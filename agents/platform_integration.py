@@ -13,6 +13,7 @@ from datetime import datetime, timedelta
 from typing import List, Dict, Optional, Any, Union
 from dataclasses import dataclass
 import sqlite3
+import psycopg2
 from flask import Flask, request, jsonify
 from flask_cors import CORS
 

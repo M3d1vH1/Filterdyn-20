@@ -56,7 +56,7 @@ class OperationsDataAgent:
     """Agent for handling operations data, service reports, and automated reminders"""
     
     def __init__(self, db_path: str = None):
-        self.db_path = db_path or 'instance/test.db'
+        self.db_path = db_path or os.getenv('DATABASE_URL', 'postgresql://user:password@localhost/filterdyn')
         self.reminder_config = self._load_reminder_config()
         self.quality_thresholds = self._load_quality_thresholds()
     
