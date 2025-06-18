@@ -113,7 +113,7 @@
                                 </span>
                                 {% if task.due_date %}
                                 <br><small class="text-muted">
-                                    {{ task.due_date.strftime('%d/%m/%Y') if task.due_date else \'N/A\' if due_date else \'N/A\' if task.due_date else 'No due date' }}
+                                    {{ task.due_date.strftime('%d/%m/%Y') if task.due_date else 'No due date' }}
                                 </small>
                                 {% endif %}
                             </div>
@@ -219,7 +219,7 @@
                                     </span>
                                 </td>
                                 <td>€{{ "%.2f"|format(order.total_amount or 0) }}</td>
-                                <td>{{ order.created_at.strftime('%d/%m/%Y') if order.created_at else \'N/A\' if created_at else \'N/A\' if order.created_at else 'N/A' }}</td>
+                                <td>{{ order.created_at.strftime('%d/%m/%Y') if .strftime('%d/%m/%Y').split('.')[0] else 'N/A' if order.created_at else 'N/A' }}</td>
                             </tr>
                             {% endfor %}
                         </tbody>

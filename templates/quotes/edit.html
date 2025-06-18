@@ -196,7 +196,7 @@
                     </tr>
                     <tr>
                         <td>{{ _('Created') }}:</td>
-                        <td>{{ quote.created_at.strftime('%d/%m/%Y') if quote.created_at else \'N/A\' if created_at else \'N/A\' }}</td>
+                        <td>{{ quote.created_at.strftime('%d/%m/%Y') if .strftime('%d/%m/%Y').split('.')[0] else 'N/A' }}</td>
                     </tr>
                     <tr>
                         <td>{{ _('Created by') }}:</td>

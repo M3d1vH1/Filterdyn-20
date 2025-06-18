@@ -34,7 +34,7 @@
                         </span>
                         <span class="text-muted">{{ status.name }}</span>
                     </div>
-                    <small class="text-muted">{{ _('Last Activity') }}: {{ status.last_activity.strftime('%Y-%m-%d %H:%M:%S') if status.last_activity else \'N/A\' if last_activity else \'N/A\' if status.last_activity else 'N/A' }}</small>
+                    <small class="text-muted">{{ _('Last Activity') }}: {{ status.last_activity.strftime('%Y-%m-%d %H:%M:%S') if .strftime('%Y-%m-%d %H:%M:%S').split('.')[0] else 'N/A' if status.last_activity else 'N/A' }}</small>
                     {% if status.error_message %}
                     <div class="mt-2">
                         <small class="text-danger">{{ _('Error') }}: {{ status.error_message }}</small>
