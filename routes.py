@@ -632,7 +632,7 @@ def settings():
     
     return render_template('settings/index.html', categories=categories, settings=settings)
 
-@main_bp.route('/settings/categories', methods=['POST'])
+@main_bp.route('/settings/categories/add', methods=['POST'])
 @login_required
 @admin_required
 def add_category():
@@ -653,6 +653,30 @@ def add_category():
         flash(_('Category added successfully'), 'success')
     except Exception as e:
         flash(_('Error adding category'), 'error')
+        db.session.rollback()
+    
+    return redirect(url_for('main.settings') + '#nav-categories')
+
+@main_bp.route('/settings/categories/<int:category_id>/edit', methods=['POST'])
+@login_required
+@admin_required
+def edit_category(category_id):
+    """Edit a product category"""
+    category = ProductCategory.query.filter_by(
+        id=category_id, 
+        tenant_id=current_user.tenant_id
+    ).first_or_404()
+    
+    try:
+        category.name_en = request.form.get('category_name_en')
+        category.name_el = request.form.get('category_name_el')
+        category.description_en = request.form.get('category_description_en')
+        category.description_el = request.form.get('category_description_el')
+        
+        db.session.commit()
+        flash(_('Category updated successfully'), 'success')
+    except Exception as e:
+        flash(_('Error updating category'), 'error')
         db.session.rollback()
     
     return redirect(url_for('main.settings') + '#nav-categories')
