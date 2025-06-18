@@ -696,31 +696,10 @@ def api_delete_quote_item(item_id):
     
     return jsonify({'success': True})
 
-# AI Agents routes
-@main_bp.route('/agents')
+# AI Assistant routes
+@main_bp.route('/ai-assistant')
 @login_required
 @admin_required
-def agents_dashboard():
-    """AI Agents Dashboard - Main landing page for all AI agents"""
-    return render_template('agents/dashboard.html')
-
-@main_bp.route('/agents/communication')
-@login_required
-@admin_required
-def agents_communication():
-    """Communication & AI Agent interface"""
-    return render_template('agents/communication.html')
-
-@main_bp.route('/agents/operations')
-@login_required
-@admin_required
-def agents_operations():
-    """Operations & Data Agent interface"""
-    return render_template('agents/operations.html')
-
-@main_bp.route('/agents/analytics')
-@login_required
-@admin_required
-def agents_analytics():
-    """Platform Integration Agent - Analytics Dashboard"""
-    return render_template('agents/analytics.html')
+def ai_assistant():
+    """AI Assistant - Email support and business communications"""
+    return render_template('ai_assistant/main.html')

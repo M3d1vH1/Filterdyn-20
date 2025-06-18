@@ -139,6 +139,7 @@ User Request -> Tenant Verification -> Data Filtering by tenant_id -> Response D
 
 Changelog:
 - June 18, 2025. Initial setup
+- June 18, 2025. Redesigned AI interface from technical "agents dashboard" to user-friendly "AI Assistant" focused on practical email support and business communications
 
 ## User Preferences
 

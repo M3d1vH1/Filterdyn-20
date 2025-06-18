@@ -1,0 +1,311 @@
+{% extends "base.html" %}
+{% set active_page = "ai_assistant" %}
+
+{% block title %}{{ _('AI Assistant') }}{% endblock %}
+
+{% block content %}
+<div class="container-fluid">
+    <div class="d-flex justify-content-between flex-wrap flex-md-nowrap align-items-center pt-3 pb-2 mb-3 border-bottom">
+        <h1 class="h2">{{ _('AI Assistant') }}</h1>
+        <div class="btn-toolbar mb-2 mb-md-0">
+            <div class="btn-group me-2">
+                <button type="button" class="btn btn-sm btn-outline-secondary" onclick="refreshAssistant()">
+                    <i data-feather="refresh-cw"></i> {{ _('Refresh') }}
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Quick Actions -->
+    <div class="row mb-4">
+        <div class="col-12">
+            <div class="card">
+                <div class="card-header">
+                    <h5 class="mb-0">{{ _('Quick Actions') }}</h5>
+                </div>
+                <div class="card-body">
+                    <div class="row">
+                        <div class="col-md-4 mb-3">
+                            <button class="btn btn-primary w-100 py-3" onclick="generateQuoteEmail()">
+                                <i data-feather="file-text" class="me-2"></i>
+                                <div>
+                                    <div class="fw-bold">{{ _('Generate Quote Email') }}</div>
+                                    <small class="text-white-50">{{ _('AI-powered quote follow-ups') }}</small>
+                                </div>
+                            </button>
+                        </div>
+                        <div class="col-md-4 mb-3">
+                            <button class="btn btn-success w-100 py-3" onclick="serviceReminder()">
+                                <i data-feather="bell" class="me-2"></i>
+                                <div>
+                                    <div class="fw-bold">{{ _('Service Reminders') }}</div>
+                                    <small class="text-white-50">{{ _('Automated customer reminders') }}</small>
+                                </div>
+                            </button>
+                        </div>
+                        <div class="col-md-4 mb-3">
+                            <button class="btn btn-info w-100 py-3" onclick="customEmail()">
+                                <i data-feather="edit" class="me-2"></i>
+                                <div>
+                                    <div class="fw-bold">{{ _('Custom Email') }}</div>
+                                    <small class="text-white-50">{{ _('Write any business email') }}</small>
+                                </div>
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Email Generator -->
+    <div class="row">
+        <div class="col-lg-8">
+            <div class="card">
+                <div class="card-header">
+                    <h5 class="mb-0">{{ _('Email Generator') }}</h5>
+                </div>
+                <div class="card-body">
+                    <form id="emailForm">
+                        <div class="mb-3">
+                            <label class="form-label">{{ _('Email Type') }}</label>
+                            <select class="form-select" id="emailType" onchange="updateEmailForm()">
+                                <option value="">{{ _('Select email type...') }}</option>
+                                <option value="quote_follow_up">{{ _('Quote Follow-up') }}</option>
+                                <option value="service_reminder">{{ _('Service Reminder') }}</option>
+                                <option value="welcome_customer">{{ _('Welcome New Customer') }}</option>
+                                <option value="maintenance_schedule">{{ _('Maintenance Schedule') }}</option>
+                                <option value="custom">{{ _('Custom Email') }}</option>
+                            </select>
+                        </div>
+
+                        <div class="mb-3" id="customerSelect" style="display: none;">
+                            <label class="form-label">{{ _('Customer') }}</label>
+                            <select class="form-select" id="customerId">
+                                <option value="">{{ _('Select customer...') }}</option>
+                                <!-- Will be populated dynamically -->
+                            </select>
+                        </div>
+
+                        <div class="mb-3" id="quoteSelect" style="display: none;">
+                            <label class="form-label">{{ _('Quote') }}</label>
+                            <select class="form-select" id="quoteId">
+                                <option value="">{{ _('Select quote...') }}</option>
+                                <!-- Will be populated dynamically -->
+                            </select>
+                        </div>
+
+                        <div class="mb-3" id="customSubject" style="display: none;">
+                            <label class="form-label">{{ _('Subject') }}</label>
+                            <input type="text" class="form-control" id="emailSubject" placeholder="{{ _('Enter email subject...') }}">
+                        </div>
+
+                        <div class="mb-3" id="customPrompt" style="display: none;">
+                            <label class="form-label">{{ _('What should this email say?') }}</label>
+                            <textarea class="form-control" id="emailPrompt" rows="3" placeholder="{{ _('Describe what you want to communicate...') }}"></textarea>
+                        </div>
+
+                        <div class="d-grid">
+                            <button type="button" class="btn btn-primary" onclick="generateEmail()">
+                                <i data-feather="zap" class="me-1"></i>
+                                {{ _('Generate Email') }}
+                            </button>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+
+        <div class="col-lg-4">
+            <div class="card">
+                <div class="card-header">
+                    <h5 class="mb-0">{{ _('Recent Activity') }}</h5>
+                </div>
+                <div class="card-body">
+                    <div class="list-group list-group-flush">
+                        <div class="list-group-item d-flex justify-content-between align-items-center">
+                            <div>
+                                <div class="fw-bold">{{ _('Emails Generated Today') }}</div>
+                                <small class="text-muted">{{ _('AI-powered communications') }}</small>
+                            </div>
+                            <span class="badge bg-primary rounded-pill">12</span>
+                        </div>
+                        <div class="list-group-item d-flex justify-content-between align-items-center">
+                            <div>
+                                <div class="fw-bold">{{ _('Service Reminders Sent') }}</div>
+                                <small class="text-muted">{{ _('This week') }}</small>
+                            </div>
+                            <span class="badge bg-success rounded-pill">8</span>
+                        </div>
+                        <div class="list-group-item d-flex justify-content-between align-items-center">
+                            <div>
+                                <div class="fw-bold">{{ _('Quote Follow-ups') }}</div>
+                                <small class="text-muted">{{ _('This month') }}</small>
+                            </div>
+                            <span class="badge bg-info rounded-pill">24</span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="card mt-3">
+                <div class="card-header">
+                    <h5 class="mb-0">{{ _('Tips') }}</h5>
+                </div>
+                <div class="card-body">
+                    <div class="small">
+                        <div class="mb-2">
+                            <strong>{{ _('Quote Follow-ups:') }}</strong> {{ _('Best sent 3-5 days after sending the quote') }}
+                        </div>
+                        <div class="mb-2">
+                            <strong>{{ _('Service Reminders:') }}</strong> {{ _('Send 2 weeks before maintenance is due') }}
+                        </div>
+                        <div class="mb-2">
+                            <strong>{{ _('Custom Emails:') }}</strong> {{ _('Be specific about what you want to communicate') }}
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Email Preview Modal -->
+    <div class="modal fade" id="emailPreviewModal" tabindex="-1">
+        <div class="modal-dialog modal-lg">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title">{{ _('Email Preview') }}</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                </div>
+                <div class="modal-body">
+                    <div class="mb-3">
+                        <label class="form-label fw-bold">{{ _('To:') }}</label>
+                        <div id="emailTo" class="form-control-plaintext"></div>
+                    </div>
+                    <div class="mb-3">
+                        <label class="form-label fw-bold">{{ _('Subject:') }}</label>
+                        <div id="emailSubjectPreview" class="form-control-plaintext"></div>
+                    </div>
+                    <div class="mb-3">
+                        <label class="form-label fw-bold">{{ _('Message:') }}</label>
+                        <div id="emailContent" class="border rounded p-3" style="white-space: pre-wrap;"></div>
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">{{ _('Cancel') }}</button>
+                    <button type="button" class="btn btn-primary" onclick="sendEmail()">
+                        <i data-feather="send" class="me-1"></i>
+                        {{ _('Send Email') }}
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+function updateEmailForm() {
+    const emailType = document.getElementById('emailType').value;
+    const customerSelect = document.getElementById('customerSelect');
+    const quoteSelect = document.getElementById('quoteSelect');
+    const customSubject = document.getElementById('customSubject');
+    const customPrompt = document.getElementById('customPrompt');
+
+    // Hide all optional fields first
+    customerSelect.style.display = 'none';
+    quoteSelect.style.display = 'none';
+    customSubject.style.display = 'none';
+    customPrompt.style.display = 'none';
+
+    switch(emailType) {
+        case 'quote_follow_up':
+            customerSelect.style.display = 'block';
+            quoteSelect.style.display = 'block';
+            break;
+        case 'service_reminder':
+        case 'welcome_customer':
+        case 'maintenance_schedule':
+            customerSelect.style.display = 'block';
+            break;
+        case 'custom':
+            customerSelect.style.display = 'block';
+            customSubject.style.display = 'block';
+            customPrompt.style.display = 'block';
+            break;
+    }
+}
+
+function generateQuoteEmail() {
+    document.getElementById('emailType').value = 'quote_follow_up';
+    updateEmailForm();
+}
+
+function serviceReminder() {
+    document.getElementById('emailType').value = 'service_reminder';
+    updateEmailForm();
+}
+
+function customEmail() {
+    document.getElementById('emailType').value = 'custom';
+    updateEmailForm();
+}
+
+function generateEmail() {
+    const emailType = document.getElementById('emailType').value;
+    if (!emailType) {
+        alert('{{ _("Please select an email type") }}');
+        return;
+    }
+
+    // Show loading state
+    const btn = event.target;
+    const originalText = btn.innerHTML;
+    btn.innerHTML = '<i data-feather="loader" class="me-1"></i> {{ _("Generating...") }}';
+    btn.disabled = true;
+
+    // Simulate API call - replace with actual implementation
+    setTimeout(() => {
+        // Sample generated email
+        document.getElementById('emailTo').textContent = 'customer@example.com';
+        document.getElementById('emailSubjectPreview').textContent = 'Follow-up on your recent quote';
+        document.getElementById('emailContent').textContent = `Dear Customer,
+
+I hope this email finds you well. I wanted to follow up on the quote we sent you last week for your water filtration system maintenance.
+
+Our proposal includes:
+- Complete system inspection and cleaning
+- Filter replacement with premium quality components
+- Performance optimization and testing
+- 6-month warranty on all work performed
+
+We understand that choosing the right service provider is an important decision. If you have any questions about our proposal or would like to discuss any aspects in more detail, I'm here to help.
+
+Would you be available for a brief call this week to discuss how we can best serve your needs?
+
+Best regards,
+Filterdyn Team`;
+
+        // Show modal
+        new bootstrap.Modal(document.getElementById('emailPreviewModal')).show();
+
+        // Reset button
+        btn.innerHTML = originalText;
+        btn.disabled = false;
+        feather.replace();
+    }, 2000);
+}
+
+function sendEmail() {
+    alert('{{ _("Email functionality will be implemented soon") }}');
+    bootstrap.Modal.getInstance(document.getElementById('emailPreviewModal')).hide();
+}
+
+function refreshAssistant() {
+    location.reload();
+}
+
+document.addEventListener('DOMContentLoaded', function() {
+    feather.replace();
+});
+</script>
+{% endblock %}
