@@ -7,393 +7,116 @@
     <div class="col-12">
         <div class="d-flex justify-content-between align-items-center mb-4">
             <h1 class="h3">
-                <i data-feather="edit-2" class="me-2"></i>
+                <i data-feather="edit" class="me-2"></i>
                 {{ _('Edit Order') }} {{ order.order_number }}
             </h1>
-            <div>
-                <a href="{{ url_for('main.orders') }}" class="btn btn-outline-secondary me-2">
+            <div class="btn-group">
+                <a href="{{ url_for('main.view_order', order_id=order.id) }}" class="btn btn-outline-secondary">
                     <i data-feather="arrow-left" class="me-2"></i>
-                    {{ _('Back to Orders') }}
+                    {{ _('Back to Order') }}
                 </a>
-                <span class="badge status-{{ order.status }} fs-6">
-                    {{ order.status.replace('_', ' ').title() }}
-                </span>
+                <a href="{{ url_for('main.orders') }}" class="btn btn-outline-secondary">
+                    <i data-feather="list" class="me-2"></i>
+                    {{ _('All Orders') }}
+                </a>
             </div>
         </div>
     </div>
 </div>
 
 <div class="row">
-    <!-- Order Form -->
-    <div class="col-lg-8">
-        <div class="card mb-4">
-            <div class="card-header">
-                <h5 class="mb-0">{{ _('Order Information') }}</h5>
-            </div>
-            <div class="card-body">
-                <form method="POST" class="needs-validation" novalidate>
-                    {{ form.hidden_tag() }}
-                    
-                    <!-- Customer & Basic Info -->
-                    <div class="row mb-4">
-                        <div class="col-12">
-                            <h6 class="text-primary border-bottom pb-2 mb-3">
-                                <i data-feather="user" class="me-2"></i>
-                                {{ _('Customer & Basic Information') }}
-                            </h6>
-                        </div>
-                        
-                        <div class="col-md-6 mb-3">
-                            <div class="form-floating">
-                                {{ form.customer_id(class="form-select", required=true) }}
-                                {{ form.customer_id.label(class="form-label") }}
-                            </div>
-                        </div>
-                        
-                        <div class="col-md-6 mb-3">
-                            <div class="form-floating">
-                                {{ form.order_type(class="form-select", required=true) }}
-                                {{ form.order_type.label(class="form-label") }}
-                            </div>
-                        </div>
-                        
-                        <div class="col-12 mb-3">
-                            <div class="form-floating">
-                                {{ form.title(class="form-control", required=true) }}
-                                {{ form.title.label(class="form-label") }}
-                            </div>
-                        </div>
-                        
-                        <div class="col-12 mb-3">
-                            <div class="form-floating">
-                                {{ form.description(class="form-control", style="height: 100px") }}
-                                {{ form.description.label(class="form-label") }}
-                            </div>
-                        </div>
-                    </div>
-                    
-                    <!-- Delivery Information -->
-                    <div class="row mb-4">
-                        <div class="col-12">
-                            <h6 class="text-primary border-bottom pb-2 mb-3">
-                                <i data-feather="truck" class="me-2"></i>
-                                {{ _('Delivery Information') }}
-                            </h6>
-                        </div>
-                        
-                        <div class="col-md-6 mb-3">
-                            <div class="form-floating">
-                                {{ form.delivery_date(class="form-control", type="date") }}
-                                {{ form.delivery_date.label(class="form-label") }}
-                            </div>
-                        </div>
-                        
-                        <div class="col-12 mb-3">
-                            <div class="form-floating">
-                                {{ form.delivery_address(class="form-control", style="height: 100px") }}
-                                {{ form.delivery_address.label(class="form-label") }}
-                            </div>
-                        </div>
-                        
-                        <div class="col-12 mb-3">
-                            <div class="form-floating">
-                                {{ form.delivery_notes(class="form-control", style="height: 80px") }}
-                                {{ form.delivery_notes.label(class="form-label") }}
-                            </div>
-                        </div>
-                    </div>
-                    
-                    <!-- Status Update -->
-                    <div class="row mb-4">
-                        <div class="col-12">
-                            <h6 class="text-primary border-bottom pb-2 mb-3">
-                                <i data-feather="activity" class="me-2"></i>
-                                {{ _('Status Update') }}
-                            </h6>
-                        </div>
-                        
-                        <div class="col-md-6 mb-3">
-                            <div class="form-floating">
-                                <select class="form-select" id="status" name="status">
-                                    <option value="pending" {% if order.status == 'pending' %}selected{% endif %}>{{ _('Pending') }}</option>
-                                    <option value="confirmed" {% if order.status == 'confirmed' %}selected{% endif %}>{{ _('Confirmed') }}</option>
-                                    <option value="processing" {% if order.status == 'processing' %}selected{% endif %}>{{ _('Processing') }}</option>
-                                    <option value="shipped" {% if order.status == 'shipped' %}selected{% endif %}>{{ _('Shipped') }}</option>
-                                    <option value="delivered" {% if order.status == 'delivered' %}selected{% endif %}>{{ _('Delivered') }}</option>
-                                    <option value="cancelled" {% if order.status == 'cancelled' %}selected{% endif %}>{{ _('Cancelled') }}</option>
-                                </select>
-                                <label for="status">{{ _('Status') }}</label>
-                            </div>
-                        </div>
-                    </div>
-                    
-                    <!-- Actions -->
-                    <div class="d-flex justify-content-end gap-2">
-                        <a href="{{ url_for('main.orders') }}" class="btn btn-outline-secondary">
-                            <i data-feather="x" class="me-2"></i>
-                            {{ _('Cancel') }}
-                        </a>
-                        <button type="submit" class="btn btn-primary">
-                            <i data-feather="save" class="me-2"></i>
-                            {{ _('Update Order') }}
-                        </button>
-                    </div>
-                </form>
-            </div>
-        </div>
-        
-        <!-- Order Items -->
-        <div class="card" data-order-id="{{ order.id }}">
-            <div class="card-header d-flex justify-content-between align-items-center">
-                <h5 class="mb-0">
-                    <i data-feather="list" class="me-2"></i>
-                    {{ _('Order Items') }}
-                </h5>
-                <button type="button" class="btn btn-sm btn-primary" id="add-item-btn">
-                    <i data-feather="plus" class="me-2"></i>
-                    {{ _('Add Item') }}
-                </button>
-            </div>
-            <div class="card-body" id="items-container">
-                {% if order.items %}
-                <div class="table-responsive">
-                    <table class="table">
-                        <thead>
-                            <tr>
-                                <th>{{ _('Description') }}</th>
-                                <th width="100">{{ _('Quantity') }}</th>
-                                <th width="100">{{ _('Delivered') }}</th>
-                                <th width="120">{{ _('Unit Price') }}</th>
-                                <th width="120">{{ _('Total') }}</th>
-                                <th width="80">{{ _('Actions') }}</th>
-                            </tr>
-                        </thead>
-                        <tbody>
-                            {% for item in order.items %}
-                            <tr>
-                                <td>{{ item.description }}</td>
-                                <td>{{ item.quantity }}</td>
-                                <td>{{ item.quantity_delivered or 0 }}</td>
-                                <td>€{{ "%.2f"|format(item.unit_price) }}</td>
-                                <td>€{{ "%.2f"|format(item.line_total) }}</td>
-                                <td>
-                                    <button type="button" class="btn btn-sm btn-outline-danger delete-item-btn" 
-                                            data-item-id="{{ item.id }}">
-                                        <i data-feather="trash-2"></i>
-                                    </button>
-                                </td>
-                            </tr>
-                            {% endfor %}
-                        </tbody>
-                    </table>
-                </div>
-                {% else %}
-                <div class="text-center py-4">
-                    <i data-feather="package" class="text-muted mb-3" style="width: 48px; height: 48px;"></i>
-                    <p class="text-muted">{{ _('No items added yet') }}</p>
-                    <button type="button" class="btn btn-primary" id="add-first-item-btn">
-                        <i data-feather="plus" class="me-2"></i>
-                        {{ _('Add First Item') }}
-                    </button>
-                </div>
-                {% endif %}
-            </div>
-        </div>
-    </div>
-    
-    <!-- Order Summary -->
-    <div class="col-lg-4">
-        <div class="card mb-4">
-            <div class="card-header">
-                <h5 class="mb-0">{{ _('Order Summary') }}</h5>
-            </div>
-            <div class="card-body">
-                <table class="table table-sm">
-                    <tr>
-                        <td>{{ _('Customer') }}:</td>
-                        <td><strong>{{ order.customer.name }}</strong></td>
-                    </tr>
-                    <tr>
-                        <td>{{ _('Created') }}:</td>
-                        <td>{{ order.created_at.strftime('%d/%m/%Y') }}</td>
-                    </tr>
-                    <tr>
-                        <td>{{ _('Created by') }}:</td>
-                        <td>{{ order.creator.full_name }}</td>
-                    </tr>
-                    <tr>
-                        <td>{{ _('Items') }}:</td>
-                        <td>{{ order.items|length }}</td>
-                    </tr>
-                    {% if order.delivery_date %}
-                    <tr>
-                        <td>{{ _('Delivery Date') }}:</td>
-                        <td>{{ order.delivery_date.strftime('%d/%m/%Y') }}</td>
-                    </tr>
-                    {% endif %}
-                </table>
-                
-                <hr>
-                
-                <table class="table table-sm">
-                    <tr>
-                        <td>{{ _('Subtotal') }}:</td>
-                        <td class="text-end">€{{ "%.2f"|format(order.subtotal or 0) }}</td>
-                    </tr>
-                    <tr>
-                        <td>{{ _('Tax') }} ({{ order.tax_rate or 24 }}%):</td>
-                        <td class="text-end">€{{ "%.2f"|format(order.tax_amount or 0) }}</td>
-                    </tr>
-                    <tr class="table-primary">
-                        <td><strong>{{ _('Total') }}:</strong></td>
-                        <td class="text-end"><strong>€{{ "%.2f"|format(order.total_amount or 0) }}</strong></td>
-                    </tr>
-                </table>
-            </div>
-        </div>
-        
-        <!-- Customer Info -->
+    <div class="col-12">
         <div class="card">
             <div class="card-header">
-                <h5 class="mb-0">{{ _('Customer Information') }}</h5>
+                <h5 class="mb-0">
+                    <i data-feather="edit-3" class="me-2"></i>
+                    {{ _('Order Details') }}
+                </h5>
             </div>
             <div class="card-body">
-                <p><strong>{{ order.customer.name }}</strong></p>
-                {% if order.customer.contact_person %}
-                <p class="mb-1">{{ order.customer.contact_person }}</p>
-                {% endif %}
-                {% if order.customer.email %}
-                <p class="mb-1">
-                    <a href="mailto:{{ order.customer.email }}">{{ order.customer.email }}</a>
-                </p>
-                {% endif %}
-                {% if order.customer.phone %}
-                <p class="mb-1">
-                    <a href="tel:{{ order.customer.phone }}">{{ order.customer.phone }}</a>
-                </p>
-                {% endif %}
-                {% if order.delivery_address or order.customer.address %}
-                <hr>
-                <h6>{{ _('Delivery Address') }}</h6>
-                <p class="mb-0">{{ order.delivery_address or order.customer.address }}</p>
-                {% if order.customer.city %}
-                <p class="mb-0">{{ order.customer.city }} {{ order.customer.postal_code }}</p>
-                {% endif %}
-                {% endif %}
-            </div>
-        </div>
-    </div>
-</div>
-
-<!-- Add Item Modal (similar to quote edit) -->
-<div class="modal fade" id="addItemModal" tabindex="-1" aria-hidden="true">
-    <div class="modal-dialog">
-        <div class="modal-content">
-            <div class="modal-header">
-                <h5 class="modal-title">{{ _('Add Item') }}</h5>
-                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
-            </div>
-            <div class="modal-body">
-                <form id="add-item-form">
-                    <div class="mb-3 position-relative">
-                        <label for="product-search" class="form-label">{{ _('Search Products') }}</label>
-                        <input type="text" class="form-control" id="product-search" 
-                               placeholder="{{ _('Type to search products...') }}">
-                        <div id="product-results" class="dropdown-menu w-100" style="display: none;"></div>
+                <form method="POST">
+                    {{ form.hidden_tag() }}
+                    
+                    <div class="row mb-3">
+                        <div class="col-md-6">
+                            {{ form.customer_id.label(class="form-label") }}
+                            {{ form.customer_id(class="form-select" + (" is-invalid" if form.customer_id.errors else "")) }}
+                            {% if form.customer_id.errors %}
+                            <div class="invalid-feedback">
+                                {% for error in form.customer_id.errors %}{{ error }}{% endfor %}
+                            </div>
+                            {% endif %}
+                        </div>
+                        <div class="col-md-6">
+                            {{ form.quote_id.label(class="form-label") }}
+                            {{ form.quote_id(class="form-select") }}
+                            <div class="form-text">{{ _('Optional: Link this order to an approved quote') }}</div>
+                        </div>
                     </div>
                     
-                    <input type="hidden" id="product_id" name="product_id">
+                    <div class="row mb-3">
+                        <div class="col-md-6">
+                            {{ form.order_type.label(class="form-label") }}
+                            {{ form.order_type(class="form-select" + (" is-invalid" if form.order_type.errors else "")) }}
+                            {% if form.order_type.errors %}
+                            <div class="invalid-feedback">
+                                {% for error in form.order_type.errors %}{{ error }}{% endfor %}
+                            </div>
+                            {% endif %}
+                        </div>
+                        <div class="col-md-6">
+                            {{ form.delivery_date.label(class="form-label") }}
+                            {{ form.delivery_date(class="form-control", type="date") }}
+                        </div>
+                    </div>
                     
                     <div class="mb-3">
-                        <div class="form-floating">
-                            <input type="text" class="form-control" id="description" name="description" required>
-                            <label for="description">{{ _('Description') }}</label>
+                        {{ form.title.label(class="form-label") }}
+                        {{ form.title(class="form-control" + (" is-invalid" if form.title.errors else "")) }}
+                        {% if form.title.errors %}
+                        <div class="invalid-feedback">
+                            {% for error in form.title.errors %}{{ error }}{% endfor %}
                         </div>
+                        {% endif %}
                     </div>
                     
-                    <div class="row">
-                        <div class="col-md-4">
-                            <div class="form-floating mb-3">
-                                <input type="number" class="form-control" id="quantity" name="quantity" 
-                                       step="0.01" min="0" required onchange="calculateLineTotal()">
-                                <label for="quantity">{{ _('Quantity') }}</label>
-                            </div>
+                    <div class="mb-3">
+                        {{ form.description.label(class="form-label") }}
+                        {{ form.description(class="form-control", rows="4") }}
+                    </div>
+                    
+                    <div class="mb-3">
+                        {{ form.delivery_address.label(class="form-label") }}
+                        {{ form.delivery_address(class="form-control", rows="3") }}
+                    </div>
+                    
+                    <div class="mb-3">
+                        {{ form.delivery_notes.label(class="form-label") }}
+                        {{ form.delivery_notes(class="form-control", rows="2") }}
+                    </div>
+                    
+                    <div class="d-flex justify-content-between">
+                        <div>
+                            <small class="text-muted">
+                                {{ _('Order created on') }}: {{ order.created_at.strftime('%d/%m/%Y %H:%M') }}
+                                <br>
+                                {{ _('Last updated') }}: {{ order.updated_at.strftime('%d/%m/%Y %H:%M') if order.updated_at else order.created_at.strftime('%d/%m/%Y %H:%M') }}
+                            </small>
                         </div>
-                        <div class="col-md-4">
-                            <div class="form-floating mb-3">
-                                <input type="number" class="form-control" id="unit_price" name="unit_price" 
-                                       step="0.01" min="0" required onchange="calculateLineTotal()">
-                                <label for="unit_price">{{ _('Unit Price') }}</label>
-                            </div>
-                        </div>
-                        <div class="col-md-4">
-                            <div class="form-floating mb-3">
-                                <input type="number" class="form-control" id="line_total" name="line_total" 
-                                       readonly>
-                                <label for="line_total">{{ _('Line Total') }}</label>
-                            </div>
+                        <div>
+                            <a href="{{ url_for('main.view_order', order_id=order.id) }}" class="btn btn-secondary me-2">
+                                <i data-feather="x" class="me-2"></i>
+                                {{ _('Cancel') }}
+                            </a>
+                            <button type="submit" class="btn btn-primary">
+                                <i data-feather="save" class="me-2"></i>
+                                {{ _('Update Order') }}
+                            </button>
                         </div>
                     </div>
                 </form>
             </div>
-            <div class="modal-footer">
-                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">{{ _('Cancel') }}</button>
-                <button type="button" class="btn btn-primary" onclick="addOrderItemFromForm()">{{ _('Add Item') }}</button>
-            </div>
         </div>
     </div>
 </div>
-{% endblock %}
-
-{% block js %}
-<script>
-// Add event listeners for add item buttons
-document.addEventListener('DOMContentLoaded', function() {
-    document.getElementById('add-item-btn')?.addEventListener('click', showAddItemModal);
-    document.getElementById('add-first-item-btn')?.addEventListener('click', showAddItemModal);
-});
-
-function addOrderItemFromForm() {
-    var form = document.getElementById('add-item-form');
-    var formData = new FormData(form);
-    
-    var itemData = {
-        product_id: formData.get('product_id') || null,
-        description: formData.get('description'),
-        quantity: parseFloat(formData.get('quantity')),
-        unit_price: parseFloat(formData.get('unit_price'))
-    };
-    
-    if (!itemData.description || !itemData.quantity || !itemData.unit_price) {
-        alert('{{ _('Please fill in all required fields') }}');
-        return;
-    }
-    
-    // Use order items API endpoint
-    var orderId = document.querySelector('[data-order-id]').dataset.orderId;
-    fetch(`/api/order-items/${orderId}`, {
-        method: 'POST',
-        headers: {
-            'Content-Type': 'application/json',
-        },
-        body: JSON.stringify(itemData)
-    })
-    .then(response => response.json())
-    .then(data => {
-        if (data.success) {
-            location.reload();
-        } else {
-            alert('{{ _('Error adding item') }}');
-        }
-    })
-    .catch(error => {
-        console.error('Error:', error);
-        alert('{{ _('Error adding item') }}');
-    });
-    
-    // Close modal
-    var modal = bootstrap.Modal.getInstance(document.getElementById('addItemModal'));
-    modal.hide();
-}
-</script>
 {% endblock %}
