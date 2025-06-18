@@ -3,9 +3,9 @@ from flask_login import login_required, current_user
 from flask_babel import _, get_locale
 from datetime import datetime, timezone, timedelta
 from decimal import Decimal
-from models import User, Customer, Product, ProductCategory, Quote, QuoteItem, Order, OrderItem, Task
+from models import User, Customer, Product, ProductCategory, Quote, QuoteItem, Order, OrderItem, Task, TaskBoard, TaskBoardMember, TaskColumn, TaskCard, TaskComment
 from app import db
-from forms import CustomerForm, ProductForm, ProductCategoryForm, QuoteForm, OrderForm, TaskForm
+from forms import CustomerForm, ProductForm, ProductCategoryForm, QuoteForm, OrderForm, TaskForm, TaskBoardForm, TaskCardForm
 from utils import admin_required, manager_required, generate_pdf_quote
 import json
 
@@ -724,3 +724,528 @@ def agents_operations():
 def agents_analytics():
     """Platform Integration Agent - Analytics Dashboard"""
     return render_template('agents/analytics.html')
+
+# Enhanced Task routes with RBAC
+@main_bp.route('/tasks/kanban')
+@login_required
+def kanban_board():
+    """Main Kanban board view"""
+    board_id = request.args.get('board_id', type=int)
+    
+    # Get user's boards
+    if current_user.role in ['admin', 'manager']:
+        # Managers can see all boards
+        boards = TaskBoard.query.filter_by(tenant_id=current_user.tenant_id).all()
+        if not board_id and boards:
+            board_id = boards[0].id
+    else:
+        # Regular users can only see boards they're members of
+        user_boards = TaskBoardMember.query.filter_by(user_id=current_user.id).all()
+        boards = [member.board for member in user_boards]
+        if not board_id and boards:
+            board_id = boards[0].id
+    
+    if not board_id:
+        # Create default personal board if none exists
+        default_board = TaskBoard(
+            tenant_id=current_user.tenant_id,
+            created_by=current_user.id,
+            name=f"{current_user.full_name}'s Tasks",
+            board_type='personal',
+            is_default=True
+        )
+        db.session.add(default_board)
+        db.session.commit()
+        
+        # Add default columns
+        columns = [
+            ('To Do', 'pending', '#6c757d'),
+            ('Acknowledged', 'acknowledged', '#17a2b8'),
+            ('In Progress', 'in_progress', '#ffc107'),
+            ('Review', 'review', '#fd7e14'),
+            ('Done', 'completed', '#28a745')
+        ]
+        
+        for i, (name, status, color) in enumerate(columns):
+            column = TaskColumn(
+                board_id=default_board.id,
+                name=name,
+                position=i,
+                color=color,
+                auto_assign_status=status
+            )
+            db.session.add(column)
+        
+        db.session.commit()
+        board_id = default_board.id
+    
+    board = TaskBoard.query.get_or_404(board_id)
+    
+    # Check permissions
+    if current_user.role not in ['admin', 'manager']:
+        member = TaskBoardMember.query.filter_by(board_id=board_id, user_id=current_user.id).first()
+        if not member:
+            flash(_('You do not have access to this board'), 'error')
+            return redirect(url_for('main.tasks'))
+    
+    # Get columns and cards
+    columns = board.columns
+    cards_by_column = {}
+    
+    for column in columns:
+        if current_user.role in ['admin', 'manager']:
+            cards = TaskCard.query.filter_by(column_id=column.id).order_by(TaskCard.position).all()
+        else:
+            # Users can only see cards assigned to them or created by them
+            cards = TaskCard.query.filter(
+                TaskCard.column_id == column.id,
+                db.or_(
+                    TaskCard.assigned_to == current_user.id,
+                    TaskCard.created_by == current_user.id
+                )
+            ).order_by(TaskCard.position).all()
+        
+        cards_by_column[column] = cards
+    
+    # Get available users for assignment
+    if current_user.role in ['admin', 'manager']:
+        available_users = User.query.filter_by(tenant_id=current_user.tenant_id, is_active=True).all()
+    else:
+        available_users = [current_user]
+    
+    return render_template('tasks/kanban.html', 
+                         board=board, 
+                         columns=columns, 
+                         cards_by_column=cards_by_column,
+                         available_users=available_users,
+                         boards=boards)
+
+@main_bp.route('/tasks/boards/create', methods=['GET', 'POST'])
+@login_required
+@manager_required
+def create_board():
+    """Create a new task board"""
+    form = TaskBoardForm()
+    
+    if form.validate_on_submit():
+        board = TaskBoard(
+            tenant_id=current_user.tenant_id,
+            created_by=current_user.id,
+            name=form.name.data,
+            description=form.description.data,
+            board_type=form.board_type.data,
+            is_public=form.is_public.data,
+            color_scheme=form.color_scheme.data,
+            auto_archive_days=form.auto_archive_days.data
+        )
+        
+        db.session.add(board)
+        db.session.commit()
+        
+        # Add creator as owner
+        member = TaskBoardMember(
+            board_id=board.id,
+            user_id=current_user.id,
+            role='owner',
+            can_create_cards=True,
+            can_move_cards=True,
+            can_edit_cards=True,
+            can_delete_cards=True,
+            can_manage_board=True
+        )
+        db.session.add(member)
+        
+        # Create default columns
+        columns = [
+            ('To Do', 'pending', '#6c757d'),
+            ('Acknowledged', 'acknowledged', '#17a2b8'),
+            ('In Progress', 'in_progress', '#ffc107'),
+            ('Review', 'review', '#fd7e14'),
+            ('Done', 'completed', '#28a745')
+        ]
+        
+        for i, (name, status, color) in enumerate(columns):
+            column = TaskColumn(
+                board_id=board.id,
+                name=name,
+                position=i,
+                color=color,
+                auto_assign_status=status
+            )
+            db.session.add(column)
+        
+        db.session.commit()
+        flash(_('Board created successfully'), 'success')
+        return redirect(url_for('main.kanban_board', board_id=board.id))
+    
+    return render_template('tasks/create_board.html', form=form)
+
+@main_bp.route('/tasks/cards/create', methods=['GET', 'POST'])
+@login_required
+def create_card():
+    """Create a new task card"""
+    board_id = request.args.get('board_id', type=int)
+    column_id = request.args.get('column_id', type=int)
+    
+    if not board_id:
+        flash(_('Board ID is required'), 'error')
+        return redirect(url_for('main.kanban_board'))
+    
+    # Check permissions
+    if current_user.role not in ['admin', 'manager']:
+        member = TaskBoardMember.query.filter_by(board_id=board_id, user_id=current_user.id).first()
+        if not member or not member.can_create_cards:
+            flash(_('You do not have permission to create cards on this board'), 'error')
+            return redirect(url_for('main.kanban_board', board_id=board_id))
+    
+    form = TaskCardForm()
+    form.assigned_to.choices = [
+        (u.id, u.full_name) for u in User.query.filter_by(tenant_id=current_user.tenant_id, is_active=True).all()
+    ]
+    form.customer_id.choices = [(0, _('Select Customer'))] + [
+        (c.id, c.name) for c in Customer.query.filter_by(tenant_id=current_user.tenant_id).all()
+    ]
+    
+    if form.validate_on_submit():
+        # Get target column
+        if column_id:
+            column = TaskColumn.query.get_or_404(column_id)
+        else:
+            # Get first column (To Do)
+            column = TaskColumn.query.filter_by(board_id=board_id).order_by(TaskColumn.position).first()
+        
+        # Get next position
+        max_position = db.session.query(db.func.max(TaskCard.position)).filter_by(column_id=column.id).scalar() or 0
+        
+        # Process labels and tags
+        labels = [label.strip() for label in form.labels.data.split(',')] if form.labels.data else []
+        tags = [tag.strip() for tag in form.tags.data.split(',')] if form.tags.data else []
+        
+        card = TaskCard(
+            board_id=board_id,
+            column_id=column.id,
+            created_by=current_user.id,
+            assigned_to=form.assigned_to.data,
+            title=form.title.data,
+            description=form.description.data,
+            priority=form.priority.data,
+            category=form.category.data,
+            customer_id=form.customer_id.data if form.customer_id.data else None,
+            due_date=form.due_date.data,
+            time_estimate=form.time_estimate.data,
+            story_points=form.story_points.data,
+            labels=labels,
+            tags=tags,
+            position=max_position + 1
+        )
+        
+        db.session.add(card)
+        
+        # Add system comment
+        comment = TaskComment(
+            card_id=card.id,
+            user_id=current_user.id,
+            content=f"Task created by {current_user.full_name}",
+            is_system_comment=True,
+            comment_type='system'
+        )
+        db.session.add(comment)
+        
+        db.session.commit()
+        flash(_('Task created successfully'), 'success')
+        return redirect(url_for('main.kanban_board', board_id=board_id))
+    
+    return render_template('tasks/create_card.html', form=form, board_id=board_id)
+
+@main_bp.route('/tasks/cards/<int:card_id>/edit', methods=['GET', 'POST'])
+@login_required
+def edit_card(card_id):
+    """Edit a task card"""
+    card = TaskCard.query.get_or_404(card_id)
+    
+    # Check permissions
+    if current_user.role not in ['admin', 'manager']:
+        if card.created_by != current_user.id and card.assigned_to != current_user.id:
+            flash(_('You can only edit tasks you created or are assigned to'), 'error')
+            return redirect(url_for('main.kanban_board', board_id=card.board_id))
+    
+    form = TaskCardForm(obj=card)
+    form.assigned_to.choices = [
+        (u.id, u.full_name) for u in User.query.filter_by(tenant_id=current_user.tenant_id, is_active=True).all()
+    ]
+    form.customer_id.choices = [(0, _('Select Customer'))] + [
+        (c.id, c.name) for c in Customer.query.filter_by(tenant_id=current_user.tenant_id).all()
+    ]
+    
+    # Set current values for labels and tags
+    if card.labels:
+        form.labels.data = ', '.join(card.labels)
+    if card.tags:
+        form.tags.data = ', '.join(card.tags)
+    
+    if form.validate_on_submit():
+        card.title = form.title.data
+        card.description = form.description.data
+        card.priority = form.priority.data
+        card.category = form.category.data
+        card.assigned_to = form.assigned_to.data
+        card.customer_id = form.customer_id.data if form.customer_id.data else None
+        card.due_date = form.due_date.data
+        card.time_estimate = form.time_estimate.data
+        card.story_points = form.story_points.data
+        
+        # Process labels and tags
+        card.labels = [label.strip() for label in form.labels.data.split(',')] if form.labels.data else []
+        card.tags = [tag.strip() for tag in form.tags.data.split(',')] if form.tags.data else []
+        
+        db.session.commit()
+        flash(_('Task updated successfully'), 'success')
+        return redirect(url_for('main.kanban_board', board_id=card.board_id))
+    
+    return render_template('tasks/edit_card.html', form=form, card=card)
+
+@main_bp.route('/tasks/cards/<int:card_id>/status', methods=['POST'])
+@login_required
+def update_card_status(card_id):
+    """Update task status with RBAC workflow"""
+    card = TaskCard.query.get_or_404(card_id)
+    new_status = request.json.get('status')
+    
+    if not new_status:
+        return jsonify({'success': False, 'error': 'Status is required'})
+    
+    # Check permissions based on current status and user role
+    can_update = False
+    
+    if current_user.role in ['admin', 'manager']:
+        can_update = True
+    elif card.assigned_to == current_user.id:
+        # Assigned user can update status following workflow
+        status_workflow = {
+            'pending': ['acknowledged', 'in_progress'],
+            'acknowledged': ['in_progress', 'pending'],
+            'in_progress': ['review', 'completed', 'acknowledged'],
+            'review': ['completed', 'in_progress'],
+            'completed': ['in_progress'],  # Can reopen
+            'cancelled': ['pending']  # Can reactivate
+        }
+        
+        current_status = card.status
+        allowed_transitions = status_workflow.get(current_status, [])
+        can_update = new_status in allowed_transitions
+    
+    if not can_update:
+        return jsonify({'success': False, 'error': 'You do not have permission to update this task status'})
+    
+    old_status = card.status
+    card.status = new_status
+    
+    # Handle status-specific actions
+    if new_status == 'acknowledged' and old_status == 'pending':
+        card.acknowledged_at = datetime.now(timezone.utc)
+        card.acknowledged_by = current_user.id
+    elif new_status == 'in_progress' and old_status in ['pending', 'acknowledged']:
+        card.started_at = datetime.now(timezone.utc)
+    elif new_status == 'completed' and old_status in ['in_progress', 'review']:
+        card.completed_at = datetime.now(timezone.utc)
+    
+    # Add system comment
+    status_messages = {
+        'acknowledged': f"Task acknowledged by {current_user.full_name}",
+        'in_progress': f"Task started by {current_user.full_name}",
+        'review': f"Task moved to review by {current_user.full_name}",
+        'completed': f"Task completed by {current_user.full_name}",
+        'cancelled': f"Task cancelled by {current_user.full_name}"
+    }
+    
+    if new_status in status_messages:
+        comment = TaskComment(
+            card_id=card.id,
+            user_id=current_user.id,
+            content=status_messages[new_status],
+            is_system_comment=True,
+            comment_type='system'
+        )
+        db.session.add(comment)
+    
+    db.session.commit()
+    
+    return jsonify({
+        'success': True, 
+        'status': new_status,
+        'progress': card.progress,
+        'message': f'Task status updated to {new_status}'
+    })
+
+@main_bp.route('/tasks/cards/<int:card_id>/move', methods=['POST'])
+@login_required
+def move_card(card_id):
+    """Move card between columns (drag and drop)"""
+    card = TaskCard.query.get_or_404(card_id)
+    new_column_id = request.json.get('column_id')
+    new_position = request.json.get('position', 0)
+    
+    if not new_column_id:
+        return jsonify({'success': False, 'error': 'Column ID is required'})
+    
+    # Check permissions
+    if current_user.role not in ['admin', 'manager']:
+        member = TaskBoardMember.query.filter_by(board_id=card.board_id, user_id=current_user.id).first()
+        if not member or not member.can_move_cards:
+            return jsonify({'success': False, 'error': 'You do not have permission to move cards'})
+    
+    new_column = TaskColumn.query.get_or_404(new_column_id)
+    
+    # Update card position and column
+    old_column_id = card.column_id
+    card.column_id = new_column_id
+    card.position = new_position
+    
+    # Update status based on column auto_assign_status
+    if new_column.auto_assign_status and new_column.auto_assign_status != card.status:
+        old_status = card.status
+        card.status = new_column.auto_assign_status
+        
+        # Handle status-specific actions
+        if card.status == 'acknowledged' and old_status == 'pending':
+            card.acknowledged_at = datetime.now(timezone.utc)
+            card.acknowledged_by = current_user.id
+        elif card.status == 'in_progress' and old_status in ['pending', 'acknowledged']:
+            card.started_at = datetime.now(timezone.utc)
+        elif card.status == 'completed' and old_status in ['in_progress', 'review']:
+            card.completed_at = datetime.now(timezone.utc)
+    
+    # Reorder other cards in the target column
+    other_cards = TaskCard.query.filter(
+        TaskCard.column_id == new_column_id,
+        TaskCard.id != card.id
+    ).order_by(TaskCard.position).all()
+    
+    for i, other_card in enumerate(other_cards):
+        if i >= new_position:
+            other_card.position = i + 1
+        else:
+            other_card.position = i
+    
+    db.session.commit()
+    
+    return jsonify({
+        'success': True,
+        'status': card.status,
+        'progress': card.progress
+    })
+
+@main_bp.route('/tasks/cards/<int:card_id>/comments', methods=['POST'])
+@login_required
+def add_comment(card_id):
+    """Add a comment to a task card"""
+    card = TaskCard.query.get_or_404(card_id)
+    content = request.json.get('content')
+    
+    if not content:
+        return jsonify({'success': False, 'error': 'Comment content is required'})
+    
+    # Check permissions
+    if current_user.role not in ['admin', 'manager']:
+        if card.created_by != current_user.id and card.assigned_to != current_user.id:
+            return jsonify({'success': False, 'error': 'You can only comment on tasks you created or are assigned to'})
+    
+    comment = TaskComment(
+        card_id=card.id,
+        user_id=current_user.id,
+        content=content
+    )
+    
+    db.session.add(comment)
+    db.session.commit()
+    
+    return jsonify({
+        'success': True,
+        'comment': {
+            'id': comment.id,
+            'content': comment.content,
+            'user_name': comment.user.full_name,
+            'created_at': comment.created_at.strftime('%d/%m/%Y %H:%M')
+        }
+    })
+
+@main_bp.route('/tasks/team')
+@login_required
+@manager_required
+def team_tasks():
+    """Manager view of all team tasks"""
+    team_members = User.query.filter_by(tenant_id=current_user.tenant_id, is_active=True).all()
+    team_tasks = {}
+    
+    for member in team_members:
+        tasks = TaskCard.query.filter_by(
+            board_id=current_user.tenant_id,  # This should be board-specific
+            assigned_to=member.id
+        ).order_by(TaskCard.due_date.asc()).all()
+        team_tasks[member] = tasks
+    
+    # Calculate team metrics
+    total_tasks = sum(len(tasks) for tasks in team_tasks.values())
+    completed_tasks = sum(len([t for t in tasks if t.status == 'completed']) for tasks in team_tasks.values())
+    overdue_tasks = sum(len([t for t in tasks if t.is_overdue]) for tasks in team_tasks.values())
+    
+    completion_rate = (completed_tasks / total_tasks * 100) if total_tasks > 0 else 0
+    
+    return render_template('tasks/team.html', 
+                         team_tasks=team_tasks,
+                         total_tasks=total_tasks,
+                         completed_tasks=completed_tasks,
+                         overdue_tasks=overdue_tasks,
+                         completion_rate=completion_rate)
+
+@main_bp.route('/tasks/reports')
+@login_required
+@manager_required
+def task_reports():
+    """Generate task analytics and reports"""
+    from sqlalchemy import func
+    
+    # Get all tasks for the tenant
+    tasks = TaskCard.query.join(TaskBoard).filter(TaskBoard.tenant_id == current_user.tenant_id).all()
+    
+    # Calculate metrics
+    total_tasks = len(tasks)
+    completed_tasks = len([t for t in tasks if t.status == 'completed'])
+    overdue_tasks = len([t for t in tasks if t.is_overdue])
+    
+    # Status distribution
+    status_counts = {}
+    for task in tasks:
+        status_counts[task.status] = status_counts.get(task.status, 0) + 1
+    
+    # Priority distribution
+    priority_counts = {}
+    for task in tasks:
+        priority_counts[task.priority] = priority_counts.get(task.priority, 0) + 1
+    
+    # User performance
+    user_performance = {}
+    for task in tasks:
+        if task.assigned_to:
+            assignee = task.assignee
+            if assignee.id not in user_performance:
+                user_performance[assignee.id] = {
+                    'user': assignee,
+                    'total': 0,
+                    'completed': 0,
+                    'overdue': 0
+                }
+            
+            user_performance[assignee.id]['total'] += 1
+            if task.status == 'completed':
+                user_performance[assignee.id]['completed'] += 1
+            if task.is_overdue:
+                user_performance[assignee.id]['overdue'] += 1
+    
+    return render_template('tasks/reports.html',
+                         total_tasks=total_tasks,
+                         completed_tasks=completed_tasks,
+                         overdue_tasks=overdue_tasks,
+                         status_counts=status_counts,
+                         priority_counts=priority_counts,
+                         user_performance=user_performance)

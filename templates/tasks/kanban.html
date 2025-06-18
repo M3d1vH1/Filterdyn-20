@@ -1,0 +1,510 @@
+{% extends "base.html" %}
+
+{% block title %}{{ _('Kanban Board') }} - {{ board.name }} - {{ super() }}{% endblock %}
+
+{% block content %}
+<div class="row">
+    <div class="col-12">
+        <div class="d-flex justify-content-between align-items-center mb-4">
+            <div>
+                <h1 class="h3">
+                    <i data-feather="trello" class="me-2"></i>
+                    {{ board.name }}
+                </h1>
+                {% if board.description %}
+                <p class="text-muted mb-0">{{ board.description }}</p>
+                {% endif %}
+            </div>
+            <div class="d-flex gap-2">
+                {% if current_user.role in ['admin', 'manager'] %}
+                <a href="{{ url_for('main.create_board') }}" class="btn btn-outline-primary">
+                    <i data-feather="plus" class="me-2"></i>
+                    {{ _('New Board') }}
+                </a>
+                {% endif %}
+                <a href="{{ url_for('main.create_card', board_id=board.id) }}" class="btn btn-primary">
+                    <i data-feather="plus" class="me-2"></i>
+                    {{ _('New Task') }}
+                </a>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Board Selector -->
+{% if boards|length > 1 %}
+<div class="row mb-4">
+    <div class="col-12">
+        <div class="card">
+            <div class="card-body">
+                <div class="d-flex align-items-center">
+                    <label class="form-label me-3 mb-0">{{ _('Switch Board') }}:</label>
+                    <select class="form-select" style="width: auto;" onchange="window.location.href='{{ url_for('main.kanban_board') }}?board_id=' + this.value">
+                        {% for b in boards %}
+                        <option value="{{ b.id }}" {% if b.id == board.id %}selected{% endif %}>
+                            {{ b.name }} ({{ b.board_type.title() }})
+                        </option>
+                        {% endfor %}
+                    </select>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endif %}
+
+<!-- Kanban Board -->
+<div class="kanban-container">
+    <div class="kanban-board">
+        {% for column in columns %}
+        <div class="kanban-column" data-column-id="{{ column.id }}">
+            <div class="kanban-column-header" style="border-left: 4px solid {{ column.color }};">
+                <h5 class="mb-0">
+                    {{ column.name }}
+                    <span class="badge bg-secondary ms-2">{{ cards_by_column[column]|length }}</span>
+                    {% if column.wip_limit %}
+                    <small class="text-muted d-block">WIP: {{ cards_by_column[column]|length }}/{{ column.wip_limit }}</small>
+                    {% endif %}
+                </h5>
+            </div>
+            <div class="kanban-cards" data-column-id="{{ column.id }}">
+                {% for card in cards_by_column[column] %}
+                <div class="kanban-card" data-card-id="{{ card.id }}" draggable="true">
+                    <div class="card-header p-2">
+                        <div class="d-flex justify-content-between align-items-start">
+                            <span class="badge priority-{{ card.priority }} me-2">
+                                {% if card.priority == 'urgent' %}<i data-feather="alert-triangle" style="width: 10px; height: 10px;"></i>
+                                {% elif card.priority == 'high' %}<i data-feather="arrow-up" style="width: 10px; height: 10px;"></i>
+                                {% elif card.priority == 'medium' %}<i data-feather="minus" style="width: 10px; height: 10px;"></i>
+                                {% else %}<i data-feather="arrow-down" style="width: 10px; height: 10px;"></i>
+                                {% endif %}
+                            </span>
+                            <div class="dropdown">
+                                <button class="btn btn-sm btn-outline-secondary dropdown-toggle" type="button" data-bs-toggle="dropdown">
+                                    <i data-feather="more-horizontal" style="width: 14px; height: 14px;"></i>
+                                </button>
+                                <ul class="dropdown-menu">
+                                    <li><a class="dropdown-item" href="#" onclick="viewCard({{ card.id }})">
+                                        <i data-feather="eye" class="me-2"></i>{{ _('View') }}
+                                    </a></li>
+                                    {% if current_user.role in ['admin', 'manager'] or card.created_by == current_user.id %}
+                                    <li><a class="dropdown-item" href="{{ url_for('main.edit_card', card_id=card.id) }}">
+                                        <i data-feather="edit-2" class="me-2"></i>{{ _('Edit') }}
+                                    </a></li>
+                                    {% endif %}
+                                    <li><hr class="dropdown-divider"></li>
+                                    <li><a class="dropdown-item" href="#" onclick="updateStatus({{ card.id }}, 'acknowledged')">
+                                        <i data-feather="check-circle" class="me-2"></i>{{ _('Acknowledge') }}
+                                    </a></li>
+                                    <li><a class="dropdown-item" href="#" onclick="updateStatus({{ card.id }}, 'in_progress')">
+                                        <i data-feather="play" class="me-2"></i>{{ _('Start Work') }}
+                                    </a></li>
+                                    <li><a class="dropdown-item" href="#" onclick="updateStatus({{ card.id }}, 'review')">
+                                        <i data-feather="eye" class="me-2"></i>{{ _('Move to Review') }}
+                                    </a></li>
+                                    <li><a class="dropdown-item" href="#" onclick="updateStatus({{ card.id }}, 'completed')">
+                                        <i data-feather="check" class="me-2"></i>{{ _('Complete') }}
+                                    </a></li>
+                                </ul>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="card-body p-3">
+                        <h6 class="card-title mb-2">{{ card.title }}</h6>
+                        {% if card.description %}
+                        <p class="card-text small text-muted mb-2">
+                            {{ card.description[:100] }}{% if card.description|length > 100 %}...{% endif %}
+                        </p>
+                        {% endif %}
+                        
+                        <!-- Progress Bar -->
+                        <div class="progress mb-2" style="height: 4px;">
+                            <div class="progress-bar" style="width: {{ card.progress }}%; background-color: {{ column.color }};"></div>
+                        </div>
+                        <small class="text-muted">{{ card.progress }}% complete</small>
+                        
+                        <!-- Task Meta -->
+                        <div class="task-meta mt-2">
+                            {% if card.assignee %}
+                            <div class="d-flex align-items-center mb-1">
+                                <i data-feather="user" style="width: 12px; height: 12px;" class="me-1 text-muted"></i>
+                                <small class="text-muted">{{ card.assignee.full_name }}</small>
+                            </div>
+                            {% endif %}
+                            
+                            {% if card.due_date %}
+                            <div class="d-flex align-items-center mb-1">
+                                <i data-feather="calendar" style="width: 12px; height: 12px;" class="me-1 text-muted"></i>
+                                <small class="text-muted {% if card.is_overdue %}text-danger{% endif %}">
+                                    {{ card.due_date.strftime('%d/%m/%Y') }}
+                                    {% if card.is_overdue %}<i data-feather="alert-circle" style="width: 10px; height: 10px;"></i>{% endif %}
+                                </small>
+                            </div>
+                            {% endif %}
+                            
+                            {% if card.time_estimate %}
+                            <div class="d-flex align-items-center mb-1">
+                                <i data-feather="clock" style="width: 12px; height: 12px;" class="me-1 text-muted"></i>
+                                <small class="text-muted">{{ card.time_estimate }}h estimated</small>
+                            </div>
+                            {% endif %}
+                            
+                            {% if card.labels %}
+                            <div class="mt-2">
+                                {% for label in card.labels[:3] %}
+                                <span class="badge bg-light text-dark me-1" style="font-size: 0.7rem;">{{ label }}</span>
+                                {% endfor %}
+                                {% if card.labels|length > 3 %}
+                                <span class="badge bg-light text-dark" style="font-size: 0.7rem;">+{{ card.labels|length - 3 }}</span>
+                                {% endif %}
+                            </div>
+                            {% endif %}
+                        </div>
+                        
+                        <!-- Comments Count -->
+                        {% if card.comments %}
+                        <div class="mt-2">
+                            <small class="text-muted">
+                                <i data-feather="message-circle" style="width: 12px; height: 12px;"></i>
+                                {{ card.comments|length }} comment{{ 's' if card.comments|length != 1 }}
+                            </small>
+                        </div>
+                        {% endif %}
+                    </div>
+                </div>
+                {% endfor %}
+            </div>
+        </div>
+        {% endfor %}
+    </div>
+</div>
+
+<!-- Card Detail Modal -->
+<div class="modal fade" id="cardModal" tabindex="-1" aria-hidden="true">
+    <div class="modal-dialog modal-lg">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title" id="cardModalTitle"></h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+            </div>
+            <div class="modal-body" id="cardModalBody">
+                <!-- Content will be loaded dynamically -->
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">{{ _('Close') }}</button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Add Comment Modal -->
+<div class="modal fade" id="commentModal" tabindex="-1" aria-hidden="true">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title">{{ _('Add Comment') }}</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+            </div>
+            <div class="modal-body">
+                <form id="commentForm">
+                    <div class="mb-3">
+                        <label for="commentContent" class="form-label">{{ _('Comment') }}</label>
+                        <textarea class="form-control" id="commentContent" rows="3" required></textarea>
+                    </div>
+                </form>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">{{ _('Cancel') }}</button>
+                <button type="button" class="btn btn-primary" onclick="submitComment()">{{ _('Add Comment') }}</button>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block css %}
+<style>
+.kanban-container {
+    overflow-x: auto;
+    padding: 1rem 0;
+}
+
+.kanban-board {
+    display: flex;
+    gap: 1rem;
+    min-width: max-content;
+    padding: 0 1rem;
+}
+
+.kanban-column {
+    min-width: 320px;
+    max-width: 320px;
+    background: #f8f9fa;
+    border-radius: 0.5rem;
+    border: 1px solid #dee2e6;
+}
+
+.kanban-column-header {
+    padding: 1rem;
+    background: white;
+    border-bottom: 1px solid #dee2e6;
+    border-radius: 0.5rem 0.5rem 0 0;
+}
+
+.kanban-column-header h5 {
+    color: var(--filterdyn-dark-teal);
+    font-weight: 600;
+}
+
+.kanban-cards {
+    padding: 1rem;
+    min-height: 200px;
+    max-height: calc(100vh - 300px);
+    overflow-y: auto;
+}
+
+.kanban-card {
+    background: white;
+    border: 1px solid #dee2e6;
+    border-radius: 0.375rem;
+    margin-bottom: 0.75rem;
+    cursor: grab;
+    transition: all 0.2s ease;
+    box-shadow: 0 0.125rem 0.25rem rgba(0, 0, 0, 0.075);
+}
+
+.kanban-card:hover {
+    box-shadow: 0 0.5rem 1rem rgba(0, 0, 0, 0.15);
+    transform: translateY(-2px);
+}
+
+.kanban-card.dragging {
+    opacity: 0.5;
+    cursor: grabbing;
+    transform: rotate(5deg);
+}
+
+.kanban-card.overdue {
+    border-left: 4px solid var(--filterdyn-danger);
+}
+
+.kanban-card .card-header {
+    background: transparent;
+    border-bottom: 1px solid #f8f9fa;
+}
+
+.task-meta {
+    font-size: 0.8rem;
+}
+
+/* Priority badges with Filterdyn colors */
+.priority-low { 
+    background-color: var(--filterdyn-secondary) !important; 
+    color: white !important;
+}
+.priority-medium { 
+    background-color: var(--filterdyn-teal) !important; 
+    color: white !important;
+}
+.priority-high { 
+    background-color: var(--filterdyn-warning) !important; 
+    color: #212529 !important;
+}
+.priority-urgent { 
+    background-color: var(--filterdyn-danger) !important; 
+    color: white !important;
+}
+
+/* Status badges */
+.status-pending { background-color: var(--filterdyn-secondary) !important; }
+.status-acknowledged { background-color: var(--filterdyn-teal) !important; }
+.status-in_progress { background-color: var(--filterdyn-warning) !important; color: #212529 !important; }
+.status-review { background-color: #fd7e14 !important; }
+.status-completed { background-color: var(--filterdyn-success) !important; }
+.status-cancelled { background-color: var(--filterdyn-dark) !important; }
+
+/* Responsive design */
+@media (max-width: 768px) {
+    .kanban-board {
+        flex-direction: column;
+        gap: 0.5rem;
+    }
+    
+    .kanban-column {
+        min-width: 100%;
+        max-width: 100%;
+    }
+    
+    .kanban-cards {
+        max-height: 300px;
+    }
+}
+</style>
+{% endblock %}
+
+{% block js %}
+<script>
+let currentCardId = null;
+
+// Drag and Drop functionality
+document.addEventListener('DOMContentLoaded', function() {
+    const cards = document.querySelectorAll('.kanban-card');
+    const columns = document.querySelectorAll('.kanban-cards');
+    
+    cards.forEach(card => {
+        card.addEventListener('dragstart', handleDragStart);
+        card.addEventListener('dragend', handleDragEnd);
+    });
+    
+    columns.forEach(column => {
+        column.addEventListener('dragover', handleDragOver);
+        column.addEventListener('drop', handleDrop);
+        column.addEventListener('dragenter', handleDragEnter);
+        column.addEventListener('dragleave', handleDragLeave);
+    });
+});
+
+function handleDragStart(e) {
+    e.target.classList.add('dragging');
+    e.dataTransfer.setData('text/plain', e.target.dataset.cardId);
+}
+
+function handleDragEnd(e) {
+    e.target.classList.remove('dragging');
+}
+
+function handleDragOver(e) {
+    e.preventDefault();
+}
+
+function handleDragEnter(e) {
+    e.preventDefault();
+    e.target.closest('.kanban-cards').classList.add('drag-over');
+}
+
+function handleDragLeave(e) {
+    e.target.closest('.kanban-cards').classList.remove('drag-over');
+}
+
+function handleDrop(e) {
+    e.preventDefault();
+    const cardId = e.dataTransfer.getData('text/plain');
+    const targetColumn = e.target.closest('.kanban-cards');
+    const columnId = targetColumn.dataset.columnId;
+    
+    // Remove drag-over class
+    document.querySelectorAll('.kanban-cards').forEach(col => col.classList.remove('drag-over'));
+    
+    // Move card via AJAX
+    fetch(`/tasks/cards/${cardId}/move`, {
+        method: 'POST',
+        headers: {
+            'Content-Type': 'application/json',
+            'X-Requested-With': 'XMLHttpRequest'
+        },
+        body: JSON.stringify({
+            column_id: parseInt(columnId),
+            position: 0
+        })
+    })
+    .then(response => response.json())
+    .then(data => {
+        if (data.success) {
+            // Reload page to show updated state
+            location.reload();
+        } else {
+            alert('Error: ' + data.error);
+        }
+    })
+    .catch(error => {
+        console.error('Error:', error);
+        alert('An error occurred while moving the card');
+    });
+}
+
+// Status update functions
+function updateStatus(cardId, status) {
+    fetch(`/tasks/cards/${cardId}/status`, {
+        method: 'POST',
+        headers: {
+            'Content-Type': 'application/json',
+            'X-Requested-With': 'XMLHttpRequest'
+        },
+        body: JSON.stringify({ status: status })
+    })
+    .then(response => response.json())
+    .then(data => {
+        if (data.success) {
+            location.reload();
+        } else {
+            alert('Error: ' + data.error);
+        }
+    })
+    .catch(error => {
+        console.error('Error:', error);
+        alert('An error occurred while updating the task status');
+    });
+}
+
+// View card details
+function viewCard(cardId) {
+    currentCardId = cardId;
+    // Load card details via AJAX and show in modal
+    fetch(`/tasks/cards/${cardId}`)
+    .then(response => response.text())
+    .then(html => {
+        document.getElementById('cardModalBody').innerHTML = html;
+        new bootstrap.Modal(document.getElementById('cardModal')).show();
+    })
+    .catch(error => {
+        console.error('Error:', error);
+        alert('An error occurred while loading card details');
+    });
+}
+
+// Add comment
+function addComment(cardId) {
+    currentCardId = cardId;
+    new bootstrap.Modal(document.getElementById('commentModal')).show();
+}
+
+function submitComment() {
+    const content = document.getElementById('commentContent').value;
+    if (!content.trim()) {
+        alert('Please enter a comment');
+        return;
+    }
+    
+    fetch(`/tasks/cards/${currentCardId}/comments`, {
+        method: 'POST',
+        headers: {
+            'Content-Type': 'application/json',
+            'X-Requested-With': 'XMLHttpRequest'
+        },
+        body: JSON.stringify({ content: content })
+    })
+    .then(response => response.json())
+    .then(data => {
+        if (data.success) {
+            bootstrap.Modal.getInstance(document.getElementById('commentModal')).hide();
+            document.getElementById('commentContent').value = '';
+            location.reload();
+        } else {
+            alert('Error: ' + data.error);
+        }
+    })
+    .catch(error => {
+        console.error('Error:', error);
+        alert('An error occurred while adding the comment');
+    });
+}
+
+// Initialize tooltips
+document.addEventListener('DOMContentLoaded', function() {
+    var tooltipTriggerList = [].slice.call(document.querySelectorAll('[data-bs-toggle="tooltip"]'));
+    var tooltipList = tooltipTriggerList.map(function (tooltipTriggerEl) {
+        return new bootstrap.Tooltip(tooltipTriggerEl);
+    });
+});
+</script>
+{% endblock %} 

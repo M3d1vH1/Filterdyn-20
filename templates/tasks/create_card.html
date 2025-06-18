@@ -1,0 +1,313 @@
+{% extends "base.html" %}
+
+{% block title %}{{ _('Create Task') }} - {{ super() }}{% endblock %}
+
+{% block content %}
+<div class="row">
+    <div class="col-12">
+        <div class="d-flex justify-content-between align-items-center mb-4">
+            <h1 class="h3">
+                <i data-feather="plus-square" class="me-2"></i>
+                {{ _('Create New Task') }}
+            </h1>
+            <a href="{{ url_for('main.kanban_board', board_id=board_id) }}" class="btn btn-outline-secondary">
+                <i data-feather="arrow-left" class="me-2"></i>
+                {{ _('Back to Board') }}
+            </a>
+        </div>
+    </div>
+</div>
+
+<div class="row justify-content-center">
+    <div class="col-lg-8">
+        <div class="card">
+            <div class="card-header">
+                <h5 class="mb-0">
+                    <i data-feather="edit-3" class="me-2"></i>
+                    {{ _('Task Information') }}
+                </h5>
+            </div>
+            <div class="card-body">
+                <form method="POST" class="needs-validation" novalidate>
+                    {{ form.hidden_tag() }}
+                    
+                    <!-- Basic Information -->
+                    <div class="row mb-4">
+                        <div class="col-12">
+                            <h6 class="text-primary border-bottom pb-2 mb-3">
+                                <i data-feather="info" class="me-2"></i>
+                                {{ _('Basic Information') }}
+                            </h6>
+                        </div>
+                        
+                        <div class="col-12 mb-3">
+                            <div class="form-floating">
+                                {{ form.title(class="form-control", required=true, placeholder=_('Enter task title')) }}
+                                {{ form.title.label(class="form-label") }}
+                                <div class="invalid-feedback">
+                                    {{ _('Please provide a task title.') }}
+                                </div>
+                            </div>
+                            {% if form.title.errors %}
+                            <div class="text-danger small mt-1">
+                                {% for error in form.title.errors %}
+                                <div>{{ error }}</div>
+                                {% endfor %}
+                            </div>
+                            {% endif %}
+                        </div>
+                        
+                        <div class="col-12 mb-3">
+                            <div class="form-floating">
+                                {{ form.description(class="form-control", style="height: 120px", placeholder=_('Enter task description')) }}
+                                {{ form.description.label(class="form-label") }}
+                            </div>
+                            {% if form.description.errors %}
+                            <div class="text-danger small mt-1">
+                                {% for error in form.description.errors %}
+                                <div>{{ error }}</div>
+                                {% endfor %}
+                            </div>
+                            {% endif %}
+                        </div>
+                    </div>
+                    
+                    <!-- Classification & Priority -->
+                    <div class="row mb-4">
+                        <div class="col-12">
+                            <h6 class="text-primary border-bottom pb-2 mb-3">
+                                <i data-feather="tag" class="me-2"></i>
+                                {{ _('Classification & Priority') }}
+                            </h6>
+                        </div>
+                        
+                        <div class="col-md-6 mb-3">
+                            <div class="form-floating">
+                                {{ form.priority(class="form-select", required=true) }}
+                                {{ form.priority.label(class="form-label") }}
+                                <div class="invalid-feedback">
+                                    {{ _('Please select a priority.') }}
+                                </div>
+                            </div>
+                            {% if form.priority.errors %}
+                            <div class="text-danger small mt-1">
+                                {% for error in form.priority.errors %}
+                                <div>{{ error }}</div>
+                                {% endfor %}
+                            </div>
+                            {% endif %}
+                        </div>
+                        
+                        <div class="col-md-6 mb-3">
+                            <div class="form-floating">
+                                {{ form.category(class="form-select") }}
+                                {{ form.category.label(class="form-label") }}
+                            </div>
+                            {% if form.category.errors %}
+                            <div class="text-danger small mt-1">
+                                {% for error in form.category.errors %}
+                                <div>{{ error }}</div>
+                                {% endfor %}
+                            </div>
+                            {% endif %}
+                        </div>
+                        
+                        <div class="col-md-6 mb-3">
+                            <div class="form-floating">
+                                {{ form.assigned_to(class="form-select", required=true) }}
+                                {{ form.assigned_to.label(class="form-label") }}
+                                <div class="invalid-feedback">
+                                    {{ _('Please assign the task to someone.') }}
+                                </div>
+                            </div>
+                            {% if form.assigned_to.errors %}
+                            <div class="text-danger small mt-1">
+                                {% for error in form.assigned_to.errors %}
+                                <div>{{ error }}</div>
+                                {% endfor %}
+                            </div>
+                            {% endif %}
+                        </div>
+                        
+                        <div class="col-md-6 mb-3">
+                            <div class="form-floating">
+                                {{ form.due_date(class="form-control", type="datetime-local") }}
+                                {{ form.due_date.label(class="form-label") }}
+                            </div>
+                            {% if form.due_date.errors %}
+                            <div class="text-danger small mt-1">
+                                {% for error in form.due_date.errors %}
+                                <div>{{ error }}</div>
+                                {% endfor %}
+                            </div>
+                            {% endif %}
+                        </div>
+                    </div>
+                    
+                    <!-- Time & Estimation -->
+                    <div class="row mb-4">
+                        <div class="col-12">
+                            <h6 class="text-primary border-bottom pb-2 mb-3">
+                                <i data-feather="clock" class="me-2"></i>
+                                {{ _('Time & Estimation') }}
+                            </h6>
+                        </div>
+                        
+                        <div class="col-md-6 mb-3">
+                            <div class="form-floating">
+                                {{ form.time_estimate(class="form-control", type="number", min="0", placeholder="0") }}
+                                {{ form.time_estimate.label(class="form-label") }}
+                                <div class="form-text">{{ _('Estimated hours to complete') }}</div>
+                            </div>
+                            {% if form.time_estimate.errors %}
+                            <div class="text-danger small mt-1">
+                                {% for error in form.time_estimate.errors %}
+                                <div>{{ error }}</div>
+                                {% endfor %}
+                            </div>
+                            {% endif %}
+                        </div>
+                        
+                        <div class="col-md-6 mb-3">
+                            <div class="form-floating">
+                                {{ form.story_points(class="form-control", type="number", min="0", max="21", placeholder="0") }}
+                                {{ form.story_points.label(class="form-label") }}
+                                <div class="form-text">{{ _('Story points (0-21)') }}</div>
+                            </div>
+                            {% if form.story_points.errors %}
+                            <div class="text-danger small mt-1">
+                                {% for error in form.story_points.errors %}
+                                <div>{{ error }}</div>
+                                {% endfor %}
+                            </div>
+                            {% endif %}
+                        </div>
+                    </div>
+                    
+                    <!-- Labels & Tags -->
+                    <div class="row mb-4">
+                        <div class="col-12">
+                            <h6 class="text-primary border-bottom pb-2 mb-3">
+                                <i data-feather="tag" class="me-2"></i>
+                                {{ _('Labels & Tags') }}
+                            </h6>
+                        </div>
+                        
+                        <div class="col-md-6 mb-3">
+                            <div class="form-floating">
+                                {{ form.labels(class="form-control", placeholder=_('bug, urgent, frontend')) }}
+                                {{ form.labels.label(class="form-label") }}
+                                <div class="form-text">{{ _('Comma-separated labels') }}</div>
+                            </div>
+                            {% if form.labels.errors %}
+                            <div class="text-danger small mt-1">
+                                {% for error in form.labels.errors %}
+                                <div>{{ error }}</div>
+                                {% endfor %}
+                            </div>
+                            {% endif %}
+                        </div>
+                        
+                        <div class="col-md-6 mb-3">
+                            <div class="form-floating">
+                                {{ form.tags(class="form-control", placeholder=_('v1.2, sprint-3')) }}
+                                {{ form.tags.label(class="form-label") }}
+                                <div class="form-text">{{ _('Comma-separated tags') }}</div>
+                            </div>
+                            {% if form.tags.errors %}
+                            <div class="text-danger small mt-1">
+                                {% for error in form.tags.errors %}
+                                <div>{{ error }}</div>
+                                {% endfor %}
+                            </div>
+                            {% endif %}
+                        </div>
+                    </div>
+                    
+                    <!-- Related Information -->
+                    <div class="row mb-4">
+                        <div class="col-12">
+                            <h6 class="text-primary border-bottom pb-2 mb-3">
+                                <i data-feather="link" class="me-2"></i>
+                                {{ _('Related Information') }}
+                            </h6>
+                        </div>
+                        
+                        <div class="col-12 mb-3">
+                            <div class="form-floating">
+                                {{ form.customer_id(class="form-select") }}
+                                {{ form.customer_id.label(class="form-label") }}
+                            </div>
+                            <div class="form-text">
+                                {{ _('Optional: Link this task to a specific customer') }}
+                            </div>
+                            {% if form.customer_id.errors %}
+                            <div class="text-danger small mt-1">
+                                {% for error in form.customer_id.errors %}
+                                <div>{{ error }}</div>
+                                {% endfor %}
+                            </div>
+                            {% endif %}
+                        </div>
+                    </div>
+                    
+                    <!-- Actions -->
+                    <div class="row">
+                        <div class="col-12">
+                            <div class="d-flex justify-content-end gap-2">
+                                <a href="{{ url_for('main.kanban_board', board_id=board_id) }}" class="btn btn-outline-secondary">
+                                    <i data-feather="x" class="me-2"></i>
+                                    {{ _('Cancel') }}
+                                </a>
+                                <button type="submit" class="btn btn-primary">
+                                    <i data-feather="save" class="me-2"></i>
+                                    {{ _('Create Task') }}
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+                </form>
+                
+                <div class="mt-4">
+                    <div class="alert alert-info">
+                        <i data-feather="info" class="me-2"></i>
+                        {{ _('Tasks help you track work items, follow-ups, and project activities. Assign them to team members and set due dates for better organization.') }}
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block js %}
+<script>
+// Form validation
+(function() {
+    'use strict';
+    window.addEventListener('load', function() {
+        var forms = document.getElementsByClassName('needs-validation');
+        var validation = Array.prototype.filter.call(forms, function(form) {
+            form.addEventListener('submit', function(event) {
+                if (form.checkValidity() === false) {
+                    event.preventDefault();
+                    event.stopPropagation();
+                }
+                form.classList.add('was-validated');
+            }, false);
+        });
+    }, false);
+})();
+
+// Auto-resize textarea
+document.addEventListener('DOMContentLoaded', function() {
+    const textareas = document.querySelectorAll('textarea[data-auto-resize="true"]');
+    textareas.forEach(textarea => {
+        textarea.addEventListener('input', function() {
+            this.style.height = 'auto';
+            this.style.height = this.scrollHeight + 'px';
+        });
+    });
+});
+</script>
+{% endblock %} 
