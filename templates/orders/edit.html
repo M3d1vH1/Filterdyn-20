@@ -98,9 +98,9 @@
                     <div class="d-flex justify-content-between">
                         <div>
                             <small class="text-muted">
-                                {{ _('Order created on') }}: {{ order.created_at.strftime('%d/%m/%Y %H:%M') if order.created_at else '-' }}
+                                {{ _('Order created on') }}: {{ safe_datetime_format(order.created_at, '%d/%m/%Y %H:%M') or '-' }}
                                 <br>
-                                {{ _('Last updated') }}: {{ order.updated_at.strftime('%d/%m/%Y %H:%M') if order.updated_at else (order.created_at.strftime('%d/%m/%Y %H:%M') if order.created_at else '-') }}
+                                {{ _('Last updated') }}: {{ safe_datetime_format(order.updated_at, '%d/%m/%Y %H:%M') or safe_datetime_format(order.created_at, '%d/%m/%Y %H:%M') or '-' }}
                             </small>
                         </div>
                         <div>

@@ -211,7 +211,7 @@
             {{ _('Quote') }} {{ quote.quote_number }}
         </div>
         <div style="margin-top: 5px; font-size: 12px;">
-            {{ _('Date') }}: {{ quote.created_at.strftime('%d/%m/%Y') if quote.created_at else '-' }}
+            {{ _('Date') }}: {{ safe_date_format(quote.created_at, '%d/%m/%Y') or '-' }}
         </div>
     </div>
     

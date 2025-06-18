@@ -52,14 +52,37 @@ def format_date(date, format='medium'):
     from babel.dates import format_datetime
     locale = get_locale()
     
-    if format == 'short':
-        return format_datetime(date, 'short', locale=locale)
-    elif format == 'medium':
-        return format_datetime(date, 'medium', locale=locale)
-    elif format == 'long':
-        return format_datetime(date, 'long', locale=locale)
-    else:
-        return format_datetime(date, format, locale=locale)
+    try:
+        if format == 'short':
+            return format_datetime(date, 'short', locale=locale)
+        elif format == 'medium':
+            return format_datetime(date, 'medium', locale=locale)
+        elif format == 'long':
+            return format_datetime(date, 'long', locale=locale)
+        else:
+            return format_datetime(date, format, locale=locale)
+    except (ValueError, TypeError):
+        return ''
+
+def safe_datetime_format(dt, format_str='%Y-%m-%d %H:%M'):
+    """Safely format datetime, returning empty string if None or invalid"""
+    if dt is None:
+        return ''
+    try:
+        return dt.strftime(format_str)
+    except (AttributeError, ValueError):
+        return ''
+
+def safe_date_format(dt, format_str='%Y-%m-%d'):
+    """Safely format date, returning empty string if None or invalid"""
+    if dt is None:
+        return ''
+    try:
+        if hasattr(dt, 'date'):
+            return dt.date().strftime(format_str)
+        return dt.strftime(format_str)
+    except (AttributeError, ValueError):
+        return ''
 
 def get_status_badge_class(status):
     """Get Bootstrap badge class for status"""
