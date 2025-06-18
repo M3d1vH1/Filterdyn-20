@@ -42,7 +42,6 @@ def create_app():
     # Initialize extensions
     db.init_app(app)
     login_manager.init_app(app)
-    babel.init_app(app)
     migrate.init_app(app, db)
     
     # Login manager configuration
@@ -56,7 +55,21 @@ def create_app():
         return User.query.get(int(user_id))
     
     # Babel locale selector
-    @babel.localeselector
+    def get_locale():
+        # 1. Check if language is set in session
+        if 'language' in session:
+            return session['language']
+        # 2. Check if language is in URL parameters
+        if request.args.get('lang'):
+            session['language'] = request.args.get('lang')
+            return session['language']
+        # 3. Use browser's preferred language
+        return request.accept_languages.best_match(app.config['LANGUAGES'].keys()) or 'en'
+    
+    babel.init_app(app, locale_selector=get_locale)
+    
+    # Add template globals
+    @app.template_global()
     def get_locale():
         # 1. Check if language is set in session
         if 'language' in session:
