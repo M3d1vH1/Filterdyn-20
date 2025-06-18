@@ -31,7 +31,12 @@ def get_coordinator():
             'db_path': os.getenv('DATABASE_URL', 'instance/test.db'),
             'gmail_credentials_path': 'credentials.json',
             'gmail_token_path': 'token.json',
-            'openai_api_key': os.getenv('OPENAI_API_KEY'),
+            'gemini_api_key': os.getenv('GEMINI_API_KEY'),
+            'gemini_model': os.getenv('GEMINI_MODEL', 'gemini-1.5-flash'),
+            'gemini_max_tokens': int(os.getenv('GEMINI_MAX_TOKENS', '1000')),
+            'gemini_temperature': float(os.getenv('GEMINI_TEMPERATURE', '0.7')),
+            'gemini_top_p': float(os.getenv('GEMINI_TOP_P', '0.8')),
+            'gemini_top_k': int(os.getenv('GEMINI_TOP_K', '40')),
             'default_from_email': 'noreply@filterdyn.com'
         }
         coordinator = AgentCoordinator(config)
