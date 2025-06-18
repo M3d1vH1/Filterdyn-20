@@ -1,0 +1,554 @@
+{% extends "base.html" %}
+
+{% block title %}{{ _('Settings') }} - {{ super() }}{% endblock %}
+
+{% block content %}
+<div class="row">
+    <div class="col-12">
+        <div class="d-flex justify-content-between align-items-center mb-4">
+            <h1 class="h3">
+                <i data-feather="settings" class="me-2"></i>
+                {{ _('Application Settings') }}
+            </h1>
+        </div>
+    </div>
+</div>
+
+<!-- Settings Navigation -->
+<div class="row mb-4">
+    <div class="col-12">
+        <div class="card">
+            <div class="card-body">
+                <nav>
+                    <div class="nav nav-pills" id="nav-tab" role="tablist">
+                        <button class="nav-link active" id="nav-company-tab" data-bs-toggle="tab" data-bs-target="#nav-company" type="button" role="tab">
+                            <i data-feather="briefcase" class="me-2"></i>
+                            {{ _('Company') }}
+                        </button>
+                        <button class="nav-link" id="nav-branding-tab" data-bs-toggle="tab" data-bs-target="#nav-branding" type="button" role="tab">
+                            <i data-feather="palette" class="me-2"></i>
+                            {{ _('Branding') }}
+                        </button>
+                        <button class="nav-link" id="nav-defaults-tab" data-bs-toggle="tab" data-bs-target="#nav-defaults" type="button" role="tab">
+                            <i data-feather="sliders" class="me-2"></i>
+                            {{ _('Defaults') }}
+                        </button>
+                        <button class="nav-link" id="nav-categories-tab" data-bs-toggle="tab" data-bs-target="#nav-categories" type="button" role="tab">
+                            <i data-feather="tag" class="me-2"></i>
+                            {{ _('Categories') }}
+                        </button>
+                        {% if current_user.role == 'superadmin' %}
+                        <button class="nav-link" id="nav-system-tab" data-bs-toggle="tab" data-bs-target="#nav-system" type="button" role="tab">
+                            <i data-feather="server" class="me-2"></i>
+                            {{ _('System') }}
+                        </button>
+                        {% endif %}
+                    </div>
+                </nav>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Settings Content -->
+<div class="row">
+    <div class="col-12">
+        <div class="tab-content" id="nav-tabContent">
+            <!-- Company Settings -->
+            <div class="tab-pane fade show active" id="nav-company" role="tabpanel">
+                <div class="card">
+                    <div class="card-header">
+                        <h5 class="mb-0">
+                            <i data-feather="briefcase" class="me-2"></i>
+                            {{ _('Company Information') }}
+                        </h5>
+                    </div>
+                    <div class="card-body">
+                        <form method="POST" action="{{ url_for('main.settings') }}">
+                            <input type="hidden" name="section" value="company">
+                            
+                            <div class="row mb-3">
+                                <div class="col-md-6">
+                                    <div class="form-floating">
+                                        <input type="text" class="form-control" id="company_name" name="company_name" 
+                                               value="{{ current_user.tenant.name }}" required>
+                                        <label for="company_name">{{ _('Company Name') }}</label>
+                                    </div>
+                                </div>
+                                <div class="col-md-6">
+                                    <div class="form-floating">
+                                        <input type="email" class="form-control" id="company_email" name="company_email" 
+                                               value="{{ current_user.tenant.company_email or '' }}">
+                                        <label for="company_email">{{ _('Company Email') }}</label>
+                                    </div>
+                                </div>
+                            </div>
+                            
+                            <div class="row mb-3">
+                                <div class="col-md-6">
+                                    <div class="form-floating">
+                                        <input type="tel" class="form-control" id="company_phone" name="company_phone" 
+                                               value="{{ current_user.tenant.company_phone or '' }}">
+                                        <label for="company_phone">{{ _('Company Phone') }}</label>
+                                    </div>
+                                </div>
+                                <div class="col-md-6">
+                                    <div class="form-floating">
+                                        <input type="url" class="form-control" id="logo_url" name="logo_url" 
+                                               value="{{ current_user.tenant.logo_url or '' }}">
+                                        <label for="logo_url">{{ _('Logo URL') }}</label>
+                                    </div>
+                                </div>
+                            </div>
+                            
+                            <div class="mb-3">
+                                <div class="form-floating">
+                                    <textarea class="form-control" id="company_address" name="company_address" 
+                                              style="height: 120px">{{ current_user.tenant.company_address or '' }}</textarea>
+                                    <label for="company_address">{{ _('Company Address') }}</label>
+                                </div>
+                            </div>
+                            
+                            <div class="d-flex justify-content-end">
+                                <button type="submit" class="btn btn-primary">
+                                    <i data-feather="save" class="me-2"></i>
+                                    {{ _('Save Changes') }}
+                                </button>
+                            </div>
+                        </form>
+                    </div>
+                </div>
+            </div>
+            
+            <!-- Branding Settings -->
+            <div class="tab-pane fade" id="nav-branding" role="tabpanel">
+                <div class="card">
+                    <div class="card-header">
+                        <h5 class="mb-0">
+                            <i data-feather="palette" class="me-2"></i>
+                            {{ _('Branding & Appearance') }}
+                        </h5>
+                    </div>
+                    <div class="card-body">
+                        <form method="POST" action="{{ url_for('main.settings') }}">
+                            <input type="hidden" name="section" value="branding">
+                            
+                            <div class="row mb-4">
+                                <div class="col-md-6">
+                                    <label for="primary_color" class="form-label">{{ _('Primary Color') }}</label>
+                                    <div class="input-group">
+                                        <input type="color" class="form-control form-control-color" id="primary_color" 
+                                               name="primary_color" value="{{ current_user.tenant.primary_color or '#1ba3a3' }}">
+                                        <input type="text" class="form-control" value="{{ current_user.tenant.primary_color or '#1ba3a3' }}" 
+                                               readonly id="primary_color_text">
+                                    </div>
+                                </div>
+                                <div class="col-md-6">
+                                    <label for="secondary_color" class="form-label">{{ _('Secondary Color') }}</label>
+                                    <div class="input-group">
+                                        <input type="color" class="form-control form-control-color" id="secondary_color" 
+                                               name="secondary_color" value="{{ current_user.tenant.secondary_color or '#ffffff' }}">
+                                        <input type="text" class="form-control" value="{{ current_user.tenant.secondary_color or '#ffffff' }}" 
+                                               readonly id="secondary_color_text">
+                                    </div>
+                                </div>
+                            </div>
+                            
+                            <div class="mb-4">
+                                <h6>{{ _('Color Preview') }}</h6>
+                                <div class="row">
+                                    <div class="col-md-6">
+                                        <div class="p-3 rounded" id="color-preview" style="background: var(--filterdyn-teal); color: white;">
+                                            <h6>{{ _('Sample Header') }}</h6>
+                                            <p class="mb-0">{{ _('This is how your primary color will appear in the interface.') }}</p>
+                                        </div>
+                                    </div>
+                                    <div class="col-md-6">
+                                        <div class="btn-group" role="group">
+                                            <button type="button" class="btn btn-primary" id="btn-preview">{{ _('Primary Button') }}</button>
+                                            <button type="button" class="btn btn-outline-primary">{{ _('Secondary Button') }}</button>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                            
+                            <div class="d-flex justify-content-end">
+                                <button type="submit" class="btn btn-primary">
+                                    <i data-feather="save" class="me-2"></i>
+                                    {{ _('Save Changes') }}
+                                </button>
+                            </div>
+                        </form>
+                    </div>
+                </div>
+            </div>
+            
+            <!-- Default Settings -->
+            <div class="tab-pane fade" id="nav-defaults" role="tabpanel">
+                <div class="card">
+                    <div class="card-header">
+                        <h5 class="mb-0">
+                            <i data-feather="sliders" class="me-2"></i>
+                            {{ _('Default Values') }}
+                        </h5>
+                    </div>
+                    <div class="card-body">
+                        <form method="POST" action="{{ url_for('main.settings') }}">
+                            <input type="hidden" name="section" value="defaults">
+                            
+                            <div class="row mb-3">
+                                <div class="col-md-4">
+                                    <div class="form-floating">
+                                        <input type="number" class="form-control" id="default_validity_days" 
+                                               name="default_validity_days" value="30" min="1" max="365">
+                                        <label for="default_validity_days">{{ _('Quote Validity (Days)') }}</label>
+                                    </div>
+                                </div>
+                                <div class="col-md-4">
+                                    <div class="form-floating">
+                                        <input type="number" class="form-control" id="default_delivery_days" 
+                                               name="default_delivery_days" value="15" min="1" max="365">
+                                        <label for="default_delivery_days">{{ _('Delivery Time (Days)') }}</label>
+                                    </div>
+                                </div>
+                                <div class="col-md-4">
+                                    <div class="form-floating">
+                                        <input type="number" class="form-control" id="default_tax_rate" 
+                                               name="default_tax_rate" value="24" min="0" max="100" step="0.01">
+                                        <label for="default_tax_rate">{{ _('Tax Rate (%)') }}</label>
+                                    </div>
+                                </div>
+                            </div>
+                            
+                            <div class="mb-3">
+                                <div class="form-floating">
+                                    <input type="text" class="form-control" id="default_payment_terms" 
+                                           name="default_payment_terms" value="30 days">
+                                    <label for="default_payment_terms">{{ _('Payment Terms') }}</label>
+                                </div>
+                            </div>
+                            
+                            <div class="row mb-3">
+                                <div class="col-md-6">
+                                    <div class="form-floating">
+                                        <select class="form-select" id="default_language" name="default_language">
+                                            <option value="en">English</option>
+                                            <option value="el">Ελληνικά</option>
+                                        </select>
+                                        <label for="default_language">{{ _('Default Language') }}</label>
+                                    </div>
+                                </div>
+                                <div class="col-md-6">
+                                    <div class="form-floating">
+                                        <select class="form-select" id="default_currency" name="default_currency">
+                                            <option value="EUR">Euro (€)</option>
+                                            <option value="USD">US Dollar ($)</option>
+                                            <option value="GBP">British Pound (£)</option>
+                                        </select>
+                                        <label for="default_currency">{{ _('Default Currency') }}</label>
+                                    </div>
+                                </div>
+                            </div>
+                            
+                            <div class="d-flex justify-content-end">
+                                <button type="submit" class="btn btn-primary">
+                                    <i data-feather="save" class="me-2"></i>
+                                    {{ _('Save Changes') }}
+                                </button>
+                            </div>
+                        </form>
+                    </div>
+                </div>
+            </div>
+            
+            <!-- Product Categories -->
+            <div class="tab-pane fade" id="nav-categories" role="tabpanel">
+                <div class="card">
+                    <div class="card-header d-flex justify-content-between align-items-center">
+                        <h5 class="mb-0">
+                            <i data-feather="tag" class="me-2"></i>
+                            {{ _('Product Categories') }}
+                        </h5>
+                        <button type="button" class="btn btn-sm btn-primary" data-bs-toggle="modal" data-bs-target="#addCategoryModal">
+                            <i data-feather="plus" class="me-2"></i>
+                            {{ _('Add Category') }}
+                        </button>
+                    </div>
+                    <div class="card-body">
+                        <div class="table-responsive">
+                            <table class="table table-hover">
+                                <thead>
+                                    <tr>
+                                        <th>{{ _('Name (English)') }}</th>
+                                        <th>{{ _('Name (Greek)') }}</th>
+                                        <th>{{ _('Status') }}</th>
+                                        <th width="100">{{ _('Actions') }}</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    <tr>
+                                        <td>Deionization Columns</td>
+                                        <td>Στήλες Απιονισμού</td>
+                                        <td><span class="badge bg-success">{{ _('Active') }}</span></td>
+                                        <td>
+                                            <div class="btn-group" role="group">
+                                                <button type="button" class="btn btn-sm btn-outline-primary">
+                                                    <i data-feather="edit-2"></i>
+                                                </button>
+                                                <button type="button" class="btn btn-sm btn-outline-danger">
+                                                    <i data-feather="trash-2"></i>
+                                                </button>
+                                            </div>
+                                        </td>
+                                    </tr>
+                                    <tr>
+                                        <td>Reverse Osmosis Systems</td>
+                                        <td>Συστήματα Αντίστροφης Όσμωσης</td>
+                                        <td><span class="badge bg-success">{{ _('Active') }}</span></td>
+                                        <td>
+                                            <div class="btn-group" role="group">
+                                                <button type="button" class="btn btn-sm btn-outline-primary">
+                                                    <i data-feather="edit-2"></i>
+                                                </button>
+                                                <button type="button" class="btn btn-sm btn-outline-danger">
+                                                    <i data-feather="trash-2"></i>
+                                                </button>
+                                            </div>
+                                        </td>
+                                    </tr>
+                                    <tr>
+                                        <td>Descaling Equipment</td>
+                                        <td>Εξοπλισμός Αφαλάτωσης</td>
+                                        <td><span class="badge bg-success">{{ _('Active') }}</span></td>
+                                        <td>
+                                            <div class="btn-group" role="group">
+                                                <button type="button" class="btn btn-sm btn-outline-primary">
+                                                    <i data-feather="edit-2"></i>
+                                                </button>
+                                                <button type="button" class="btn btn-sm btn-outline-danger">
+                                                    <i data-feather="trash-2"></i>
+                                                </button>
+                                            </div>
+                                        </td>
+                                    </tr>
+                                    <tr>
+                                        <td>Pressure Vessels</td>
+                                        <td>Δοχεία Πίεσης</td>
+                                        <td><span class="badge bg-success">{{ _('Active') }}</span></td>
+                                        <td>
+                                            <div class="btn-group" role="group">
+                                                <button type="button" class="btn btn-sm btn-outline-primary">
+                                                    <i data-feather="edit-2"></i>
+                                                </button>
+                                                <button type="button" class="btn btn-sm btn-outline-danger">
+                                                    <i data-feather="trash-2"></i>
+                                                </button>
+                                            </div>
+                                        </td>
+                                    </tr>
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            
+            <!-- System Settings (Superadmin only) -->
+            {% if current_user.role == 'superadmin' %}
+            <div class="tab-pane fade" id="nav-system" role="tabpanel">
+                <div class="card">
+                    <div class="card-header">
+                        <h5 class="mb-0">
+                            <i data-feather="server" class="me-2"></i>
+                            {{ _('System Settings') }}
+                        </h5>
+                    </div>
+                    <div class="card-body">
+                        <div class="row">
+                            <div class="col-md-6">
+                                <h6>{{ _('Application Information') }}</h6>
+                                <table class="table table-sm">
+                                    <tr>
+                                        <td><strong>{{ _('Version') }}:</strong></td>
+                                        <td>1.0.0</td>
+                                    </tr>
+                                    <tr>
+                                        <td><strong>{{ _('Environment') }}:</strong></td>
+                                        <td><span class="badge bg-info">{{ _('Production') }}</span></td>
+                                    </tr>
+                                    <tr>
+                                        <td><strong>{{ _('Database') }}:</strong></td>
+                                        <td>PostgreSQL</td>
+                                    </tr>
+                                    <tr>
+                                        <td><strong>{{ _('Active Tenants') }}:</strong></td>
+                                        <td>1</td>
+                                    </tr>
+                                </table>
+                            </div>
+                            <div class="col-md-6">
+                                <h6>{{ _('System Actions') }}</h6>
+                                <div class="d-grid gap-2">
+                                    <button type="button" class="btn btn-outline-info">
+                                        <i data-feather="download" class="me-2"></i>
+                                        {{ _('Export Data') }}
+                                    </button>
+                                    <button type="button" class="btn btn-outline-warning">
+                                        <i data-feather="refresh-cw" class="me-2"></i>
+                                        {{ _('Clear Cache') }}
+                                    </button>
+                                    <button type="button" class="btn btn-outline-secondary">
+                                        <i data-feather="file-text" class="me-2"></i>
+                                        {{ _('View Logs') }}
+                                    </button>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                
+                <!-- Maintenance Mode -->
+                <div class="card mt-4 border-warning">
+                    <div class="card-header bg-warning">
+                        <h5 class="mb-0">
+                            <i data-feather="tool" class="me-2"></i>
+                            {{ _('Maintenance Mode') }}
+                        </h5>
+                    </div>
+                    <div class="card-body">
+                        <div class="row align-items-center">
+                            <div class="col-md-8">
+                                <p class="mb-0">{{ _('Enable maintenance mode to perform system updates. This will prevent all users except superadmins from accessing the application.') }}</p>
+                            </div>
+                            <div class="col-md-4 text-end">
+                                <div class="form-check form-switch">
+                                    <input class="form-check-input" type="checkbox" id="maintenance_mode">
+                                    <label class="form-check-label" for="maintenance_mode">
+                                        {{ _('Maintenance Mode') }}
+                                    </label>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            {% endif %}
+        </div>
+    </div>
+</div>
+
+<!-- Add Category Modal -->
+<div class="modal fade" id="addCategoryModal" tabindex="-1" aria-hidden="true">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title">{{ _('Add Product Category') }}</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+            </div>
+            <div class="modal-body">
+                <form id="addCategoryForm">
+                    <div class="mb-3">
+                        <div class="form-floating">
+                            <input type="text" class="form-control" id="category_name_en" required>
+                            <label for="category_name_en">{{ _('Name (English)') }}</label>
+                        </div>
+                    </div>
+                    <div class="mb-3">
+                        <div class="form-floating">
+                            <input type="text" class="form-control" id="category_name_el" required>
+                            <label for="category_name_el">{{ _('Name (Greek)') }}</label>
+                        </div>
+                    </div>
+                    <div class="mb-3">
+                        <div class="form-floating">
+                            <textarea class="form-control" id="category_description_en" style="height: 80px"></textarea>
+                            <label for="category_description_en">{{ _('Description (English)') }}</label>
+                        </div>
+                    </div>
+                    <div class="mb-3">
+                        <div class="form-floating">
+                            <textarea class="form-control" id="category_description_el" style="height: 80px"></textarea>
+                            <label for="category_description_el">{{ _('Description (Greek)') }}</label>
+                        </div>
+                    </div>
+                </form>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">{{ _('Cancel') }}</button>
+                <button type="button" class="btn btn-primary" onclick="addCategory()">{{ _('Add Category') }}</button>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block js %}
+<script>
+// Color picker updates
+document.getElementById('primary_color').addEventListener('change', function() {
+    document.getElementById('primary_color_text').value = this.value;
+    updateColorPreview();
+});
+
+document.getElementById('secondary_color').addEventListener('change', function() {
+    document.getElementById('secondary_color_text').value = this.value;
+    updateColorPreview();
+});
+
+function updateColorPreview() {
+    var primaryColor = document.getElementById('primary_color').value;
+    var secondaryColor = document.getElementById('secondary_color').value;
+    
+    document.getElementById('color-preview').style.backgroundColor = primaryColor;
+    document.getElementById('btn-preview').style.backgroundColor = primaryColor;
+    document.getElementById('btn-preview').style.borderColor = primaryColor;
+    
+    // Update CSS custom properties
+    document.documentElement.style.setProperty('--filterdyn-teal', primaryColor);
+}
+
+function addCategory() {
+    var form = document.getElementById('addCategoryForm');
+    var formData = new FormData(form);
+    
+    // Here you would normally send the data to the server
+    // For now, just close the modal and show a success message
+    var modal = bootstrap.Modal.getInstance(document.getElementById('addCategoryModal'));
+    modal.hide();
+    
+    // Show success alert
+    var alertDiv = document.createElement('div');
+    alertDiv.className = 'alert alert-success alert-dismissible fade show';
+    alertDiv.innerHTML = `
+        {{ _('Category added successfully') }}
+        <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+    `;
+    
+    document.querySelector('.container-fluid').insertBefore(alertDiv, document.querySelector('.row'));
+    
+    // Reset form
+    form.reset();
+}
+
+// Tab persistence
+document.addEventListener('DOMContentLoaded', function() {
+    // Get the hash from URL and activate corresponding tab
+    var hash = window.location.hash;
+    if (hash) {
+        var tabElement = document.querySelector('button[data-bs-target="' + hash + '"]');
+        if (tabElement) {
+            var tab = new bootstrap.Tab(tabElement);
+            tab.show();
+        }
+    }
+    
+    // Update URL hash when tab changes
+    var tabButtons = document.querySelectorAll('button[data-bs-toggle="tab"]');
+    tabButtons.forEach(function(button) {
+        button.addEventListener('shown.bs.tab', function(e) {
+            window.location.hash = e.target.getAttribute('data-bs-target');
+        });
+    });
+});
+</script>
+{% endblock %}

@@ -1,0 +1,269 @@
+{% extends "base.html" %}
+
+{% block title %}
+{% if product %}{{ _('Edit Product') }}{% else %}{{ _('Add Product') }}{% endif %} - {{ super() }}
+{% endblock %}
+
+{% block content %}
+<div class="row">
+    <div class="col-12">
+        <div class="d-flex justify-content-between align-items-center mb-4">
+            <h1 class="h3">
+                <i data-feather="{% if product %}edit-2{% else %}package{% endif %}" class="me-2"></i>
+                {% if product %}{{ _('Edit Product') }}{% else %}{{ _('Add Product') }}{% endif %}
+            </h1>
+            <a href="{{ url_for('main.products') }}" class="btn btn-outline-secondary">
+                <i data-feather="arrow-left" class="me-2"></i>
+                {{ _('Back to Products') }}
+            </a>
+        </div>
+    </div>
+</div>
+
+<div class="row justify-content-center">
+    <div class="col-lg-8">
+        <div class="card">
+            <div class="card-header">
+                <h5 class="mb-0">{{ _('Product Information') }}</h5>
+            </div>
+            <div class="card-body">
+                <form method="POST" class="needs-validation" novalidate>
+                    {{ form.hidden_tag() }}
+                    
+                    <!-- Basic Information -->
+                    <div class="row mb-4">
+                        <div class="col-12">
+                            <h6 class="text-primary border-bottom pb-2 mb-3">
+                                <i data-feather="info" class="me-2"></i>
+                                {{ _('Basic Information') }}
+                            </h6>
+                        </div>
+                        
+                        <div class="col-md-6 mb-3">
+                            <div class="form-floating">
+                                {{ form.category_id(class="form-select", required=true) }}
+                                {{ form.category_id.label(class="form-label") }}
+                                <div class="invalid-feedback">
+                                    {{ _('Please select a category.') }}
+                                </div>
+                            </div>
+                            {% if form.category_id.errors %}
+                            <div class="text-danger small mt-1">
+                                {% for error in form.category_id.errors %}
+                                <div>{{ error }}</div>
+                                {% endfor %}
+                            </div>
+                            {% endif %}
+                        </div>
+                        
+                        <div class="col-md-6 mb-3">
+                            <div class="form-floating">
+                                {{ form.code(class="form-control", required=true) }}
+                                {{ form.code.label(class="form-label") }}
+                                <div class="invalid-feedback">
+                                    {{ _('Please provide a product code.') }}
+                                </div>
+                            </div>
+                            {% if form.code.errors %}
+                            <div class="text-danger small mt-1">
+                                {% for error in form.code.errors %}
+                                <div>{{ error }}</div>
+                                {% endfor %}
+                            </div>
+                            {% endif %}
+                        </div>
+                        
+                        <div class="col-md-6 mb-3">
+                            <div class="form-floating">
+                                {{ form.name_en(class="form-control", required=true) }}
+                                {{ form.name_en.label(class="form-label") }}
+                                <div class="invalid-feedback">
+                                    {{ _('Please provide an English name.') }}
+                                </div>
+                            </div>
+                            {% if form.name_en.errors %}
+                            <div class="text-danger small mt-1">
+                                {% for error in form.name_en.errors %}
+                                <div>{{ error }}</div>
+                                {% endfor %}
+                            </div>
+                            {% endif %}
+                        </div>
+                        
+                        <div class="col-md-6 mb-3">
+                            <div class="form-floating">
+                                {{ form.name_el(class="form-control", required=true) }}
+                                {{ form.name_el.label(class="form-label") }}
+                                <div class="invalid-feedback">
+                                    {{ _('Please provide a Greek name.') }}
+                                </div>
+                            </div>
+                            {% if form.name_el.errors %}
+                            <div class="text-danger small mt-1">
+                                {% for error in form.name_el.errors %}
+                                <div>{{ error }}</div>
+                                {% endfor %}
+                            </div>
+                            {% endif %}
+                        </div>
+                    </div>
+                    
+                    <!-- Descriptions -->
+                    <div class="row mb-4">
+                        <div class="col-12">
+                            <h6 class="text-primary border-bottom pb-2 mb-3">
+                                <i data-feather="file-text" class="me-2"></i>
+                                {{ _('Descriptions') }}
+                            </h6>
+                        </div>
+                        
+                        <div class="col-md-6 mb-3">
+                            <div class="form-floating">
+                                {{ form.description_en(class="form-control", style="height: 120px", data_auto_resize="true") }}
+                                {{ form.description_en.label(class="form-label") }}
+                            </div>
+                            {% if form.description_en.errors %}
+                            <div class="text-danger small mt-1">
+                                {% for error in form.description_en.errors %}
+                                <div>{{ error }}</div>
+                                {% endfor %}
+                            </div>
+                            {% endif %}
+                        </div>
+                        
+                        <div class="col-md-6 mb-3">
+                            <div class="form-floating">
+                                {{ form.description_el(class="form-control", style="height: 120px", data_auto_resize="true") }}
+                                {{ form.description_el.label(class="form-label") }}
+                            </div>
+                            {% if form.description_el.errors %}
+                            <div class="text-danger small mt-1">
+                                {% for error in form.description_el.errors %}
+                                <div>{{ error }}</div>
+                                {% endfor %}
+                            </div>
+                            {% endif %}
+                        </div>
+                    </div>
+                    
+                    <!-- Pricing & Units -->
+                    <div class="row mb-4">
+                        <div class="col-12">
+                            <h6 class="text-primary border-bottom pb-2 mb-3">
+                                <i data-feather="dollar-sign" class="me-2"></i>
+                                {{ _('Pricing & Units') }}
+                            </h6>
+                        </div>
+                        
+                        <div class="col-md-4 mb-3">
+                            <div class="form-floating">
+                                {{ form.unit_price(class="form-control", step="0.01") }}
+                                {{ form.unit_price.label(class="form-label") }}
+                            </div>
+                            {% if form.unit_price.errors %}
+                            <div class="text-danger small mt-1">
+                                {% for error in form.unit_price.errors %}
+                                <div>{{ error }}</div>
+                                {% endfor %}
+                            </div>
+                            {% endif %}
+                        </div>
+                        
+                        <div class="col-md-4 mb-3">
+                            <div class="form-floating">
+                                {{ form.cost_price(class="form-control", step="0.01") }}
+                                {{ form.cost_price.label(class="form-label") }}
+                            </div>
+                            {% if form.cost_price.errors %}
+                            <div class="text-danger small mt-1">
+                                {% for error in form.cost_price.errors %}
+                                <div>{{ error }}</div>
+                                {% endfor %}
+                            </div>
+                            {% endif %}
+                        </div>
+                        
+                        <div class="col-md-4 mb-3">
+                            <div class="form-floating">
+                                {{ form.unit(class="form-control") }}
+                                {{ form.unit.label(class="form-label") }}
+                            </div>
+                            {% if form.unit.errors %}
+                            <div class="text-danger small mt-1">
+                                {% for error in form.unit.errors %}
+                                <div>{{ error }}</div>
+                                {% endfor %}
+                            </div>
+                            {% endif %}
+                        </div>
+                    </div>
+                    
+                    <!-- Technical Specifications -->
+                    <div class="row mb-4">
+                        <div class="col-12">
+                            <h6 class="text-primary border-bottom pb-2 mb-3">
+                                <i data-feather="settings" class="me-2"></i>
+                                {{ _('Technical Specifications') }}
+                            </h6>
+                        </div>
+                        
+                        <div class="col-12 mb-3">
+                            <div class="form-floating">
+                                {{ form.specifications(class="form-control", style="height: 150px", placeholder='{"key": "value"}') }}
+                                {{ form.specifications.label(class="form-label") }}
+                            </div>
+                            <div class="form-text">
+                                {{ _('Enter technical specifications in JSON format. Example: {"capacity": "10 liters", "pressure": "6 bar"}') }}
+                            </div>
+                            {% if form.specifications.errors %}
+                            <div class="text-danger small mt-1">
+                                {% for error in form.specifications.errors %}
+                                <div>{{ error }}</div>
+                                {% endfor %}
+                            </div>
+                            {% endif %}
+                        </div>
+                    </div>
+                    
+                    <!-- Actions -->
+                    <div class="row">
+                        <div class="col-12">
+                            <div class="d-flex justify-content-end gap-2">
+                                <a href="{{ url_for('main.products') }}" class="btn btn-outline-secondary">
+                                    <i data-feather="x" class="me-2"></i>
+                                    {{ _('Cancel') }}
+                                </a>
+                                <button type="submit" class="btn btn-primary">
+                                    <i data-feather="save" class="me-2"></i>
+                                    {{ _('Save Product') }}
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block js %}
+<script>
+// JSON validation for specifications field
+document.getElementById('specifications').addEventListener('blur', function() {
+    const value = this.value.trim();
+    if (value && value !== '') {
+        try {
+            JSON.parse(value);
+            this.classList.remove('is-invalid');
+            this.classList.add('is-valid');
+        } catch (e) {
+            this.classList.remove('is-valid');
+            this.classList.add('is-invalid');
+        }
+    } else {
+        this.classList.remove('is-invalid', 'is-valid');
+    }
+});
+</script>
+{% endblock %}

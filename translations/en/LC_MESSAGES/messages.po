@@ -1,0 +1,278 @@
+# English translations for Filterdyn Operations Suite.
+# Copyright (C) 2025 Filterdyn
+# This file is distributed under the same license as the Filterdyn Operations Suite project.
+# FIRST AUTHOR <EMAIL@ADDRESS>, 2025.
+#
+msgid ""
+msgstr ""
+"Project-Id-Version: Filterdyn Operations Suite 1.0\n"
+"Report-Msgid-Bugs-To: admin@filterdyn.com\n"
+"POT-Creation-Date: 2025-06-18 12:00+0000\n"
+"PO-Revision-Date: 2025-06-18 12:00+0000\n"
+"Last-Translator: Admin <admin@filterdyn.com>\n"
+"Language: en\n"
+"Language-Team: en <admin@filterdyn.com>\n"
+"Plural-Forms: nplurals=2; plural=(n != 1)\n"
+"MIME-Version: 1.0\n"
+"Content-Type: text/plain; charset=utf-8\n"
+"Content-Transfer-Encoding: 8bit\n"
+"Generated-By: Babel 2.12.1\n"
+
+# Authentication
+msgid "Username"
+msgstr "Username"
+
+msgid "Password"
+msgstr "Password"
+
+msgid "Remember Me"
+msgstr "Remember Me"
+
+msgid "Login"
+msgstr "Login"
+
+msgid "Logout"
+msgstr "Logout"
+
+# Navigation
+msgid "Dashboard"
+msgstr "Dashboard"
+
+msgid "Customers"
+msgstr "Customers"
+
+msgid "Products"
+msgstr "Products"
+
+msgid "Quotes"
+msgstr "Quotes"
+
+msgid "Orders"
+msgstr "Orders"
+
+msgid "Tasks"
+msgstr "Tasks"
+
+msgid "Users"
+msgstr "Users"
+
+msgid "Settings"
+msgstr "Settings"
+
+# Dashboard
+msgid "Welcome"
+msgstr "Welcome"
+
+msgid "My Tasks"
+msgstr "My Tasks"
+
+msgid "Quick Actions"
+msgstr "Quick Actions"
+
+msgid "Create New Quote"
+msgstr "Create New Quote"
+
+msgid "Log New Order"
+msgstr "Log New Order"
+
+msgid "Active Quotes"
+msgstr "Active Quotes"
+
+msgid "Pending Orders"
+msgstr "Pending Orders"
+
+msgid "Overdue Tasks"
+msgstr "Overdue Tasks"
+
+# Customers
+msgid "Company Name"
+msgstr "Company Name"
+
+msgid "Contact Person"
+msgstr "Contact Person"
+
+msgid "Email"
+msgstr "Email"
+
+msgid "Phone"
+msgstr "Phone"
+
+msgid "Mobile"
+msgstr "Mobile"
+
+msgid "Address"
+msgstr "Address"
+
+msgid "City"
+msgstr "City"
+
+msgid "Postal Code"
+msgstr "Postal Code"
+
+msgid "Country"
+msgstr "Country"
+
+msgid "Tax Number"
+msgstr "Tax Number"
+
+msgid "Industry"
+msgstr "Industry"
+
+msgid "Notes"
+msgstr "Notes"
+
+# Products
+msgid "Product Code"
+msgstr "Product Code"
+
+msgid "Name (English)"
+msgstr "Name (English)"
+
+msgid "Name (Greek)"
+msgstr "Name (Greek)"
+
+msgid "Description (English)"
+msgstr "Description (English)"
+
+msgid "Description (Greek)"
+msgstr "Description (Greek)"
+
+msgid "Unit Price"
+msgstr "Unit Price"
+
+msgid "Cost Price"
+msgstr "Cost Price"
+
+msgid "Unit"
+msgstr "Unit"
+
+msgid "Category"
+msgstr "Category"
+
+# Quotes
+msgid "Quote Number"
+msgstr "Quote Number"
+
+msgid "Quote Type"
+msgstr "Quote Type"
+
+msgid "New Columns"
+msgstr "New Columns"
+
+msgid "Filtration Equipment"
+msgstr "Filtration Equipment"
+
+msgid "Emergency Repair"
+msgstr "Emergency Repair"
+
+msgid "Technical Analysis"
+msgstr "Technical Analysis"
+
+msgid "Title"
+msgstr "Title"
+
+msgid "Description"
+msgstr "Description"
+
+msgid "Validity (Days)"
+msgstr "Validity (Days)"
+
+msgid "Delivery (Days)"
+msgstr "Delivery (Days)"
+
+msgid "Payment Terms"
+msgstr "Payment Terms"
+
+msgid "Tax Rate (%)"
+msgstr "Tax Rate (%)"
+
+# Status
+msgid "Draft"
+msgstr "Draft"
+
+msgid "Pending Approval"
+msgstr "Pending Approval"
+
+msgid "Approved"
+msgstr "Approved"
+
+msgid "Rejected"
+msgstr "Rejected"
+
+msgid "Sent"
+msgstr "Sent"
+
+msgid "Accepted"
+msgstr "Accepted"
+
+msgid "Expired"
+msgstr "Expired"
+
+# Priority
+msgid "Low"
+msgstr "Low"
+
+msgid "Medium"
+msgstr "Medium"
+
+msgid "High"
+msgstr "High"
+
+msgid "Urgent"
+msgstr "Urgent"
+
+# Actions
+msgid "Create"
+msgstr "Create"
+
+msgid "Edit"
+msgstr "Edit"
+
+msgid "Delete"
+msgstr "Delete"
+
+msgid "Save"
+msgstr "Save"
+
+msgid "Cancel"
+msgstr "Cancel"
+
+msgid "Submit"
+msgstr "Submit"
+
+msgid "Approve"
+msgstr "Approve"
+
+msgid "Reject"
+msgstr "Reject"
+
+msgid "View"
+msgstr "View"
+
+msgid "Search"
+msgstr "Search"
+
+# Messages
+msgid "Customer created successfully"
+msgstr "Customer created successfully"
+
+msgid "Customer updated successfully"
+msgstr "Customer updated successfully"
+
+msgid "Customer deleted successfully"
+msgstr "Customer deleted successfully"
+
+msgid "Quote created successfully"
+msgstr "Quote created successfully"
+
+msgid "Quote updated successfully"
+msgstr "Quote updated successfully"
+
+msgid "Quote submitted for approval"
+msgstr "Quote submitted for approval"
+
+msgid "Quote approved successfully"
+msgstr "Quote approved successfully"
+
+msgid "Quote rejected"
+msgstr "Quote rejected"

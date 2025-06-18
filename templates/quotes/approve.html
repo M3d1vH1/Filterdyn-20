@@ -1,0 +1,263 @@
+{% extends "base.html" %}
+
+{% block title %}{{ _('Approve Quote') }} {{ quote.quote_number }} - {{ super() }}{% endblock %}
+
+{% block content %}
+<div class="row">
+    <div class="col-12">
+        <div class="d-flex justify-content-between align-items-center mb-4">
+            <h1 class="h3">
+                <i data-feather="check-circle" class="me-2"></i>
+                {{ _('Review Quote') }} {{ quote.quote_number }}
+            </h1>
+            <div>
+                <a href="{{ url_for('main.quotes') }}" class="btn btn-outline-secondary me-2">
+                    <i data-feather="arrow-left" class="me-2"></i>
+                    {{ _('Back to Quotes') }}
+                </a>
+                <span class="badge bg-warning fs-6">{{ _('Pending Approval') }}</span>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="row">
+    <!-- Quote Details -->
+    <div class="col-lg-8">
+        <div class="card mb-4">
+            <div class="card-header">
+                <h5 class="mb-0">{{ _('Quote Information') }}</h5>
+            </div>
+            <div class="card-body">
+                <div class="row">
+                    <div class="col-md-6">
+                        <table class="table table-sm table-borderless">
+                            <tr>
+                                <td><strong>{{ _('Quote Number') }}:</strong></td>
+                                <td>{{ quote.quote_number }}</td>
+                            </tr>
+                            <tr>
+                                <td><strong>{{ _('Customer') }}:</strong></td>
+                                <td>{{ quote.customer.name }}</td>
+                            </tr>
+                            <tr>
+                                <td><strong>{{ _('Type') }}:</strong></td>
+                                <td>{{ quote.quote_type.replace('_', ' ').title() }}</td>
+                            </tr>
+                            <tr>
+                                <td><strong>{{ _('Title') }}:</strong></td>
+                                <td>{{ quote.title }}</td>
+                            </tr>
+                            <tr>
+                                <td><strong>{{ _('Created') }}:</strong></td>
+                                <td>{{ quote.created_at.strftime('%d/%m/%Y %H:%M') }}</td>
+                            </tr>
+                            <tr>
+                                <td><strong>{{ _('Created by') }}:</strong></td>
+                                <td>{{ quote.creator.full_name }}</td>
+                            </tr>
+                        </table>
+                    </div>
+                    <div class="col-md-6">
+                        <table class="table table-sm table-borderless">
+                            <tr>
+                                <td><strong>{{ _('Validity') }}:</strong></td>
+                                <td>{{ quote.validity_days }} {{ _('days') }}</td>
+                            </tr>
+                            <tr>
+                                <td><strong>{{ _('Delivery') }}:</strong></td>
+                                <td>{{ quote.delivery_days }} {{ _('days') }}</td>
+                            </tr>
+                            <tr>
+                                <td><strong>{{ _('Payment Terms') }}:</strong></td>
+                                <td>{{ quote.payment_terms }}</td>
+                            </tr>
+                            <tr>
+                                <td><strong>{{ _('Tax Rate') }}:</strong></td>
+                                <td>{{ quote.tax_rate }}%</td>
+                            </tr>
+                        </table>
+                    </div>
+                </div>
+                
+                {% if quote.description %}
+                <div class="row mt-3">
+                    <div class="col-12">
+                        <h6>{{ _('Description') }}</h6>
+                        <p class="bg-light p-3 rounded">{{ quote.description }}</p>
+                    </div>
+                </div>
+                {% endif %}
+            </div>
+        </div>
+        
+        <!-- Quote Items -->
+        <div class="card mb-4">
+            <div class="card-header">
+                <h5 class="mb-0">
+                    <i data-feather="list" class="me-2"></i>
+                    {{ _('Quote Items') }}
+                </h5>
+            </div>
+            <div class="card-body">
+                {% if quote.items %}
+                <div class="table-responsive">
+                    <table class="table">
+                        <thead>
+                            <tr>
+                                <th>{{ _('Description') }}</th>
+                                <th class="text-center">{{ _('Quantity') }}</th>
+                                <th class="text-end">{{ _('Unit Price') }}</th>
+                                <th class="text-end">{{ _('Total') }}</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {% for item in quote.items %}
+                            <tr>
+                                <td>{{ item.description }}</td>
+                                <td class="text-center">{{ item.quantity }}</td>
+                                <td class="text-end">€{{ "%.2f"|format(item.unit_price) }}</td>
+                                <td class="text-end">€{{ "%.2f"|format(item.line_total) }}</td>
+                            </tr>
+                            {% endfor %}
+                        </tbody>
+                        <tfoot>
+                            <tr>
+                                <td colspan="3"><strong>{{ _('Subtotal') }}</strong></td>
+                                <td class="text-end"><strong>€{{ "%.2f"|format(quote.subtotal or 0) }}</strong></td>
+                            </tr>
+                            <tr>
+                                <td colspan="3"><strong>{{ _('Tax') }} ({{ quote.tax_rate }}%)</strong></td>
+                                <td class="text-end"><strong>€{{ "%.2f"|format(quote.tax_amount or 0) }}</strong></td>
+                            </tr>
+                            <tr class="table-primary">
+                                <td colspan="3"><strong>{{ _('Total Amount') }}</strong></td>
+                                <td class="text-end"><strong>€{{ "%.2f"|format(quote.total_amount or 0) }}</strong></td>
+                            </tr>
+                        </tfoot>
+                    </table>
+                </div>
+                {% else %}
+                <div class="alert alert-warning">
+                    <i data-feather="alert-triangle" class="me-2"></i>
+                    {{ _('This quote has no items. Consider rejecting it for completion.') }}
+                </div>
+                {% endif %}
+            </div>
+        </div>
+        
+        <!-- Approval Form -->
+        <div class="card">
+            <div class="card-header">
+                <h5 class="mb-0">
+                    <i data-feather="clipboard" class="me-2"></i>
+                    {{ _('Approval Decision') }}
+                </h5>
+            </div>
+            <div class="card-body">
+                <form method="POST">
+                    <div class="mb-3">
+                        <label for="notes" class="form-label">{{ _('Notes') }} ({{ _('Optional') }})</label>
+                        <textarea class="form-control" id="notes" name="notes" rows="3" 
+                                  placeholder="{{ _('Add any comments about your decision...') }}"></textarea>
+                    </div>
+                    
+                    <div class="d-flex gap-2">
+                        <button type="submit" name="action" value="approve" class="btn btn-success">
+                            <i data-feather="check" class="me-2"></i>
+                            {{ _('Approve Quote') }}
+                        </button>
+                        <button type="submit" name="action" value="reject" class="btn btn-danger">
+                            <i data-feather="x" class="me-2"></i>
+                            {{ _('Reject Quote') }}
+                        </button>
+                        <a href="{{ url_for('main.quotes') }}" class="btn btn-outline-secondary">
+                            <i data-feather="arrow-left" class="me-2"></i>
+                            {{ _('Cancel') }}
+                        </a>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+    
+    <!-- Customer & Quote Summary -->
+    <div class="col-lg-4">
+        <!-- Quote Summary -->
+        <div class="card mb-4">
+            <div class="card-header">
+                <h5 class="mb-0">{{ _('Quote Summary') }}</h5>
+            </div>
+            <div class="card-body">
+                <div class="stats-card text-center mb-3">
+                    <div class="stats-number">€{{ "%.2f"|format(quote.total_amount or 0) }}</div>
+                    <div class="stats-label">{{ _('Total Value') }}</div>
+                </div>
+                
+                <table class="table table-sm">
+                    <tr>
+                        <td>{{ _('Items') }}:</td>
+                        <td class="text-end"><strong>{{ quote.items|length }}</strong></td>
+                    </tr>
+                    <tr>
+                        <td>{{ _('Validity') }}:</td>
+                        <td class="text-end">{{ quote.validity_days }} {{ _('days') }}</td>
+                    </tr>
+                    <tr>
+                        <td>{{ _('Delivery') }}:</td>
+                        <td class="text-end">{{ quote.delivery_days }} {{ _('days') }}</td>
+                    </tr>
+                </table>
+            </div>
+        </div>
+        
+        <!-- Customer Information -->
+        <div class="card">
+            <div class="card-header">
+                <h5 class="mb-0">{{ _('Customer Information') }}</h5>
+            </div>
+            <div class="card-body">
+                <p><strong>{{ quote.customer.name }}</strong></p>
+                {% if quote.customer.contact_person %}
+                <p class="mb-1">
+                    <i data-feather="user" class="me-1" style="width: 16px; height: 16px;"></i>
+                    {{ quote.customer.contact_person }}
+                </p>
+                {% endif %}
+                {% if quote.customer.email %}
+                <p class="mb-1">
+                    <i data-feather="mail" class="me-1" style="width: 16px; height: 16px;"></i>
+                    <a href="mailto:{{ quote.customer.email }}" class="text-decoration-none">
+                        {{ quote.customer.email }}
+                    </a>
+                </p>
+                {% endif %}
+                {% if quote.customer.phone %}
+                <p class="mb-1">
+                    <i data-feather="phone" class="me-1" style="width: 16px; height: 16px;"></i>
+                    <a href="tel:{{ quote.customer.phone }}" class="text-decoration-none">
+                        {{ quote.customer.phone }}
+                    </a>
+                </p>
+                {% endif %}
+                {% if quote.customer.industry %}
+                <p class="mb-1">
+                    <i data-feather="briefcase" class="me-1" style="width: 16px; height: 16px;"></i>
+                    {{ quote.customer.industry }}
+                </p>
+                {% endif %}
+                {% if quote.customer.address %}
+                <hr>
+                <p class="mb-0">
+                    <i data-feather="map-pin" class="me-1" style="width: 16px; height: 16px;"></i>
+                    {{ quote.customer.address }}
+                </p>
+                {% if quote.customer.city %}
+                <p class="mb-0 ms-4">{{ quote.customer.city }} {{ quote.customer.postal_code }}</p>
+                {% endif %}
+                {% endif %}
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

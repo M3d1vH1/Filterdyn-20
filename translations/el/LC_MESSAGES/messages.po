@@ -1,0 +1,278 @@
+# Greek translations for Filterdyn Operations Suite.
+# Copyright (C) 2025 Filterdyn
+# This file is distributed under the same license as the Filterdyn Operations Suite project.
+# FIRST AUTHOR <EMAIL@ADDRESS>, 2025.
+#
+msgid ""
+msgstr ""
+"Project-Id-Version: Filterdyn Operations Suite 1.0\n"
+"Report-Msgid-Bugs-To: admin@filterdyn.com\n"
+"POT-Creation-Date: 2025-06-18 12:00+0000\n"
+"PO-Revision-Date: 2025-06-18 12:00+0000\n"
+"Last-Translator: Admin <admin@filterdyn.com>\n"
+"Language: el\n"
+"Language-Team: el <admin@filterdyn.com>\n"
+"Plural-Forms: nplurals=2; plural=(n != 1)\n"
+"MIME-Version: 1.0\n"
+"Content-Type: text/plain; charset=utf-8\n"
+"Content-Transfer-Encoding: 8bit\n"
+"Generated-By: Babel 2.12.1\n"
+
+# Authentication
+msgid "Username"
+msgstr "Όνομα Χρήστη"
+
+msgid "Password"
+msgstr "Κωδικός"
+
+msgid "Remember Me"
+msgstr "Να με θυμάσαι"
+
+msgid "Login"
+msgstr "Σύνδεση"
+
+msgid "Logout"
+msgstr "Αποσύνδεση"
+
+# Navigation
+msgid "Dashboard"
+msgstr "Αρχική"
+
+msgid "Customers"
+msgstr "Πελάτες"
+
+msgid "Products"
+msgstr "Προϊόντα"
+
+msgid "Quotes"
+msgstr "Προσφορές"
+
+msgid "Orders"
+msgstr "Παραγγελίες"
+
+msgid "Tasks"
+msgstr "Εργασίες"
+
+msgid "Users"
+msgstr "Χρήστες"
+
+msgid "Settings"
+msgstr "Ρυθμίσεις"
+
+# Dashboard
+msgid "Welcome"
+msgstr "Καλώς ήρθατε"
+
+msgid "My Tasks"
+msgstr "Οι Εργασίες μου"
+
+msgid "Quick Actions"
+msgstr "Γρήγορες Ενέργειες"
+
+msgid "Create New Quote"
+msgstr "Νέα Προσφορά"
+
+msgid "Log New Order"
+msgstr "Νέα Παραγγελία"
+
+msgid "Active Quotes"
+msgstr "Ενεργές Προσφορές"
+
+msgid "Pending Orders"
+msgstr "Εκκρεμείς Παραγγελίες"
+
+msgid "Overdue Tasks"
+msgstr "Καθυστερημένες Εργασίες"
+
+# Customers
+msgid "Company Name"
+msgstr "Όνομα Εταιρείας"
+
+msgid "Contact Person"
+msgstr "Υπεύθυνος Επικοινωνίας"
+
+msgid "Email"
+msgstr "Email"
+
+msgid "Phone"
+msgstr "Τηλέφωνο"
+
+msgid "Mobile"
+msgstr "Κινητό"
+
+msgid "Address"
+msgstr "Διεύθυνση"
+
+msgid "City"
+msgstr "Πόλη"
+
+msgid "Postal Code"
+msgstr "Τ.Κ."
+
+msgid "Country"
+msgstr "Χώρα"
+
+msgid "Tax Number"
+msgstr "Α.Φ.Μ."
+
+msgid "Industry"
+msgstr "Κλάδος"
+
+msgid "Notes"
+msgstr "Σημειώσεις"
+
+# Products
+msgid "Product Code"
+msgstr "Κωδικός Προϊόντος"
+
+msgid "Name (English)"
+msgstr "Όνομα (Αγγλικά)"
+
+msgid "Name (Greek)"
+msgstr "Όνομα (Ελληνικά)"
+
+msgid "Description (English)"
+msgstr "Περιγραφή (Αγγλικά)"
+
+msgid "Description (Greek)"
+msgstr "Περιγραφή (Ελληνικά)"
+
+msgid "Unit Price"
+msgstr "Τιμή Μονάδας"
+
+msgid "Cost Price"
+msgstr "Κόστος"
+
+msgid "Unit"
+msgstr "Μονάδα"
+
+msgid "Category"
+msgstr "Κατηγορία"
+
+# Quotes
+msgid "Quote Number"
+msgstr "Αριθμός Προσφοράς"
+
+msgid "Quote Type"
+msgstr "Τύπος Προσφοράς"
+
+msgid "New Columns"
+msgstr "Νέες Στήλες"
+
+msgid "Filtration Equipment"
+msgstr "Εξοπλισμός Φιλτραρίσματος"
+
+msgid "Emergency Repair"
+msgstr "Επείγουσα Επισκευή"
+
+msgid "Technical Analysis"
+msgstr "Τεχνική Ανάλυση"
+
+msgid "Title"
+msgstr "Τίτλος"
+
+msgid "Description"
+msgstr "Περιγραφή"
+
+msgid "Validity (Days)"
+msgstr "Ισχύς (Ημέρες)"
+
+msgid "Delivery (Days)"
+msgstr "Παράδοση (Ημέρες)"
+
+msgid "Payment Terms"
+msgstr "Όροι Πληρωμής"
+
+msgid "Tax Rate (%)"
+msgstr "Φ.Π.Α. (%)"
+
+# Status
+msgid "Draft"
+msgstr "Πρόχειρο"
+
+msgid "Pending Approval"
+msgstr "Εκκρεμεί Έγκριση"
+
+msgid "Approved"
+msgstr "Εγκρίθηκε"
+
+msgid "Rejected"
+msgstr "Απορρίφθηκε"
+
+msgid "Sent"
+msgstr "Στάλθηκε"
+
+msgid "Accepted"
+msgstr "Έγινε Δεκτή"
+
+msgid "Expired"
+msgstr "Έληξε"
+
+# Priority
+msgid "Low"
+msgstr "Χαμηλή"
+
+msgid "Medium"
+msgstr "Μέτρια"
+
+msgid "High"
+msgstr "Υψηλή"
+
+msgid "Urgent"
+msgstr "Επείγον"
+
+# Actions
+msgid "Create"
+msgstr "Δημιουργία"
+
+msgid "Edit"
+msgstr "Επεξεργασία"
+
+msgid "Delete"
+msgstr "Διαγραφή"
+
+msgid "Save"
+msgstr "Αποθήκευση"
+
+msgid "Cancel"
+msgstr "Ακύρωση"
+
+msgid "Submit"
+msgstr "Υποβολή"
+
+msgid "Approve"
+msgstr "Έγκριση"
+
+msgid "Reject"
+msgstr "Απόρριψη"
+
+msgid "View"
+msgstr "Προβολή"
+
+msgid "Search"
+msgstr "Αναζήτηση"
+
+# Messages
+msgid "Customer created successfully"
+msgstr "Ο πελάτης δημιουργήθηκε επιτυχώς"
+
+msgid "Customer updated successfully"
+msgstr "Ο πελάτης ενημερώθηκε επιτυχώς"
+
+msgid "Customer deleted successfully"
+msgstr "Ο πελάτης διαγράφηκε επιτυχώς"
+
+msgid "Quote created successfully"
+msgstr "Η προσφορά δημιουργήθηκε επιτυχώς"
+
+msgid "Quote updated successfully"
+msgstr "Η προσφορά ενημερώθηκε επιτυχώς"
+
+msgid "Quote submitted for approval"
+msgstr "Η προσφορά υποβλήθηκε για έγκριση"
+
+msgid "Quote approved successfully"
+msgstr "Η προσφορά εγκρίθηκε επιτυχώς"
+
+msgid "Quote rejected"
+msgstr "Η προσφορά απορρίφθηκε"

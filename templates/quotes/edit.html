@@ -1,0 +1,365 @@
+{% extends "base.html" %}
+
+{% block title %}{{ _('Edit Quote') }} {{ quote.quote_number }} - {{ super() }}{% endblock %}
+
+{% block content %}
+<div class="row">
+    <div class="col-12">
+        <div class="d-flex justify-content-between align-items-center mb-4">
+            <h1 class="h3">
+                <i data-feather="edit-2" class="me-2"></i>
+                {{ _('Edit Quote') }} {{ quote.quote_number }}
+            </h1>
+            <div>
+                <a href="{{ url_for('main.quotes') }}" class="btn btn-outline-secondary me-2">
+                    <i data-feather="arrow-left" class="me-2"></i>
+                    {{ _('Back to Quotes') }}
+                </a>
+                <span class="badge status-{{ quote.status }} fs-6">
+                    {{ quote.status.replace('_', ' ').title() }}
+                </span>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="row">
+    <!-- Quote Form -->
+    <div class="col-lg-8">
+        <div class="card mb-4">
+            <div class="card-header">
+                <h5 class="mb-0">{{ _('Quote Information') }}</h5>
+            </div>
+            <div class="card-body">
+                <form method="POST" class="needs-validation" novalidate>
+                    {{ form.hidden_tag() }}
+                    
+                    <!-- Customer & Basic Info -->
+                    <div class="row mb-4">
+                        <div class="col-12">
+                            <h6 class="text-primary border-bottom pb-2 mb-3">
+                                <i data-feather="user" class="me-2"></i>
+                                {{ _('Customer & Basic Information') }}
+                            </h6>
+                        </div>
+                        
+                        <div class="col-md-6 mb-3">
+                            <div class="form-floating">
+                                {{ form.customer_id(class="form-select", required=true) }}
+                                {{ form.customer_id.label(class="form-label") }}
+                            </div>
+                        </div>
+                        
+                        <div class="col-md-6 mb-3">
+                            <div class="form-floating">
+                                {{ form.quote_type(class="form-select", required=true) }}
+                                {{ form.quote_type.label(class="form-label") }}
+                            </div>
+                        </div>
+                        
+                        <div class="col-12 mb-3">
+                            <div class="form-floating">
+                                {{ form.title(class="form-control", required=true) }}
+                                {{ form.title.label(class="form-label") }}
+                            </div>
+                        </div>
+                        
+                        <div class="col-12 mb-3">
+                            <div class="form-floating">
+                                {{ form.description(class="form-control", style="height: 100px") }}
+                                {{ form.description.label(class="form-label") }}
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <!-- Terms & Conditions -->
+                    <div class="row mb-4">
+                        <div class="col-12">
+                            <h6 class="text-primary border-bottom pb-2 mb-3">
+                                <i data-feather="file-text" class="me-2"></i>
+                                {{ _('Terms & Conditions') }}
+                            </h6>
+                        </div>
+                        
+                        <div class="col-md-4 mb-3">
+                            <div class="form-floating">
+                                {{ form.validity_days(class="form-control", required=true) }}
+                                {{ form.validity_days.label(class="form-label") }}
+                            </div>
+                        </div>
+                        
+                        <div class="col-md-4 mb-3">
+                            <div class="form-floating">
+                                {{ form.delivery_days(class="form-control", required=true) }}
+                                {{ form.delivery_days.label(class="form-label") }}
+                            </div>
+                        </div>
+                        
+                        <div class="col-md-4 mb-3">
+                            <div class="form-floating">
+                                {{ form.tax_rate(class="form-control", required=true, step="0.01") }}
+                                {{ form.tax_rate.label(class="form-label") }}
+                            </div>
+                        </div>
+                        
+                        <div class="col-12 mb-3">
+                            <div class="form-floating">
+                                {{ form.payment_terms(class="form-control", required=true) }}
+                                {{ form.payment_terms.label(class="form-label") }}
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <!-- Actions -->
+                    <div class="d-flex justify-content-end gap-2">
+                        <a href="{{ url_for('main.quotes') }}" class="btn btn-outline-secondary">
+                            <i data-feather="x" class="me-2"></i>
+                            {{ _('Cancel') }}
+                        </a>
+                        <button type="submit" class="btn btn-primary">
+                            <i data-feather="save" class="me-2"></i>
+                            {{ _('Update Quote') }}
+                        </button>
+                    </div>
+                </form>
+            </div>
+        </div>
+        
+        <!-- Quote Items -->
+        <div class="card" data-quote-id="{{ quote.id }}">
+            <div class="card-header d-flex justify-content-between align-items-center">
+                <h5 class="mb-0">
+                    <i data-feather="list" class="me-2"></i>
+                    {{ _('Quote Items') }}
+                </h5>
+                <button type="button" class="btn btn-sm btn-primary" id="add-item-btn">
+                    <i data-feather="plus" class="me-2"></i>
+                    {{ _('Add Item') }}
+                </button>
+            </div>
+            <div class="card-body" id="items-container">
+                {% if quote.items %}
+                <div class="table-responsive">
+                    <table class="table">
+                        <thead>
+                            <tr>
+                                <th>{{ _('Description') }}</th>
+                                <th width="100">{{ _('Quantity') }}</th>
+                                <th width="120">{{ _('Unit Price') }}</th>
+                                <th width="120">{{ _('Total') }}</th>
+                                <th width="80">{{ _('Actions') }}</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {% for item in quote.items %}
+                            <tr>
+                                <td>{{ item.description }}</td>
+                                <td>{{ item.quantity }}</td>
+                                <td>€{{ "%.2f"|format(item.unit_price) }}</td>
+                                <td>€{{ "%.2f"|format(item.line_total) }}</td>
+                                <td>
+                                    <button type="button" class="btn btn-sm btn-outline-danger delete-item-btn" 
+                                            data-item-id="{{ item.id }}">
+                                        <i data-feather="trash-2"></i>
+                                    </button>
+                                </td>
+                            </tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
+                {% else %}
+                <div class="text-center py-4">
+                    <i data-feather="package" class="text-muted mb-3" style="width: 48px; height: 48px;"></i>
+                    <p class="text-muted">{{ _('No items added yet') }}</p>
+                    <button type="button" class="btn btn-primary" id="add-first-item-btn">
+                        <i data-feather="plus" class="me-2"></i>
+                        {{ _('Add First Item') }}
+                    </button>
+                </div>
+                {% endif %}
+            </div>
+        </div>
+    </div>
+    
+    <!-- Quote Summary -->
+    <div class="col-lg-4">
+        <div class="card mb-4">
+            <div class="card-header">
+                <h5 class="mb-0">{{ _('Quote Summary') }}</h5>
+            </div>
+            <div class="card-body">
+                <table class="table table-sm">
+                    <tr>
+                        <td>{{ _('Customer') }}:</td>
+                        <td><strong>{{ quote.customer.name }}</strong></td>
+                    </tr>
+                    <tr>
+                        <td>{{ _('Created') }}:</td>
+                        <td>{{ quote.created_at.strftime('%d/%m/%Y') }}</td>
+                    </tr>
+                    <tr>
+                        <td>{{ _('Created by') }}:</td>
+                        <td>{{ quote.creator.full_name }}</td>
+                    </tr>
+                    <tr>
+                        <td>{{ _('Items') }}:</td>
+                        <td>{{ quote.items|length }}</td>
+                    </tr>
+                </table>
+                
+                <hr>
+                
+                <table class="table table-sm">
+                    <tr>
+                        <td>{{ _('Subtotal') }}:</td>
+                        <td class="text-end">€{{ "%.2f"|format(quote.subtotal or 0) }}</td>
+                    </tr>
+                    <tr>
+                        <td>{{ _('Tax') }} ({{ quote.tax_rate }}%):</td>
+                        <td class="text-end">€{{ "%.2f"|format(quote.tax_amount or 0) }}</td>
+                    </tr>
+                    <tr class="table-primary">
+                        <td><strong>{{ _('Total') }}:</strong></td>
+                        <td class="text-end"><strong>€{{ "%.2f"|format(quote.total_amount or 0) }}</strong></td>
+                    </tr>
+                </table>
+                
+                {% if quote.status == 'draft' %}
+                <div class="d-grid mt-3">
+                    <form method="POST" action="{{ url_for('main.submit_quote', quote_id=quote.id) }}">
+                        <button type="submit" class="btn btn-warning" 
+                                onclick="return confirm('{{ _('Submit this quote for approval?') }}')">
+                            <i data-feather="send" class="me-2"></i>
+                            {{ _('Submit for Approval') }}
+                        </button>
+                    </form>
+                </div>
+                {% endif %}
+            </div>
+        </div>
+        
+        <!-- Customer Info -->
+        <div class="card">
+            <div class="card-header">
+                <h5 class="mb-0">{{ _('Customer Information') }}</h5>
+            </div>
+            <div class="card-body">
+                <p><strong>{{ quote.customer.name }}</strong></p>
+                {% if quote.customer.contact_person %}
+                <p class="mb-1">{{ quote.customer.contact_person }}</p>
+                {% endif %}
+                {% if quote.customer.email %}
+                <p class="mb-1">
+                    <a href="mailto:{{ quote.customer.email }}">{{ quote.customer.email }}</a>
+                </p>
+                {% endif %}
+                {% if quote.customer.phone %}
+                <p class="mb-1">
+                    <a href="tel:{{ quote.customer.phone }}">{{ quote.customer.phone }}</a>
+                </p>
+                {% endif %}
+                {% if quote.customer.address %}
+                <hr>
+                <p class="mb-0">{{ quote.customer.address }}</p>
+                {% if quote.customer.city %}
+                <p class="mb-0">{{ quote.customer.city }} {{ quote.customer.postal_code }}</p>
+                {% endif %}
+                {% endif %}
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Add Item Modal -->
+<div class="modal fade" id="addItemModal" tabindex="-1" aria-hidden="true">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title">{{ _('Add Item') }}</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+            </div>
+            <div class="modal-body">
+                <form id="add-item-form">
+                    <div class="mb-3 position-relative">
+                        <label for="product-search" class="form-label">{{ _('Search Products') }}</label>
+                        <input type="text" class="form-control" id="product-search" 
+                               placeholder="{{ _('Type to search products...') }}">
+                        <div id="product-results" class="dropdown-menu w-100" style="display: none;"></div>
+                    </div>
+                    
+                    <input type="hidden" id="product_id" name="product_id">
+                    
+                    <div class="mb-3">
+                        <div class="form-floating">
+                            <input type="text" class="form-control" id="description" name="description" required>
+                            <label for="description">{{ _('Description') }}</label>
+                        </div>
+                    </div>
+                    
+                    <div class="row">
+                        <div class="col-md-4">
+                            <div class="form-floating mb-3">
+                                <input type="number" class="form-control" id="quantity" name="quantity" 
+                                       step="0.01" min="0" required onchange="calculateLineTotal()">
+                                <label for="quantity">{{ _('Quantity') }}</label>
+                            </div>
+                        </div>
+                        <div class="col-md-4">
+                            <div class="form-floating mb-3">
+                                <input type="number" class="form-control" id="unit_price" name="unit_price" 
+                                       step="0.01" min="0" required onchange="calculateLineTotal()">
+                                <label for="unit_price">{{ _('Unit Price') }}</label>
+                            </div>
+                        </div>
+                        <div class="col-md-4">
+                            <div class="form-floating mb-3">
+                                <input type="number" class="form-control" id="line_total" name="line_total" 
+                                       readonly>
+                                <label for="line_total">{{ _('Line Total') }}</label>
+                            </div>
+                        </div>
+                    </div>
+                </form>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">{{ _('Cancel') }}</button>
+                <button type="button" class="btn btn-primary" onclick="addItemFromForm()">{{ _('Add Item') }}</button>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block js %}
+<script>
+// Add event listeners for add item buttons
+document.addEventListener('DOMContentLoaded', function() {
+    document.getElementById('add-item-btn')?.addEventListener('click', showAddItemModal);
+    document.getElementById('add-first-item-btn')?.addEventListener('click', showAddItemModal);
+});
+
+function addItemFromForm() {
+    var form = document.getElementById('add-item-form');
+    var formData = new FormData(form);
+    
+    var itemData = {
+        product_id: formData.get('product_id') || null,
+        description: formData.get('description'),
+        quantity: parseFloat(formData.get('quantity')),
+        unit_price: parseFloat(formData.get('unit_price'))
+    };
+    
+    if (!itemData.description || !itemData.quantity || !itemData.unit_price) {
+        alert('{{ _('Please fill in all required fields') }}');
+        return;
+    }
+    
+    addItem(itemData);
+    
+    // Close modal
+    var modal = bootstrap.Modal.getInstance(document.getElementById('addItemModal'));
+    modal.hide();
+}
+</script>
+{% endblock %}

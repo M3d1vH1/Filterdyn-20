@@ -1,0 +1,369 @@
+{% extends "base.html" %}
+
+{% block title %}{{ _('Quotes') }} - {{ super() }}{% endblock %}
+
+{% block content %}
+<div class="row">
+    <div class="col-12">
+        <div class="d-flex justify-content-between align-items-center mb-4">
+            <h1 class="h3">
+                <i data-feather="file-text" class="me-2"></i>
+                {{ _('Quotes') }}
+            </h1>
+            <a href="{{ url_for('main.create_quote') }}" class="btn btn-primary">
+                <i data-feather="plus" class="me-2"></i>
+                {{ _('Create Quote') }}
+            </a>
+        </div>
+    </div>
+</div>
+
+<!-- Filters -->
+<div class="row mb-4">
+    <div class="col-12">
+        <div class="card">
+            <div class="card-body">
+                <form method="GET" class="row g-3">
+                    <div class="col-md-3">
+                        <div class="form-floating">
+                            <select class="form-select" id="status" name="status">
+                                <option value="">{{ _('All Statuses') }}</option>
+                                <option value="draft" {% if status == 'draft' %}selected{% endif %}>{{ _('Draft') }}</option>
+                                <option value="pending_approval" {% if status == 'pending_approval' %}selected{% endif %}>{{ _('Pending Approval') }}</option>
+                                <option value="approved" {% if status == 'approved' %}selected{% endif %}>{{ _('Approved') }}</option>
+                                <option value="rejected" {% if status == 'rejected' %}selected{% endif %}>{{ _('Rejected') }}</option>
+                                <option value="sent" {% if status == 'sent' %}selected{% endif %}>{{ _('Sent') }}</option>
+                                <option value="accepted" {% if status == 'accepted' %}selected{% endif %}>{{ _('Accepted') }}</option>
+                                <option value="expired" {% if status == 'expired' %}selected{% endif %}>{{ _('Expired') }}</option>
+                            </select>
+                            <label for="status">{{ _('Status') }}</label>
+                        </div>
+                    </div>
+                    <div class="col-md-7">
+                        <div class="form-floating">
+                            <input type="text" class="form-control" id="search" name="search" 
+                                   value="{{ search }}" placeholder="{{ _('Search quotes...') }}">
+                            <label for="search">{{ _('Search quotes...') }}</label>
+                        </div>
+                    </div>
+                    <div class="col-md-2">
+                        <button type="submit" class="btn btn-outline-primary me-2">
+                            <i data-feather="search" class="me-2"></i>
+                            {{ _('Search') }}
+                        </button>
+                        {% if search or status %}
+                        <a href="{{ url_for('main.quotes') }}" class="btn btn-outline-secondary">
+                            <i data-feather="x" class="me-2"></i>
+                            {{ _('Clear') }}
+                        </a>
+                        {% endif %}
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Results -->
+<div class="row">
+    <div class="col-12">
+        <div class="card">
+            <div class="card-header">
+                <h5 class="mb-0">
+                    {{ _('Quote List') }}
+                    <span class="badge bg-primary ms-2">{{ quotes.total }}</span>
+                </h5>
+            </div>
+            <div class="card-body">
+                {% if quotes.items %}
+                <div class="table-responsive">
+                    <table class="table table-hover">
+                        <thead>
+                            <tr>
+                                <th>{{ _('Quote Number') }}</th>
+                                <th>{{ _('Customer') }}</th>
+                                <th>{{ _('Title') }}</th>
+                                <th>{{ _('Type') }}</th>
+                                <th>{{ _('Total') }}</th>
+                                <th>{{ _('Status') }}</th>
+                                <th>{{ _('Date') }}</th>
+                                <th width="200">{{ _('Actions') }}</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {% for quote in quotes.items %}
+                            <tr>
+                                <td>
+                                    <strong>{{ quote.quote_number }}</strong>
+                                </td>
+                                <td>{{ quote.customer.name }}</td>
+                                <td>{{ quote.title }}</td>
+                                <td>
+                                    <span class="badge bg-info">
+                                        {{ quote.quote_type.replace('_', ' ').title() }}
+                                    </span>
+                                </td>
+                                <td>
+                                    {% if quote.total_amount %}
+                                    <strong>€{{ "%.2f"|format(quote.total_amount) }}</strong>
+                                    {% else %}
+                                    <span class="text-muted">-</span>
+                                    {% endif %}
+                                </td>
+                                <td>
+                                    <span class="badge status-{{ quote.status }}">
+                                        {{ quote.status.replace('_', ' ').title() }}
+                                    </span>
+                                </td>
+                                <td>{{ quote.created_at.strftime('%d/%m/%Y') }}</td>
+                                <td>
+                                    <div class="btn-group" role="group">
+                                        <!-- View/Edit button -->
+                                        {% if quote.status in ['draft', 'rejected'] and (current_user.role in ['admin', 'manager'] or quote.created_by == current_user.id) %}
+                                        <a href="{{ url_for('main.edit_quote', quote_id=quote.id) }}" 
+                                           class="btn btn-sm btn-outline-primary" 
+                                           data-bs-toggle="tooltip" title="{{ _('Edit') }}">
+                                            <i data-feather="edit-2"></i>
+                                        </a>
+                                        {% else %}
+                                        <button type="button" class="btn btn-sm btn-outline-info" 
+                                                data-bs-toggle="modal" data-bs-target="#quoteModal{{ quote.id }}"
+                                                title="{{ _('View Details') }}">
+                                            <i data-feather="eye"></i>
+                                        </button>
+                                        {% endif %}
+                                        
+                                        <!-- Submit for approval -->
+                                        {% if quote.status == 'draft' and (current_user.role in ['admin', 'manager'] or quote.created_by == current_user.id) %}
+                                        <form method="POST" action="{{ url_for('main.submit_quote', quote_id=quote.id) }}" class="d-inline">
+                                            <button type="submit" class="btn btn-sm btn-outline-warning" 
+                                                    data-bs-toggle="tooltip" title="{{ _('Submit for Approval') }}"
+                                                    onclick="return confirm('{{ _('Submit this quote for approval?') }}')">
+                                                <i data-feather="send"></i>
+                                            </button>
+                                        </form>
+                                        {% endif %}
+                                        
+                                        <!-- Approval actions -->
+                                        {% if quote.status == 'pending_approval' and current_user.role in ['manager', 'admin', 'superadmin'] %}
+                                        <a href="{{ url_for('main.approve_quote', quote_id=quote.id) }}" 
+                                           class="btn btn-sm btn-outline-success" 
+                                           data-bs-toggle="tooltip" title="{{ _('Review') }}">
+                                            <i data-feather="check"></i>
+                                        </a>
+                                        {% endif %}
+                                        
+                                        <!-- Generate PDF -->
+                                        {% if quote.status in ['approved', 'sent', 'accepted'] %}
+                                        <button type="button" class="btn btn-sm btn-outline-secondary" 
+                                                data-bs-toggle="tooltip" title="{{ _('Download PDF') }}">
+                                            <i data-feather="download"></i>
+                                        </button>
+                                        {% endif %}
+                                    </div>
+                                </td>
+                            </tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
+                
+                <!-- Pagination -->
+                {% if quotes.pages > 1 %}
+                <nav aria-label="Quote pagination">
+                    <ul class="pagination justify-content-center">
+                        {% if quotes.has_prev %}
+                        <li class="page-item">
+                            <a class="page-link" href="{{ url_for('main.quotes', page=quotes.prev_num, status=status, search=search) }}">
+                                {{ _('Previous') }}
+                            </a>
+                        </li>
+                        {% endif %}
+                        
+                        {% for page_num in quotes.iter_pages() %}
+                        {% if page_num %}
+                        {% if page_num != quotes.page %}
+                        <li class="page-item">
+                            <a class="page-link" href="{{ url_for('main.quotes', page=page_num, status=status, search=search) }}">
+                                {{ page_num }}
+                            </a>
+                        </li>
+                        {% else %}
+                        <li class="page-item active">
+                            <span class="page-link">{{ page_num }}</span>
+                        </li>
+                        {% endif %}
+                        {% else %}
+                        <li class="page-item disabled">
+                            <span class="page-link">…</span>
+                        </li>
+                        {% endif %}
+                        {% endfor %}
+                        
+                        {% if quotes.has_next %}
+                        <li class="page-item">
+                            <a class="page-link" href="{{ url_for('main.quotes', page=quotes.next_num, status=status, search=search) }}">
+                                {{ _('Next') }}
+                            </a>
+                        </li>
+                        {% endif %}
+                    </ul>
+                </nav>
+                {% endif %}
+                {% else %}
+                <div class="text-center py-5">
+                    <i data-feather="file-text" class="text-muted mb-3" style="width: 64px; height: 64px;"></i>
+                    <h5 class="text-muted">{{ _('No quotes found') }}</h5>
+                    {% if search or status %}
+                    <p class="text-muted">{{ _('Try adjusting your search criteria') }}</p>
+                    <a href="{{ url_for('main.quotes') }}" class="btn btn-outline-primary">
+                        {{ _('View All Quotes') }}
+                    </a>
+                    {% else %}
+                    <p class="text-muted">{{ _('Get started by creating your first quote') }}</p>
+                    <a href="{{ url_for('main.create_quote') }}" class="btn btn-primary">
+                        <i data-feather="plus" class="me-2"></i>
+                        {{ _('Create Quote') }}
+                    </a>
+                    {% endif %}
+                </div>
+                {% endif %}
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Quote Detail Modals -->
+{% for quote in quotes.items %}
+<div class="modal fade" id="quoteModal{{ quote.id }}" tabindex="-1" aria-hidden="true">
+    <div class="modal-dialog modal-xl">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title">{{ _('Quote') }} {{ quote.quote_number }}</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+            </div>
+            <div class="modal-body">
+                <div class="row">
+                    <div class="col-md-6">
+                        <h6>{{ _('Quote Information') }}</h6>
+                        <table class="table table-sm">
+                            <tr>
+                                <td><strong>{{ _('Customer') }}:</strong></td>
+                                <td>{{ quote.customer.name }}</td>
+                            </tr>
+                            <tr>
+                                <td><strong>{{ _('Title') }}:</strong></td>
+                                <td>{{ quote.title }}</td>
+                            </tr>
+                            <tr>
+                                <td><strong>{{ _('Type') }}:</strong></td>
+                                <td>{{ quote.quote_type.replace('_', ' ').title() }}</td>
+                            </tr>
+                            <tr>
+                                <td><strong>{{ _('Status') }}:</strong></td>
+                                <td>
+                                    <span class="badge status-{{ quote.status }}">
+                                        {{ quote.status.replace('_', ' ').title() }}
+                                    </span>
+                                </td>
+                            </tr>
+                            <tr>
+                                <td><strong>{{ _('Created') }}:</strong></td>
+                                <td>{{ quote.created_at.strftime('%d/%m/%Y %H:%M') }}</td>
+                            </tr>
+                            <tr>
+                                <td><strong>{{ _('Created by') }}:</strong></td>
+                                <td>{{ quote.creator.full_name }}</td>
+                            </tr>
+                        </table>
+                    </div>
+                    <div class="col-md-6">
+                        <h6>{{ _('Terms') }}</h6>
+                        <table class="table table-sm">
+                            <tr>
+                                <td><strong>{{ _('Validity') }}:</strong></td>
+                                <td>{{ quote.validity_days }} {{ _('days') }}</td>
+                            </tr>
+                            <tr>
+                                <td><strong>{{ _('Delivery') }}:</strong></td>
+                                <td>{{ quote.delivery_days }} {{ _('days') }}</td>
+                            </tr>
+                            <tr>
+                                <td><strong>{{ _('Payment Terms') }}:</strong></td>
+                                <td>{{ quote.payment_terms }}</td>
+                            </tr>
+                            <tr>
+                                <td><strong>{{ _('Tax Rate') }}:</strong></td>
+                                <td>{{ quote.tax_rate }}%</td>
+                            </tr>
+                        </table>
+                    </div>
+                </div>
+                
+                {% if quote.description %}
+                <div class="row mt-3">
+                    <div class="col-12">
+                        <h6>{{ _('Description') }}</h6>
+                        <p>{{ quote.description }}</p>
+                    </div>
+                </div>
+                {% endif %}
+                
+                {% if quote.items %}
+                <div class="row mt-3">
+                    <div class="col-12">
+                        <h6>{{ _('Items') }}</h6>
+                        <div class="table-responsive">
+                            <table class="table table-sm">
+                                <thead>
+                                    <tr>
+                                        <th>{{ _('Description') }}</th>
+                                        <th>{{ _('Quantity') }}</th>
+                                        <th>{{ _('Unit Price') }}</th>
+                                        <th>{{ _('Total') }}</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    {% for item in quote.items %}
+                                    <tr>
+                                        <td>{{ item.description }}</td>
+                                        <td>{{ item.quantity }}</td>
+                                        <td>€{{ "%.2f"|format(item.unit_price) }}</td>
+                                        <td>€{{ "%.2f"|format(item.line_total) }}</td>
+                                    </tr>
+                                    {% endfor %}
+                                </tbody>
+                                <tfoot>
+                                    <tr>
+                                        <td colspan="3"><strong>{{ _('Subtotal') }}</strong></td>
+                                        <td><strong>€{{ "%.2f"|format(quote.subtotal or 0) }}</strong></td>
+                                    </tr>
+                                    <tr>
+                                        <td colspan="3"><strong>{{ _('Tax') }} ({{ quote.tax_rate }}%)</strong></td>
+                                        <td><strong>€{{ "%.2f"|format(quote.tax_amount or 0) }}</strong></td>
+                                    </tr>
+                                    <tr class="table-primary">
+                                        <td colspan="3"><strong>{{ _('Total') }}</strong></td>
+                                        <td><strong>€{{ "%.2f"|format(quote.total_amount or 0) }}</strong></td>
+                                    </tr>
+                                </tfoot>
+                            </table>
+                        </div>
+                    </div>
+                </div>
+                {% endif %}
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">{{ _('Close') }}</button>
+                {% if quote.status in ['approved', 'sent', 'accepted'] %}
+                <button type="button" class="btn btn-primary">
+                    <i data-feather="download" class="me-2"></i>
+                    {{ _('Download PDF') }}
+                </button>
+                {% endif %}
+            </div>
+        </div>
+    </div>
+</div>
+{% endfor %}
+{% endblock %}

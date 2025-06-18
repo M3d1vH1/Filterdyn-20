@@ -1,0 +1,78 @@
+{% extends "base.html" %}
+
+{% block title %}{{ _('Login') }} - {{ super() }}{% endblock %}
+
+{% block content %}
+<div class="login-container">
+    <div class="login-card">
+        <div class="login-header">
+            <img src="{{ url_for('static', filename='img/logo.svg') }}" alt="Filterdyn" height="50" class="mb-3">
+            <h1>{{ _('Welcome') }}</h1>
+            <p>{{ _('Sign in to your account') }}</p>
+        </div>
+        
+        <div class="login-body">
+            <form method="POST" class="needs-validation" novalidate>
+                {{ form.hidden_tag() }}
+                
+                <div class="mb-3">
+                    <div class="form-floating">
+                        {{ form.username(class="form-control", placeholder=_('Username'), required=true) }}
+                        {{ form.username.label(class="form-label") }}
+                        <div class="invalid-feedback">
+                            {{ _('Please provide a valid username.') }}
+                        </div>
+                    </div>
+                    {% if form.username.errors %}
+                    <div class="text-danger small mt-1">
+                        {% for error in form.username.errors %}
+                        <div>{{ error }}</div>
+                        {% endfor %}
+                    </div>
+                    {% endif %}
+                </div>
+                
+                <div class="mb-3">
+                    <div class="form-floating">
+                        {{ form.password(class="form-control", placeholder=_('Password'), required=true) }}
+                        {{ form.password.label(class="form-label") }}
+                        <div class="invalid-feedback">
+                            {{ _('Please provide a password.') }}
+                        </div>
+                    </div>
+                    {% if form.password.errors %}
+                    <div class="text-danger small mt-1">
+                        {% for error in form.password.errors %}
+                        <div>{{ error }}</div>
+                        {% endfor %}
+                    </div>
+                    {% endif %}
+                </div>
+                
+                <div class="mb-3">
+                    <div class="form-check">
+                        {{ form.remember_me(class="form-check-input") }}
+                        {{ form.remember_me.label(class="form-check-label") }}
+                    </div>
+                </div>
+                
+                <div class="d-grid">
+                    <button type="submit" class="btn btn-primary btn-lg">
+                        <i data-feather="log-in" class="me-2"></i>
+                        {{ _('Login') }}
+                    </button>
+                </div>
+            </form>
+            
+            <!-- Language switcher -->
+            <div class="text-center mt-4">
+                <small class="text-muted">{{ _('Language') }}:</small>
+                <a href="{{ url_for('auth.change_language', language='en') }}" 
+                   class="language-toggle ms-2 {% if get_locale() == 'en' %}active{% endif %}">EN</a>
+                <a href="{{ url_for('auth.change_language', language='el') }}" 
+                   class="language-toggle {% if get_locale() == 'el' %}active{% endif %}">ΕΛ</a>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

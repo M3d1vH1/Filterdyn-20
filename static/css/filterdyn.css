@@ -1,0 +1,390 @@
+/* Filterdyn Custom CSS Theme */
+
+:root {
+    --filterdyn-teal: #1ba3a3;
+    --filterdyn-dark-teal: #158a8a;
+    --filterdyn-light-teal: #e8f5f5;
+    --filterdyn-secondary: #6c757d;
+    --filterdyn-success: #198754;
+    --filterdyn-warning: #ffc107;
+    --filterdyn-danger: #dc3545;
+    --filterdyn-light: #f8f9fa;
+    --filterdyn-dark: #212529;
+}
+
+/* General Styles */
+body {
+    font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+    background-color: #f8f9fa;
+}
+
+/* Custom Bootstrap overrides */
+.btn-primary {
+    background-color: var(--filterdyn-teal);
+    border-color: var(--filterdyn-teal);
+}
+
+.btn-primary:hover,
+.btn-primary:focus,
+.btn-primary:active {
+    background-color: var(--filterdyn-dark-teal);
+    border-color: var(--filterdyn-dark-teal);
+}
+
+.btn-outline-primary {
+    color: var(--filterdyn-teal);
+    border-color: var(--filterdyn-teal);
+}
+
+.btn-outline-primary:hover,
+.btn-outline-primary:focus,
+.btn-outline-primary:active {
+    background-color: var(--filterdyn-teal);
+    border-color: var(--filterdyn-teal);
+}
+
+.text-primary {
+    color: var(--filterdyn-teal) !important;
+}
+
+.bg-primary {
+    background-color: var(--filterdyn-teal) !important;
+}
+
+.border-primary {
+    border-color: var(--filterdyn-teal) !important;
+}
+
+/* Navigation */
+.navbar-brand {
+    font-weight: bold;
+    font-size: 1.5rem;
+    color: var(--filterdyn-teal) !important;
+}
+
+.navbar-nav .nav-link {
+    font-weight: 500;
+    padding: 0.75rem 1rem;
+    border-radius: 0.375rem;
+    margin: 0 0.25rem;
+    transition: all 0.15s ease-in-out;
+}
+
+.navbar-nav .nav-link:hover {
+    background-color: var(--filterdyn-light-teal);
+    color: var(--filterdyn-dark-teal) !important;
+}
+
+.navbar-nav .nav-link.active {
+    background-color: var(--filterdyn-teal);
+    color: white !important;
+}
+
+/* Cards */
+.card {
+    border: none;
+    box-shadow: 0 0.125rem 0.25rem rgba(0, 0, 0, 0.075);
+    border-radius: 0.5rem;
+    transition: box-shadow 0.15s ease-in-out;
+}
+
+.card:hover {
+    box-shadow: 0 0.5rem 1rem rgba(0, 0, 0, 0.15);
+}
+
+.card-header {
+    background-color: var(--filterdyn-light-teal);
+    border-bottom: 1px solid var(--filterdyn-teal);
+    font-weight: 600;
+    color: var(--filterdyn-dark-teal);
+}
+
+/* Dashboard Stats Cards */
+.stats-card {
+    background: linear-gradient(135deg, var(--filterdyn-teal), var(--filterdyn-dark-teal));
+    color: white;
+    border-radius: 1rem;
+    padding: 1.5rem;
+    margin-bottom: 1rem;
+}
+
+.stats-card .stats-number {
+    font-size: 2.5rem;
+    font-weight: bold;
+    margin-bottom: 0.5rem;
+}
+
+.stats-card .stats-label {
+    font-size: 0.9rem;
+    opacity: 0.9;
+}
+
+.stats-card .stats-icon {
+    font-size: 3rem;
+    opacity: 0.3;
+    position: absolute;
+    right: 1.5rem;
+    top: 50%;
+    transform: translateY(-50%);
+}
+
+/* Tables */
+.table {
+    background-color: white;
+    border-radius: 0.5rem;
+    overflow: hidden;
+}
+
+.table thead th {
+    background-color: var(--filterdyn-light-teal);
+    color: var(--filterdyn-dark-teal);
+    font-weight: 600;
+    border-bottom: 2px solid var(--filterdyn-teal);
+}
+
+.table-hover tbody tr:hover {
+    background-color: var(--filterdyn-light-teal);
+}
+
+/* Forms */
+.form-control:focus {
+    border-color: var(--filterdyn-teal);
+    box-shadow: 0 0 0 0.2rem rgba(27, 163, 163, 0.25);
+}
+
+.form-select:focus {
+    border-color: var(--filterdyn-teal);
+    box-shadow: 0 0 0 0.2rem rgba(27, 163, 163, 0.25);
+}
+
+.form-floating > .form-control:focus ~ label,
+.form-floating > .form-select:focus ~ label {
+    color: var(--filterdyn-teal);
+}
+
+/* Badges */
+.badge.bg-secondary {
+    background-color: var(--filterdyn-secondary) !important;
+}
+
+.badge.bg-success {
+    background-color: var(--filterdyn-success) !important;
+}
+
+.badge.bg-warning {
+    background-color: var(--filterdyn-warning) !important;
+}
+
+.badge.bg-danger {
+    background-color: var(--filterdyn-danger) !important;
+}
+
+.badge.bg-info {
+    background-color: var(--filterdyn-teal) !important;
+}
+
+/* Priority badges */
+.priority-low { background-color: var(--filterdyn-secondary) !important; }
+.priority-medium { background-color: var(--filterdyn-teal) !important; }
+.priority-high { background-color: var(--filterdyn-warning) !important; }
+.priority-urgent { background-color: var(--filterdyn-danger) !important; }
+
+/* Status badges */
+.status-draft { background-color: var(--filterdyn-secondary) !important; }
+.status-pending { background-color: var(--filterdyn-warning) !important; }
+.status-approved { background-color: var(--filterdyn-success) !important; }
+.status-rejected { background-color: var(--filterdyn-danger) !important; }
+.status-sent { background-color: var(--filterdyn-teal) !important; }
+.status-accepted { background-color: var(--filterdyn-success) !important; }
+.status-expired { background-color: var(--filterdyn-dark) !important; }
+
+/* Alerts */
+.alert-primary {
+    background-color: var(--filterdyn-light-teal);
+    border-color: var(--filterdyn-teal);
+    color: var(--filterdyn-dark-teal);
+}
+
+/* Pagination */
+.page-link {
+    color: var(--filterdyn-teal);
+}
+
+.page-link:hover {
+    color: var(--filterdyn-dark-teal);
+    background-color: var(--filterdyn-light-teal);
+    border-color: var(--filterdyn-teal);
+}
+
+.page-item.active .page-link {
+    background-color: var(--filterdyn-teal);
+    border-color: var(--filterdyn-teal);
+}
+
+/* Quick Actions */
+.quick-actions {
+    background: linear-gradient(135deg, var(--filterdyn-light-teal), #ffffff);
+    border-radius: 1rem;
+    padding: 2rem;
+    margin-bottom: 2rem;
+}
+
+.quick-action-btn {
+    background: white;
+    border: 2px solid var(--filterdyn-teal);
+    color: var(--filterdyn-teal);
+    padding: 1rem 1.5rem;
+    border-radius: 0.75rem;
+    text-decoration: none;
+    display: inline-block;
+    margin: 0.5rem;
+    transition: all 0.15s ease-in-out;
+    font-weight: 600;
+}
+
+.quick-action-btn:hover {
+    background: var(--filterdyn-teal);
+    color: white;
+    transform: translateY(-2px);
+    box-shadow: 0 0.5rem 1rem rgba(27, 163, 163, 0.3);
+}
+
+/* Language Toggle */
+.language-toggle {
+    background: none;
+    border: 1px solid var(--filterdyn-teal);
+    color: var(--filterdyn-teal);
+    border-radius: 0.375rem;
+    padding: 0.375rem 0.75rem;
+    margin: 0 0.25rem;
+    transition: all 0.15s ease-in-out;
+}
+
+.language-toggle:hover,
+.language-toggle.active {
+    background: var(--filterdyn-teal);
+    color: white;
+}
+
+/* Login Form */
+.login-container {
+    min-height: 100vh;
+    background: linear-gradient(135deg, var(--filterdyn-teal), var(--filterdyn-dark-teal));
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.login-card {
+    background: white;
+    border-radius: 1rem;
+    box-shadow: 0 1rem 3rem rgba(0, 0, 0, 0.175);
+    overflow: hidden;
+    max-width: 400px;
+    width: 100%;
+}
+
+.login-header {
+    background: linear-gradient(135deg, var(--filterdyn-teal), var(--filterdyn-dark-teal));
+    color: white;
+    padding: 2rem;
+    text-align: center;
+}
+
+.login-header h1 {
+    font-size: 2rem;
+    font-weight: bold;
+    margin-bottom: 0.5rem;
+}
+
+.login-header p {
+    opacity: 0.9;
+    margin-bottom: 0;
+}
+
+.login-body {
+    padding: 2rem;
+}
+
+/* Mobile Responsiveness */
+@media (max-width: 768px) {
+    .navbar-nav {
+        background: white;
+        border-radius: 0.5rem;
+        padding: 0.5rem;
+        margin-top: 0.5rem;
+    }
+    
+    .stats-card {
+        text-align: center;
+        margin-bottom: 1rem;
+    }
+    
+    .stats-card .stats-icon {
+        position: static;
+        transform: none;
+        display: block;
+        margin-bottom: 1rem;
+    }
+    
+    .quick-action-btn {
+        display: block;
+        width: 100%;
+        margin: 0.5rem 0;
+    }
+    
+    .table-responsive {
+        border-radius: 0.5rem;
+    }
+}
+
+/* Custom utilities */
+.text-filterdyn {
+    color: var(--filterdyn-teal) !important;
+}
+
+.bg-filterdyn {
+    background-color: var(--filterdyn-teal) !important;
+}
+
+.bg-filterdyn-light {
+    background-color: var(--filterdyn-light-teal) !important;
+}
+
+.border-filterdyn {
+    border-color: var(--filterdyn-teal) !important;
+}
+
+/* Overdue task highlighting */
+.task-overdue {
+    background-color: #fff5f5;
+    border-left: 4px solid var(--filterdyn-danger);
+}
+
+.task-overdue .card-header {
+    background-color: #fed7d7;
+    color: var(--filterdyn-danger);
+}
+
+/* Loading spinner */
+.spinner-filterdyn {
+    color: var(--filterdyn-teal);
+}
+
+/* Custom scrollbar */
+::-webkit-scrollbar {
+    width: 8px;
+}
+
+::-webkit-scrollbar-track {
+    background: #f1f1f1;
+}
+
+::-webkit-scrollbar-thumb {
+    background: var(--filterdyn-teal);
+    border-radius: 4px;
+}
+
+::-webkit-scrollbar-thumb:hover {
+    background: var(--filterdyn-dark-teal);
+}

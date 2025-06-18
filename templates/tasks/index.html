@@ -1,0 +1,365 @@
+{% extends "base.html" %}
+
+{% block title %}{{ _('Tasks') }} - {{ super() }}{% endblock %}
+
+{% block content %}
+<div class="row">
+    <div class="col-12">
+        <div class="d-flex justify-content-between align-items-center mb-4">
+            <h1 class="h3">
+                <i data-feather="check-square" class="me-2"></i>
+                {{ _('Tasks') }}
+            </h1>
+            <a href="{{ url_for('main.create_task') }}" class="btn btn-primary">
+                <i data-feather="plus" class="me-2"></i>
+                {{ _('Create Task') }}
+            </a>
+        </div>
+    </div>
+</div>
+
+<!-- Filters -->
+<div class="row mb-4">
+    <div class="col-12">
+        <div class="card">
+            <div class="card-body">
+                <form method="GET" class="row g-3">
+                    <div class="col-md-3">
+                        <div class="form-floating">
+                            <select class="form-select" id="status" name="status">
+                                <option value="">{{ _('All Statuses') }}</option>
+                                <option value="pending" {% if status == 'pending' %}selected{% endif %}>{{ _('Pending') }}</option>
+                                <option value="in_progress" {% if status == 'in_progress' %}selected{% endif %}>{{ _('In Progress') }}</option>
+                                <option value="completed" {% if status == 'completed' %}selected{% endif %}>{{ _('Completed') }}</option>
+                                <option value="cancelled" {% if status == 'cancelled' %}selected{% endif %}>{{ _('Cancelled') }}</option>
+                            </select>
+                            <label for="status">{{ _('Status') }}</label>
+                        </div>
+                    </div>
+                    <div class="col-md-3">
+                        <div class="form-floating">
+                            <select class="form-select" id="priority" name="priority">
+                                <option value="">{{ _('All Priorities') }}</option>
+                                <option value="low" {% if priority == 'low' %}selected{% endif %}>{{ _('Low') }}</option>
+                                <option value="medium" {% if priority == 'medium' %}selected{% endif %}>{{ _('Medium') }}</option>
+                                <option value="high" {% if priority == 'high' %}selected{% endif %}>{{ _('High') }}</option>
+                                <option value="urgent" {% if priority == 'urgent' %}selected{% endif %}>{{ _('Urgent') }}</option>
+                            </select>
+                            <label for="priority">{{ _('Priority') }}</label>
+                        </div>
+                    </div>
+                    <div class="col-md-4">
+                        <div class="form-floating">
+                            <input type="text" class="form-control" id="search" name="search" 
+                                   value="{{ search }}" placeholder="{{ _('Search tasks...') }}">
+                            <label for="search">{{ _('Search tasks...') }}</label>
+                        </div>
+                    </div>
+                    <div class="col-md-2">
+                        <button type="submit" class="btn btn-outline-primary me-2">
+                            <i data-feather="search" class="me-2"></i>
+                            {{ _('Search') }}
+                        </button>
+                        {% if search or status or priority %}
+                        <a href="{{ url_for('main.tasks') }}" class="btn btn-outline-secondary">
+                            <i data-feather="x" class="me-2"></i>
+                            {{ _('Clear') }}
+                        </a>
+                        {% endif %}
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Results -->
+<div class="row">
+    <div class="col-12">
+        <div class="card">
+            <div class="card-header">
+                <h5 class="mb-0">
+                    {{ _('Task List') }}
+                    <span class="badge bg-primary ms-2">{{ tasks.total if tasks else 0 }}</span>
+                </h5>
+            </div>
+            <div class="card-body">
+                {% if tasks and tasks.items %}
+                <div class="table-responsive">
+                    <table class="table table-hover">
+                        <thead>
+                            <tr>
+                                <th width="40">{{ _('Priority') }}</th>
+                                <th>{{ _('Title') }}</th>
+                                <th>{{ _('Assigned To') }}</th>
+                                <th>{{ _('Customer') }}</th>
+                                <th>{{ _('Due Date') }}</th>
+                                <th>{{ _('Status') }}</th>
+                                <th width="150">{{ _('Actions') }}</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {% for task in tasks.items %}
+                            <tr class="{% if task.is_overdue %}task-overdue{% endif %}">
+                                <td>
+                                    <span class="badge priority-{{ task.priority }}">
+                                        {% if task.priority == 'urgent' %}<i data-feather="alert-triangle" style="width: 12px; height: 12px;"></i>
+                                        {% elif task.priority == 'high' %}<i data-feather="arrow-up" style="width: 12px; height: 12px;"></i>
+                                        {% elif task.priority == 'medium' %}<i data-feather="minus" style="width: 12px; height: 12px;"></i>
+                                        {% else %}<i data-feather="arrow-down" style="width: 12px; height: 12px;"></i>
+                                        {% endif %}
+                                    </span>
+                                </td>
+                                <td>
+                                    <strong>{{ task.title }}</strong>
+                                    {% if task.description %}
+                                    <br><small class="text-muted">{{ task.description[:50] }}{% if task.description|length > 50 %}...{% endif %}</small>
+                                    {% endif %}
+                                    {% if task.is_overdue %}
+                                    <br><small class="text-danger"><i data-feather="alert-circle" style="width: 12px; height: 12px;"></i> {{ _('Overdue') }}</small>
+                                    {% endif %}
+                                </td>
+                                <td>
+                                    {% if task.assignee %}
+                                    {{ task.assignee.full_name }}
+                                    {% else %}
+                                    <span class="text-muted">{{ _('Unassigned') }}</span>
+                                    {% endif %}
+                                </td>
+                                <td>
+                                    {% if task.customer %}
+                                    <a href="{{ url_for('main.edit_customer', customer_id=task.customer.id) }}" class="text-decoration-none">
+                                        {{ task.customer.name }}
+                                    </a>
+                                    {% else %}
+                                    <span class="text-muted">-</span>
+                                    {% endif %}
+                                </td>
+                                <td>
+                                    {% if task.due_date %}
+                                    {{ task.due_date.strftime('%d/%m/%Y') }}
+                                    {% if task.is_overdue %}
+                                    <br><small class="text-danger">{{ _('Overdue') }}</small>
+                                    {% endif %}
+                                    {% else %}
+                                    <span class="text-muted">-</span>
+                                    {% endif %}
+                                </td>
+                                <td>
+                                    <span class="badge status-{{ task.status }}">
+                                        {{ task.status.replace('_', ' ').title() }}
+                                    </span>
+                                </td>
+                                <td>
+                                    <div class="btn-group" role="group">
+                                        {% if task.status == 'pending' and (current_user.role in ['admin', 'manager'] or task.assigned_to == current_user.id) %}
+                                        <form method="POST" action="{{ url_for('main.complete_task', task_id=task.id) }}" class="d-inline">
+                                            <button type="submit" class="btn btn-sm btn-outline-success" 
+                                                    data-bs-toggle="tooltip" title="{{ _('Mark Complete') }}"
+                                                    onclick="return confirm('{{ _('Mark this task as completed?') }}')">
+                                                <i data-feather="check"></i>
+                                            </button>
+                                        </form>
+                                        {% endif %}
+                                        
+                                        <button type="button" class="btn btn-sm btn-outline-info" 
+                                                data-bs-toggle="modal" data-bs-target="#taskModal{{ task.id }}"
+                                                title="{{ _('View Details') }}">
+                                            <i data-feather="eye"></i>
+                                        </button>
+                                        
+                                        {% if current_user.role in ['admin', 'manager'] or task.created_by == current_user.id %}
+                                        <a href="{{ url_for('main.edit_task', task_id=task.id) }}" 
+                                           class="btn btn-sm btn-outline-primary" 
+                                           data-bs-toggle="tooltip" title="{{ _('Edit') }}">
+                                            <i data-feather="edit-2"></i>
+                                        </a>
+                                        {% endif %}
+                                    </div>
+                                </td>
+                            </tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
+                
+                <!-- Pagination -->
+                {% if tasks.pages > 1 %}
+                <nav aria-label="Task pagination">
+                    <ul class="pagination justify-content-center">
+                        {% if tasks.has_prev %}
+                        <li class="page-item">
+                            <a class="page-link" href="{{ url_for('main.tasks', page=tasks.prev_num, status=status, priority=priority, search=search) }}">
+                                {{ _('Previous') }}
+                            </a>
+                        </li>
+                        {% endif %}
+                        
+                        {% for page_num in tasks.iter_pages() %}
+                        {% if page_num %}
+                        {% if page_num != tasks.page %}
+                        <li class="page-item">
+                            <a class="page-link" href="{{ url_for('main.tasks', page=page_num, status=status, priority=priority, search=search) }}">
+                                {{ page_num }}
+                            </a>
+                        </li>
+                        {% else %}
+                        <li class="page-item active">
+                            <span class="page-link">{{ page_num }}</span>
+                        </li>
+                        {% endif %}
+                        {% else %}
+                        <li class="page-item disabled">
+                            <span class="page-link">…</span>
+                        </li>
+                        {% endif %}
+                        {% endfor %}
+                        
+                        {% if tasks.has_next %}
+                        <li class="page-item">
+                            <a class="page-link" href="{{ url_for('main.tasks', page=tasks.next_num, status=status, priority=priority, search=search) }}">
+                                {{ _('Next') }}
+                            </a>
+                        </li>
+                        {% endif %}
+                    </ul>
+                </nav>
+                {% endif %}
+                {% else %}
+                <div class="text-center py-5">
+                    <i data-feather="check-square" class="text-muted mb-3" style="width: 64px; height: 64px;"></i>
+                    <h5 class="text-muted">{{ _('No tasks found') }}</h5>
+                    {% if search or status or priority %}
+                    <p class="text-muted">{{ _('Try adjusting your search criteria') }}</p>
+                    <a href="{{ url_for('main.tasks') }}" class="btn btn-outline-primary">
+                        {{ _('View All Tasks') }}
+                    </a>
+                    {% else %}
+                    <p class="text-muted">{{ _('Get started by creating your first task') }}</p>
+                    <a href="{{ url_for('main.create_task') }}" class="btn btn-primary">
+                        <i data-feather="plus" class="me-2"></i>
+                        {{ _('Create Task') }}
+                    </a>
+                    {% endif %}
+                </div>
+                {% endif %}
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Task Detail Modals -->
+{% if tasks and tasks.items %}
+{% for task in tasks.items %}
+<div class="modal fade" id="taskModal{{ task.id }}" tabindex="-1" aria-hidden="true">
+    <div class="modal-dialog modal-lg">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title">{{ task.title }}</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+            </div>
+            <div class="modal-body">
+                <div class="row">
+                    <div class="col-md-6">
+                        <h6>{{ _('Task Information') }}</h6>
+                        <table class="table table-sm">
+                            <tr>
+                                <td><strong>{{ _('Priority') }}:</strong></td>
+                                <td>
+                                    <span class="badge priority-{{ task.priority }}">
+                                        {{ task.priority.title() }}
+                                    </span>
+                                </td>
+                            </tr>
+                            <tr>
+                                <td><strong>{{ _('Status') }}:</strong></td>
+                                <td>
+                                    <span class="badge status-{{ task.status }}">
+                                        {{ task.status.replace('_', ' ').title() }}
+                                    </span>
+                                </td>
+                            </tr>
+                            <tr>
+                                <td><strong>{{ _('Category') }}:</strong></td>
+                                <td>{{ task.category.replace('_', ' ').title() if task.category else '-' }}</td>
+                            </tr>
+                            <tr>
+                                <td><strong>{{ _('Created') }}:</strong></td>
+                                <td>{{ task.created_at.strftime('%d/%m/%Y %H:%M') }}</td>
+                            </tr>
+                            <tr>
+                                <td><strong>{{ _('Created by') }}:</strong></td>
+                                <td>{{ task.creator.full_name }}</td>
+                            </tr>
+                        </table>
+                    </div>
+                    <div class="col-md-6">
+                        <h6>{{ _('Assignment & Timing') }}</h6>
+                        <table class="table table-sm">
+                            <tr>
+                                <td><strong>{{ _('Assigned To') }}:</strong></td>
+                                <td>{{ task.assignee.full_name if task.assignee else _('Unassigned') }}</td>
+                            </tr>
+                            {% if task.due_date %}
+                            <tr>
+                                <td><strong>{{ _('Due Date') }}:</strong></td>
+                                <td>
+                                    {{ task.due_date.strftime('%d/%m/%Y') }}
+                                    {% if task.is_overdue %}
+                                    <br><small class="text-danger">{{ _('Overdue') }}</small>
+                                    {% endif %}
+                                </td>
+                            </tr>
+                            {% endif %}
+                            {% if task.completed_at %}
+                            <tr>
+                                <td><strong>{{ _('Completed') }}:</strong></td>
+                                <td>{{ task.completed_at.strftime('%d/%m/%Y %H:%M') }}</td>
+                            </tr>
+                            {% endif %}
+                            {% if task.customer %}
+                            <tr>
+                                <td><strong>{{ _('Customer') }}:</strong></td>
+                                <td>{{ task.customer.name }}</td>
+                            </tr>
+                            {% endif %}
+                        </table>
+                    </div>
+                </div>
+                
+                {% if task.description %}
+                <div class="row mt-3">
+                    <div class="col-12">
+                        <h6>{{ _('Description') }}</h6>
+                        <p class="bg-light p-3 rounded">{{ task.description }}</p>
+                    </div>
+                </div>
+                {% endif %}
+                
+                {% if task.notes %}
+                <div class="row mt-3">
+                    <div class="col-12">
+                        <h6>{{ _('Notes') }}</h6>
+                        <p class="bg-light p-3 rounded">{{ task.notes }}</p>
+                    </div>
+                </div>
+                {% endif %}
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">{{ _('Close') }}</button>
+                {% if task.status == 'pending' and (current_user.role in ['admin', 'manager'] or task.assigned_to == current_user.id) %}
+                <form method="POST" action="{{ url_for('main.complete_task', task_id=task.id) }}" class="d-inline">
+                    <button type="submit" class="btn btn-success"
+                            onclick="return confirm('{{ _('Mark this task as completed?') }}')">
+                        <i data-feather="check" class="me-2"></i>
+                        {{ _('Mark Complete') }}
+                    </button>
+                </form>
+                {% endif %}
+            </div>
+        </div>
+    </div>
+</div>
+{% endfor %}
+{% endif %}
+{% endblock %}
