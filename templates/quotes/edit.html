@@ -196,7 +196,7 @@
                     </tr>
                     <tr>
                         <td>{{ _('Created') }}:</td>
-                        <td>{{ quote.created_at.strftime('%d/%m/%Y') if quote.created_at else '-' }}</td>
+                        <td>{{ safe_date_format(quote.created_at, '%d/%m/%Y') or '-' }}</td>
                     </tr>
                     <tr>
                         <td>{{ _('Created by') }}:</td>

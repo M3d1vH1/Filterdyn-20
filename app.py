@@ -92,9 +92,14 @@ def create_app():
     @app.context_processor
     def inject_globals():
         from flask_login import current_user
+        from utils import format_date, safe_datetime_format, safe_date_format, format_currency
         return {
             'current_user': current_user,
-            'current_locale': get_locale()
+            'current_locale': get_locale(),
+            'format_date': format_date,
+            'safe_datetime_format': safe_datetime_format,
+            'safe_date_format': safe_date_format,
+            'format_currency': format_currency
         }
     
     # Create tables
