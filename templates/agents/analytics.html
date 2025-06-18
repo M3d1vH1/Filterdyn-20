@@ -1,0 +1,281 @@
+{% extends "base.html" %}
+{% set active_page = "agents" %}
+
+{% block title %}{{ _('Analytics Dashboard') }}{% endblock %}
+
+{% block content %}
+<div class="container-fluid">
+    <div class="d-flex justify-content-between flex-wrap flex-md-nowrap align-items-center pt-3 pb-2 mb-3 border-bottom">
+        <h1 class="h2">{{ _('Analytics Dashboard') }}</h1>
+        <div class="btn-toolbar mb-2 mb-md-0">
+            <div class="btn-group me-2">
+                <a href="{{ url_for('agents.dashboard') }}" class="btn btn-sm btn-outline-secondary">
+                    <i data-feather="arrow-left"></i> {{ _('Back to Dashboard') }}
+                </a>
+                <button type="button" class="btn btn-sm btn-outline-secondary" onclick="refreshData()">
+                    <i data-feather="refresh-cw"></i> {{ _('Refresh') }}
+                </button>
+                <button type="button" class="btn btn-sm btn-primary" onclick="exportReport()">
+                    <i data-feather="download"></i> {{ _('Export Report') }}
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Key Metrics Overview -->
+    <div class="row mb-4">
+        {% if dashboard_data and dashboard_data.basic_stats %}
+        <div class="col-md-3">
+            <div class="card">
+                <div class="card-body text-center">
+                    <div class="h3 mb-0 text-primary">{{ dashboard_data.basic_stats.total_customers or 0 }}</div>
+                    <small class="text-muted">{{ _('Total Customers') }}</small>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-3">
+            <div class="card">
+                <div class="card-body text-center">
+                    <div class="h3 mb-0 text-success">{{ dashboard_data.basic_stats.total_quotes or 0 }}</div>
+                    <small class="text-muted">{{ _('Total Quotes') }}</small>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-3">
+            <div class="card">
+                <div class="card-body text-center">
+                    <div class="h3 mb-0 text-info">{{ dashboard_data.basic_stats.total_orders or 0 }}</div>
+                    <small class="text-muted">{{ _('Total Orders') }}</small>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-3">
+            <div class="card">
+                <div class="card-body text-center">
+                    <div class="h3 mb-0 text-warning">{{ dashboard_data.basic_stats.active_tasks or 0 }}</div>
+                    <small class="text-muted">{{ _('Active Tasks') }}</small>
+                </div>
+            </div>
+        </div>
+        {% else %}
+        <div class="col-12">
+            <div class="card">
+                <div class="card-body">
+                    <p class="text-muted text-center">{{ _('Analytics data is being generated...') }}</p>
+                </div>
+            </div>
+        </div>
+        {% endif %}
+    </div>
+
+    <!-- Performance Metrics -->
+    {% if dashboard_data and dashboard_data.equipment_metrics %}
+    <div class="row mb-4">
+        <div class="col-md-6">
+            <div class="card">
+                <div class="card-header">
+                    <h5 class="card-title mb-0">{{ _('Equipment Performance') }}</h5>
+                </div>
+                <div class="card-body">
+                    <div class="table-responsive">
+                        <table class="table table-sm">
+                            <thead>
+                                <tr>
+                                    <th>{{ _('Metric') }}</th>
+                                    <th>{{ _('Value') }}</th>
+                                    <th>{{ _('Trend') }}</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                {% for metric in dashboard_data.equipment_metrics %}
+                                <tr>
+                                    <td>{{ metric.name }}</td>
+                                    <td>{{ metric.value }} {{ metric.unit if metric.unit else '' }}</td>
+                                    <td>
+                                        <span class="badge {% if metric.trend == 'increasing' %}bg-success{% elif metric.trend == 'decreasing' %}bg-danger{% else %}bg-secondary{% endif %}">
+                                            {{ metric.trend|title }}
+                                        </span>
+                                    </td>
+                                </tr>
+                                {% endfor %}
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+        </div>
+        
+        <div class="col-md-6">
+            <div class="card">
+                <div class="card-header">
+                    <h5 class="card-title mb-0">{{ _('Service Metrics') }}</h5>
+                </div>
+                <div class="card-body">
+                    {% if dashboard_data.service_metrics %}
+                    <div class="table-responsive">
+                        <table class="table table-sm">
+                            <thead>
+                                <tr>
+                                    <th>{{ _('Metric') }}</th>
+                                    <th>{{ _('Value') }}</th>
+                                    <th>{{ _('Change') }}</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                {% for metric in dashboard_data.service_metrics %}
+                                <tr>
+                                    <td>{{ metric.name }}</td>
+                                    <td>{{ metric.value }} {{ metric.unit if metric.unit else '' }}</td>
+                                    <td>
+                                        <span class="{% if metric.change_percent > 0 %}text-success{% elif metric.change_percent < 0 %}text-danger{% else %}text-muted{% endif %}">
+                                            {{ metric.change_percent }}%
+                                        </span>
+                                    </td>
+                                </tr>
+                                {% endfor %}
+                            </tbody>
+                        </table>
+                    </div>
+                    {% else %}
+                    <p class="text-muted">{{ _('No service metrics available') }}</p>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+    </div>
+    {% endif %}
+
+    <!-- Water Quality Trends -->
+    {% if dashboard_data and dashboard_data.quality_trends %}
+    <div class="row mb-4">
+        <div class="col">
+            <div class="card">
+                <div class="card-header">
+                    <h5 class="card-title mb-0">{{ _('Water Quality Trends') }}</h5>
+                </div>
+                <div class="card-body">
+                    <div id="qualityChart" style="height: 300px;">
+                        <div class="d-flex align-items-center justify-content-center h-100">
+                            <div class="text-center">
+                                <i data-feather="bar-chart-2" class="mb-2" style="width: 48px; height: 48px;"></i>
+                                <p class="text-muted">{{ _('Quality trends chart will be displayed here') }}</p>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+    {% endif %}
+
+    <!-- Customer Engagement -->
+    {% if dashboard_data and dashboard_data.customer_metrics %}
+    <div class="row">
+        <div class="col-md-8">
+            <div class="card">
+                <div class="card-header">
+                    <h5 class="card-title mb-0">{{ _('Customer Engagement') }}</h5>
+                </div>
+                <div class="card-body">
+                    <div class="table-responsive">
+                        <table class="table table-striped">
+                            <thead>
+                                <tr>
+                                    <th>{{ _('Metric') }}</th>
+                                    <th>{{ _('Current Period') }}</th>
+                                    <th>{{ _('Previous Period') }}</th>
+                                    <th>{{ _('Change') }}</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                {% for metric in dashboard_data.customer_metrics %}
+                                <tr>
+                                    <td>{{ metric.name }}</td>
+                                    <td>{{ metric.value }}</td>
+                                    <td>{{ metric.previous_value if metric.previous_value else 'N/A' }}</td>
+                                    <td>
+                                        {% if metric.change_percent %}
+                                        <span class="{% if metric.change_percent > 0 %}text-success{% elif metric.change_percent < 0 %}text-danger{% else %}text-muted{% endif %}">
+                                            {{ metric.change_percent }}%
+                                        </span>
+                                        {% else %}
+                                        <span class="text-muted">N/A</span>
+                                        {% endif %}
+                                    </td>
+                                </tr>
+                                {% endfor %}
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+        </div>
+        
+        <div class="col-md-4">
+            <div class="card">
+                <div class="card-header">
+                    <h5 class="card-title mb-0">{{ _('Quick Actions') }}</h5>
+                </div>
+                <div class="card-body">
+                    <div class="d-grid gap-2">
+                        <button class="btn btn-outline-primary" onclick="generateCustomReport()">
+                            <i data-feather="file-text"></i> {{ _('Generate Custom Report') }}
+                        </button>
+                        <button class="btn btn-outline-secondary" onclick="scheduleReport()">
+                            <i data-feather="calendar"></i> {{ _('Schedule Regular Report') }}
+                        </button>
+                        <button class="btn btn-outline-info" onclick="exportData()">
+                            <i data-feather="database"></i> {{ _('Export Raw Data') }}
+                        </button>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+    {% endif %}
+</div>
+
+<script>
+function refreshData() {
+    location.reload();
+}
+
+function exportReport() {
+    alert('{{ _("Report export functionality will be implemented") }}');
+}
+
+function generateCustomReport() {
+    alert('{{ _("Custom report generation will be implemented") }}');
+}
+
+function scheduleReport() {
+    alert('{{ _("Report scheduling functionality will be implemented") }}');
+}
+
+function exportData() {
+    fetch('/agents/api/analytics/dashboard')
+        .then(response => response.json())
+        .then(data => {
+            const dataStr = JSON.stringify(data, null, 2);
+            const dataBlob = new Blob([dataStr], {type: 'application/json'});
+            const url = URL.createObjectURL(dataBlob);
+            const link = document.createElement('a');
+            link.href = url;
+            link.download = 'analytics_data.json';
+            link.click();
+        })
+        .catch(error => {
+            alert('{{ _("Error exporting data") }}: ' + error);
+        });
+}
+
+// Initialize charts when page loads
+document.addEventListener('DOMContentLoaded', function() {
+    // Chart initialization would go here
+    // For now, just ensure feather icons are loaded
+    if (typeof feather !== 'undefined') {
+        feather.replace();
+    }
+});
+</script>
+{% endblock %}
