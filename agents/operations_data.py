@@ -11,6 +11,8 @@ from datetime import datetime, timedelta
 from typing import List, Dict, Optional, Any, Tuple
 from dataclasses import dataclass
 import sqlite3
+import psycopg2
+from urllib.parse import urlparse
 import csv
 
 try:

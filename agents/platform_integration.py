@@ -52,7 +52,7 @@ class PlatformIntegrationAgent:
     
     def __init__(self, config: Dict[str, Any] = None):
         self.config = config or {}
-        self.db_path = self.config.get('db_path', 'instance/test.db')
+        self.db_path = self.config.get('db_path', os.getenv('DATABASE_URL', 'postgresql://user:password@localhost/filterdyn'))
         self.grandstream_config = self.config.get('grandstream', {})
         self.api_keys = self.config.get('api_keys', {})
         
