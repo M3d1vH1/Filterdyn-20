@@ -576,12 +576,13 @@ def tasks():
 @login_required
 def create_task():
     form = TaskForm()
-    form.assigned_to.choices = [
-        (u.id, u.full_name) for u in User.query.filter_by(tenant_id=current_user.tenant_id, is_active=True).all()
-    ]
-    form.customer_id.choices = [(0, _('Select Customer'))] + [
-        (c.id, c.name) for c in Customer.query.filter_by(tenant_id=current_user.tenant_id).all()
-    ]
+    
+    # Populate choices for dropdowns
+    users = User.query.filter_by(tenant_id=current_user.tenant_id, is_active=True).all()
+    customers = Customer.query.filter_by(tenant_id=current_user.tenant_id).all()
+    
+    form.assigned_to.choices = [(u.id, u.full_name) for u in users]
+    form.customer_id.choices = [(0, _('None'))] + [(c.id, c.name) for c in customers]
     
     if form.validate_on_submit():
         task = Task(
@@ -590,16 +591,24 @@ def create_task():
             assigned_to=form.assigned_to.data,
             title=form.title.data,
             description=form.description.data,
+            status=form.status.data,
             priority=form.priority.data,
             category=form.category.data,
-            customer_id=form.customer_id.data if form.customer_id.data else None,
-            due_date=form.due_date.data
+            customer_id=form.customer_id.data if form.customer_id.data != 0 else None,
+            due_date=form.due_date.data,
+            notes=form.notes.data
         )
         
         db.session.add(task)
         db.session.commit()
         flash(_('Task created successfully'), 'success')
         return redirect(url_for('main.tasks'))
+    
+    # Debug form errors
+    if request.method == 'POST' and not form.validate():
+        for field, errors in form.errors.items():
+            for error in errors:
+                flash(f'Error in {field}: {error}', 'error')
     
     return render_template('tasks/create.html', form=form)
 
@@ -617,14 +626,19 @@ def edit_task(task_id):
     form.assigned_to.choices = [
         (u.id, u.full_name) for u in User.query.filter_by(tenant_id=current_user.tenant_id, is_active=True).all()
     ]
-    form.customer_id.choices = [(0, _('Select Customer'))] + [
+    form.customer_id.choices = [(0, _('None'))] + [
         (c.id, c.name) for c in Customer.query.filter_by(tenant_id=current_user.tenant_id).all()
     ]
     
-    # Handle datetime formatting for the form
-    if request.method == 'GET' and task.due_date:
-        # Format datetime for datetime-local input
-        form.due_date.data = task.due_date.replace(tzinfo=None) if task.due_date.tzinfo else task.due_date
+    # Set initial values for GET request
+    if request.method == 'GET':
+        if task.due_date:
+            # Format datetime for datetime-local input
+            form.due_date.data = task.due_date.replace(tzinfo=None) if task.due_date.tzinfo else task.due_date
+        if task.customer_id:
+            form.customer_id.data = task.customer_id
+        else:
+            form.customer_id.data = 0
     
     if form.validate_on_submit():
         old_status = task.status

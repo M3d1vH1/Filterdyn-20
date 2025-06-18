@@ -101,8 +101,8 @@ class TaskForm(FlaskForm):
         ('follow_up', _l('Follow Up')),
         ('service_reminder', _l('Service Reminder')),
         ('general', _l('General'))
-    ], validators=[Optional()])
+    ], validators=[DataRequired()], default='general')
     assigned_to = SelectField(_l('Assigned To'), coerce=int, validators=[DataRequired()])
     customer_id = SelectField(_l('Customer (Optional)'), coerce=int, validators=[Optional()])
-    due_date = DateTimeField(_l('Due Date'), validators=[Optional()], format='%Y-%m-%d %H:%M')
+    due_date = DateTimeField(_l('Due Date'), validators=[Optional()], format='%Y-%m-%dT%H:%M')
     notes = TextAreaField(_l('Notes'), validators=[Optional()])
