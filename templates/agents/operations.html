@@ -46,7 +46,7 @@
                                     <td>{{ reminder.equipment_number }}</td>
                                     <td>{{ reminder.customer_name }}</td>
                                     <td>{{ reminder.service_type }}</td>
-                                    <td>{{ reminder.next_service_date.strftime('%Y-%m-%d') if .strftime('%Y-%m-%d').split('.')[0] else 'N/A' if reminder.next_service_date else 'N/A' }}</td>
+                                    <td>{{ reminder.next_service_date.strftime('%Y-%m-%d') if reminder.next_service_date else 'N/A' }}</td>
                                     <td>
                                         <span class="badge {% if reminder.priority == 'urgent' %}bg-danger{% elif reminder.priority == 'high' %}bg-warning{% else %}bg-info{% endif %}">
                                             {{ reminder.priority|title }}
@@ -106,7 +106,7 @@
                                             {{ alert.alert_type|title }}
                                         </span>
                                     </td>
-                                    <td>{{ alert.timestamp.strftime('%Y-%m-%d %H:%M') if .strftime('%Y-%m-%d %H:%M').split('.')[0] else 'N/A' if alert.timestamp else 'N/A' }}</td>
+                                    <td>{{ alert.timestamp.strftime('%Y-%m-%d %H:%M') if alert.timestamp else 'N/A' }}</td>
                                     <td>
                                         <button class="btn btn-sm btn-outline-danger" onclick="sendAlert({{ alert.equipment_id }})">
                                             <i data-feather="alert-triangle"></i> {{ _('Send Alert') }}
