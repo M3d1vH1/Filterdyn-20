@@ -616,7 +616,21 @@ def settings():
         flash(_('Settings updated successfully'), 'success')
         return redirect(url_for('main.settings'))
     
-    return render_template('settings/index.html')
+    # Get data for template
+    from models_settings import SystemSetting
+    from models import ProductCategory
+    
+    categories = ProductCategory.query.filter_by(tenant_id=current_user.tenant_id).all()
+    
+    # Get current settings
+    settings = {
+        'openai_api_key': SystemSetting.get_setting(current_user.tenant_id, 'openai_api_key'),
+        'openai_default_model': SystemSetting.get_setting(current_user.tenant_id, 'openai_default_model', 'gpt-4o'),
+        'gmail_client_id': SystemSetting.get_setting(current_user.tenant_id, 'gmail_client_id'),
+        'twilio_account_sid': SystemSetting.get_setting(current_user.tenant_id, 'twilio_account_sid'),
+    }
+    
+    return render_template('settings/index.html', categories=categories, settings=settings)
 
 @main_bp.route('/settings/categories', methods=['POST'])
 @login_required
