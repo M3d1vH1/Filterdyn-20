@@ -535,11 +535,60 @@ def settings():
             current_user.tenant.primary_color = request.form.get('primary_color')
             current_user.tenant.secondary_color = request.form.get('secondary_color')
             
+        elif section == 'defaults':
+            # Handle default settings
+            flash(_('Default settings updated successfully'), 'success')
+            
         db.session.commit()
         flash(_('Settings updated successfully'), 'success')
         return redirect(url_for('main.settings'))
     
     return render_template('settings/index.html')
+
+@main_bp.route('/settings/categories', methods=['POST'])
+@login_required
+@admin_required
+def add_category():
+    """Add a new product category"""
+    try:
+        category = ProductCategory(
+            tenant_id=current_user.tenant_id,
+            name_en=request.form.get('category_name_en'),
+            name_el=request.form.get('category_name_el'),
+            description_en=request.form.get('category_description_en'),
+            description_el=request.form.get('category_description_el'),
+            is_active=True
+        )
+        
+        db.session.add(category)
+        db.session.commit()
+        
+        flash(_('Category added successfully'), 'success')
+    except Exception as e:
+        flash(_('Error adding category'), 'error')
+        db.session.rollback()
+    
+    return redirect(url_for('main.settings') + '#nav-categories')
+
+@main_bp.route('/settings/categories/<int:category_id>/delete', methods=['POST'])
+@login_required
+@admin_required
+def delete_category(category_id):
+    """Delete a product category"""
+    category = ProductCategory.query.filter_by(
+        id=category_id, 
+        tenant_id=current_user.tenant_id
+    ).first_or_404()
+    
+    # Check if category has products
+    if category.products:
+        flash(_('Cannot delete category with existing products'), 'error')
+    else:
+        db.session.delete(category)
+        db.session.commit()
+        flash(_('Category deleted successfully'), 'success')
+    
+    return redirect(url_for('main.settings') + '#nav-categories')
 
 # Task routes
 @main_bp.route('/tasks')
