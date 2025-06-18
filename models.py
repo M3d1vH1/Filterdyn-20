@@ -266,13 +266,7 @@ class Task(db.Model):
     title = db.Column(db.String(200), nullable=False)
     description = db.Column(db.Text)
     priority = db.Column(db.String(20), default='medium')  # low, medium, high, urgent
-    category = db.Column(db.String(50))  # follow_up, service_reminder, general, automated_reminder
-    
-    # Automation features
-    is_automated = db.Column(db.Boolean, default=False)
-    recurrence_pattern = db.Column(db.String(50))  # daily, weekly, monthly, quarterly
-    business_hours_only = db.Column(db.Boolean, default=True)
-    auto_assign_role = db.Column(db.String(20))  # Auto-assign to users with specific role
+    category = db.Column(db.String(50))  # follow_up, service_reminder, general
 
     # References
     customer_id = db.Column(db.Integer, db.ForeignKey('customers.id'))

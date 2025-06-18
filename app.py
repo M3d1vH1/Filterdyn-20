@@ -84,11 +84,9 @@ def create_app():
     # Register blueprints
     from routes import main_bp
     from auth import auth_bp
-    from api.base import api_bp
     
     app.register_blueprint(main_bp)
     app.register_blueprint(auth_bp)
-    app.register_blueprint(api_bp)
     
     # Context processors
     @app.context_processor
@@ -102,7 +100,6 @@ def create_app():
     # Create tables
     with app.app_context():
         import models
-        import models_extended  # Import extended models
         db.create_all()
         
         # Create superadmin if it doesn't exist

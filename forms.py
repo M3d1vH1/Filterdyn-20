@@ -82,56 +82,6 @@ class OrderForm(FlaskForm):
     delivery_date = DateTimeField(_l('Delivery Date'), validators=[Optional()], format='%Y-%m-%d')
     delivery_notes = TextAreaField(_l('Delivery Notes'), validators=[Optional()])
 
-class AssetForm(FlaskForm):
-    customer_id = SelectField(_l('Customer'), coerce=int, validators=[DataRequired()])
-    category_id = SelectField(_l('Category'), coerce=int, validators=[DataRequired()])
-    
-    # Asset identification
-    serial_number = StringField(_l('Serial Number'), validators=[DataRequired(), Length(max=100)])
-    model = StringField(_l('Model'), validators=[Optional(), Length(max=100)])
-    manufacturer = StringField(_l('Manufacturer'), validators=[Optional(), Length(max=100)])
-    
-    # Location and status
-    location = StringField(_l('Location'), validators=[Optional(), Length(max=200)])
-    status = SelectField(_l('Status'), 
-                        choices=[('active', 'Active'), ('maintenance', 'Maintenance'), ('retired', 'Retired')],
-                        default='active')
-    
-    # Installation and service
-    installation_date = DateTimeLocalField(_l('Installation Date'), validators=[Optional()])
-    last_service_date = DateTimeLocalField(_l('Last Service Date'), validators=[Optional()])
-    next_service_date = DateTimeLocalField(_l('Next Service Date'), validators=[Optional()])
-    
-    # Water quality specific
-    capacity_liters = DecimalField(_l('Capacity (Liters)'), validators=[Optional()], places=2)
-    resin_type = StringField(_l('Resin Type'), validators=[Optional(), Length(max=100)])
-    conductivity_limit = DecimalField(_l('Conductivity Limit (μS/cm)'), validators=[Optional()], places=4)
-    
-    submit = SubmitField(_l('Save Asset'))
-
-class WaterQualityForm(FlaskForm):
-    asset_id = SelectField(_l('Asset'), coerce=int, validators=[DataRequired()])
-    reading_date = DateTimeLocalField(_l('Reading Date'), validators=[DataRequired()], 
-                                     default=lambda: datetime.now())
-    
-    # Water quality parameters
-    conductivity = DecimalField(_l('Conductivity (μS/cm)'), validators=[Optional()], places=4)
-    ph_level = DecimalField(_l('pH Level'), validators=[Optional()], places=2)
-    tds = DecimalField(_l('TDS (ppm)'), validators=[Optional()], places=2)
-    chlorine = DecimalField(_l('Chlorine (mg/L)'), validators=[Optional()], places=3)
-    temperature = DecimalField(_l('Temperature (°C)'), validators=[Optional()], places=2)
-    
-    notes = TextAreaField(_l('Notes'), validators=[Optional()])
-    submit = SubmitField(_l('Save Reading'))
-
-class EmailIntegrationForm(FlaskForm):
-    gmail_credentials = TextAreaField(_l('Gmail OAuth2 Credentials (JSON)'), 
-                                     validators=[DataRequired()],
-                                     description='Paste your Gmail API credentials JSON here')
-    openai_api_key = StringField(_l('OpenAI API Key'), validators=[DataRequired()],
-                                render_kw={'type': 'password'})
-    submit = SubmitField(_l('Configure Email Integration'))
-
 class TaskForm(FlaskForm):
     title = StringField(_l('Title'), validators=[DataRequired(), Length(max=200)])
     description = TextAreaField(_l('Description'), validators=[Optional()])
