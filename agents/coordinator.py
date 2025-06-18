@@ -15,9 +15,9 @@ from dataclasses import dataclass
 from .communication_ai import CommunicationAIAgent
 from .operations_data import OperationsDataAgent
 from .platform_integration import PlatformIntegrationAgent
-from operational_suite_features.agents.testing_quality.test_runner import run_tests
-from operational_suite_features.agents.testing_quality.test_analysis import analyze_results
-from operational_suite_features.agents.testing_quality.test_reporter import generate_report
+from .testing_quality.test_runner import run_tests
+from .testing_quality.test_analysis import analyze_results
+from .testing_quality.test_reporter import generate_report
 
 
 @dataclass
