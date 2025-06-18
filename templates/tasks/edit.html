@@ -215,14 +215,14 @@
                         <div class="row">
                             <div class="col-md-6">
                                 <small>
-                                    <strong>{{ _('Created:') }}</strong> {{ task.created_at.strftime('%d/%m/%Y %H:%M') }}<br>
+                                    <strong>{{ _('Created:') }}</strong> {{ task.created_at.strftime('%d/%m/%Y %H:%M') if task.created_at else \'N/A\' if created_at else \'N/A\' }}<br>
                                     <strong>{{ _('Created by:') }}</strong> {{ task.creator.full_name }}
                                 </small>
                             </div>
                             <div class="col-md-6">
                                 {% if task.completed_at %}
                                 <small>
-                                    <strong>{{ _('Completed:') }}</strong> {{ task.completed_at.strftime('%d/%m/%Y %H:%M') }}
+                                    <strong>{{ _('Completed:') }}</strong> {{ task.completed_at.strftime('%d/%m/%Y %H:%M') if task.completed_at else \'N/A\' if completed_at else \'N/A\' }}
                                 </small>
                                 {% endif %}
                             </div>
