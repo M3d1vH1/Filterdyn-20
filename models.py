@@ -293,7 +293,12 @@ class Task(db.Model):
     @property
     def is_overdue(self):
         if self.due_date and self.status not in ['completed', 'cancelled']:
-            return self.due_date < datetime.now(timezone.utc)
+            now = datetime.now(timezone.utc)
+            if self.due_date.tzinfo is None:
+                # If due_date is naive, make it timezone-aware
+                due_date_aware = self.due_date.replace(tzinfo=timezone.utc)
+                return due_date_aware < now
+            return self.due_date < now
         return False
 
 class PDFTemplate(db.Model):
