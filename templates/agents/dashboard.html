@@ -1,0 +1,172 @@
+{% extends "base.html" %}
+{% set active_page = "agents" %}
+
+{% block title %}{{ _('Agent System Dashboard') }}{% endblock %}
+
+{% block content %}
+<div class="container-fluid">
+    <div class="d-flex justify-content-between flex-wrap flex-md-nowrap align-items-center pt-3 pb-2 mb-3 border-bottom">
+        <h1 class="h2">{{ _('Agent System Dashboard') }}</h1>
+        <div class="btn-toolbar mb-2 mb-md-0">
+            <div class="btn-group me-2">
+                <button type="button" class="btn btn-sm btn-outline-secondary" onclick="refreshAgentStatus()">
+                    <i data-feather="refresh-cw"></i> {{ _('Refresh') }}
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <!-- System Health Overview -->
+    <div class="row mb-4">
+        <div class="col">
+            <div class="card">
+                <div class="card-header">
+                    <h5 class="card-title mb-0">{{ _('System Health') }}</h5>
+                </div>
+                <div class="card-body">
+                    <div class="row">
+                        <div class="col-md-3">
+                            <div class="text-center">
+                                <div class="h3 mb-0 text-success">{{ system_health.get('system_status', 'Unknown') }}</div>
+                                <small class="text-muted">{{ _('Overall Status') }}</small>
+                            </div>
+                        </div>
+                        <div class="col-md-3">
+                            <div class="text-center">
+                                <div class="h3 mb-0 text-info">{{ agent_status|length }}</div>
+                                <small class="text-muted">{{ _('Active Agents') }}</small>
+                            </div>
+                        </div>
+                        <div class="col-md-3">
+                            <div class="text-center">
+                                <div class="h3 mb-0 text-warning">{{ system_health.get('current_alerts', {})|length }}</div>
+                                <small class="text-muted">{{ _('Current Alerts') }}</small>
+                            </div>
+                        </div>
+                        <div class="col-md-3">
+                            <div class="text-center">
+                                <div class="h3 mb-0 text-primary">{{ system_health.get('uptime', 'N/A') }}</div>
+                                <small class="text-muted">{{ _('Uptime') }}</small>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Agent Status Cards -->
+    <div class="row mb-4">
+        {% for agent_name, status in agent_status.items() %}
+        <div class="col-md-6 col-lg-3 mb-3">
+            <div class="card h-100">
+                <div class="card-body">
+                    <div class="d-flex justify-content-between align-items-start">
+                        <div>
+                            <h6 class="card-title">{{ status.name }}</h6>
+                            <span class="badge {% if status.status == 'active' %}bg-success{% elif status.status == 'inactive' %}bg-secondary{% else %}bg-danger{% endif %}">
+                                {{ status.status|title }}
+                            </span>
+                        </div>
+                        <div class="dropdown">
+                            <button class="btn btn-sm btn-outline-secondary dropdown-toggle" type="button" data-bs-toggle="dropdown">
+                                <i data-feather="more-horizontal"></i>
+                            </button>
+                            <ul class="dropdown-menu">
+                                <li><a class="dropdown-item" href="{{ url_for('agents.' + agent_name.replace('_', '')) }}">{{ _('View Details') }}</a></li>
+                                <li><a class="dropdown-item" href="#" onclick="restartAgent('{{ agent_name }}')">{{ _('Restart') }}</a></li>
+                            </ul>
+                        </div>
+                    </div>
+                    <small class="text-muted">{{ _('Last Activity') }}: {{ status.last_activity.strftime('%H:%M:%S') if status.last_activity else 'N/A' }}</small>
+                    {% if status.error_message %}
+                    <div class="mt-2">
+                        <small class="text-danger">{{ _('Error') }}: {{ status.error_message }}</small>
+                    </div>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+        {% endfor %}
+    </div>
+
+    <!-- Quick Actions -->
+    <div class="row">
+        <div class="col-md-6">
+            <div class="card">
+                <div class="card-header">
+                    <h5 class="card-title mb-0">{{ _('Communication & AI') }}</h5>
+                </div>
+                <div class="card-body">
+                    <p class="card-text">{{ _('Send emails, generate AI content, and manage communications.') }}</p>
+                    <a href="{{ url_for('agents.communicationai') }}" class="btn btn-primary">{{ _('Open Communication Agent') }}</a>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-6">
+            <div class="card">
+                <div class="card-header">
+                    <h5 class="card-title mb-0">{{ _('Operations & Data') }}</h5>
+                </div>
+                <div class="card-body">
+                    <p class="card-text">{{ _('Monitor service reminders, water quality alerts, and operational data.') }}</p>
+                    <a href="{{ url_for('agents.operations') }}" class="btn btn-primary">{{ _('Open Operations Agent') }}</a>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="row mt-3">
+        <div class="col-md-6">
+            <div class="card">
+                <div class="card-header">
+                    <h5 class="card-title mb-0">{{ _('Analytics Dashboard') }}</h5>
+                </div>
+                <div class="card-body">
+                    <p class="card-text">{{ _('View comprehensive analytics, performance metrics, and business intelligence.') }}</p>
+                    <a href="{{ url_for('agents.analytics_dashboard') }}" class="btn btn-primary">{{ _('Open Analytics') }}</a>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-6">
+            <div class="card">
+                <div class="card-header">
+                    <h5 class="card-title mb-0">{{ _('API & Integrations') }}</h5>
+                </div>
+                <div class="card-body">
+                    <p class="card-text">{{ _('Manage API endpoints, external integrations, and platform connections.') }}</p>
+                    <button class="btn btn-outline-primary" onclick="testApiHealth()">{{ _('Test API Health') }}</button>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+function refreshAgentStatus() {
+    location.reload();
+}
+
+function restartAgent(agentName) {
+    if (confirm('{{ _("Are you sure you want to restart this agent?") }}')) {
+        // Implementation for restarting agent
+        alert('{{ _("Agent restart functionality will be implemented") }}');
+    }
+}
+
+function testApiHealth() {
+    fetch('/agents/api/health')
+        .then(response => response.json())
+        .then(data => {
+            if (data.status === 'healthy') {
+                alert('{{ _("API is healthy and responding") }}');
+            } else {
+                alert('{{ _("API health check failed") }}: ' + data.error);
+            }
+        })
+        .catch(error => {
+            alert('{{ _("Error testing API health") }}: ' + error);
+        });
+}
+</script>
+{% endblock %}
