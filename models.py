@@ -325,3 +325,145 @@ class PDFTemplate(db.Model):
 
     created_at = db.Column(db.DateTime, default=lambda: datetime.now(timezone.utc))
     updated_at = db.Column(db.DateTime, default=lambda: datetime.now(timezone.utc), onupdate=lambda: datetime.now(timezone.utc))
+
+
+# Additional models referenced in relationships
+class Equipment(db.Model):
+    __tablename__ = 'equipment'
+
+    id = db.Column(db.Integer, primary_key=True)
+    tenant_id = db.Column(db.Integer, db.ForeignKey('tenants.id'), nullable=False)
+    customer_id = db.Column(db.Integer, db.ForeignKey('customers.id'), nullable=False)
+    
+    # Equipment info
+    equipment_type = db.Column(db.String(100), nullable=False)
+    model = db.Column(db.String(100))
+    serial_number = db.Column(db.String(100))
+    installation_date = db.Column(db.Date)
+    location = db.Column(db.String(200))
+    description = db.Column(db.Text)
+    
+    # Service info
+    last_service_date = db.Column(db.Date)
+    next_service_date = db.Column(db.Date)
+    service_interval_days = db.Column(db.Integer, default=180)
+    
+    # Status
+    status = db.Column(db.String(20), default='active')
+    is_active = db.Column(db.Boolean, default=True)
+    created_at = db.Column(db.DateTime, default=lambda: datetime.now(timezone.utc))
+    updated_at = db.Column(db.DateTime, default=lambda: datetime.now(timezone.utc), onupdate=lambda: datetime.now(timezone.utc))
+
+
+class WaterQualityData(db.Model):
+    __tablename__ = 'water_quality_data'
+
+    id = db.Column(db.Integer, primary_key=True)
+    tenant_id = db.Column(db.Integer, db.ForeignKey('tenants.id'), nullable=False)
+    customer_id = db.Column(db.Integer, db.ForeignKey('customers.id'), nullable=False)
+    equipment_id = db.Column(db.Integer, db.ForeignKey('equipment.id'))
+    
+    # Sample info
+    sample_date = db.Column(db.DateTime, nullable=False)
+    sample_location = db.Column(db.String(200))
+    sample_type = db.Column(db.String(50))
+    
+    # Water quality parameters
+    ph_level = db.Column(db.Numeric(4, 2))
+    turbidity = db.Column(db.Numeric(10, 3))
+    chlorine_free = db.Column(db.Numeric(10, 3))
+    chlorine_total = db.Column(db.Numeric(10, 3))
+    conductivity = db.Column(db.Numeric(10, 2))
+    temperature = db.Column(db.Numeric(5, 2))
+    additional_parameters = db.Column(db.JSON)
+    
+    # Analysis info
+    analyzed_by = db.Column(db.String(100))
+    lab_reference = db.Column(db.String(100))
+    notes = db.Column(db.Text)
+    is_compliant = db.Column(db.Boolean)
+    alert_triggered = db.Column(db.Boolean, default=False)
+    
+    created_at = db.Column(db.DateTime, default=lambda: datetime.now(timezone.utc))
+    updated_at = db.Column(db.DateTime, default=lambda: datetime.now(timezone.utc), onupdate=lambda: datetime.now(timezone.utc))
+
+
+class EmailTemplate(db.Model):
+    __tablename__ = 'email_templates'
+
+    id = db.Column(db.Integer, primary_key=True)
+    tenant_id = db.Column(db.Integer, db.ForeignKey('tenants.id'), nullable=False)
+    
+    name = db.Column(db.String(100), nullable=False)
+    template_type = db.Column(db.String(50), nullable=False)
+    subject_template = db.Column(db.String(200), nullable=False)
+    body_template = db.Column(db.Text, nullable=False)
+    is_active = db.Column(db.Boolean, default=True)
+    is_default = db.Column(db.Boolean, default=False)
+    
+    created_at = db.Column(db.DateTime, default=lambda: datetime.now(timezone.utc))
+    updated_at = db.Column(db.DateTime, default=lambda: datetime.now(timezone.utc), onupdate=lambda: datetime.now(timezone.utc))
+
+
+class ServiceReminder(db.Model):
+    __tablename__ = 'service_reminders'
+
+    id = db.Column(db.Integer, primary_key=True)
+    tenant_id = db.Column(db.Integer, db.ForeignKey('tenants.id'), nullable=False)
+    customer_id = db.Column(db.Integer, db.ForeignKey('customers.id'), nullable=False)
+    equipment_id = db.Column(db.Integer, db.ForeignKey('equipment.id'))
+    
+    reminder_type = db.Column(db.String(50), nullable=False)
+    title = db.Column(db.String(200), nullable=False)
+    description = db.Column(db.Text)
+    due_date = db.Column(db.Date, nullable=False)
+    reminder_date = db.Column(db.Date, nullable=False)
+    repeat_interval_days = db.Column(db.Integer)
+    
+    status = db.Column(db.String(20), default='pending')
+    last_sent = db.Column(db.DateTime)
+    completed_at = db.Column(db.DateTime)
+    
+    created_at = db.Column(db.DateTime, default=lambda: datetime.now(timezone.utc))
+    updated_at = db.Column(db.DateTime, default=lambda: datetime.now(timezone.utc), onupdate=lambda: datetime.now(timezone.utc))
+
+
+class SystemLog(db.Model):
+    __tablename__ = 'system_logs'
+
+    id = db.Column(db.Integer, primary_key=True)
+    tenant_id = db.Column(db.Integer, db.ForeignKey('tenants.id'))
+    user_id = db.Column(db.Integer, db.ForeignKey('users.id'))
+    
+    log_level = db.Column(db.String(20), nullable=False)
+    category = db.Column(db.String(50), nullable=False)
+    message = db.Column(db.Text, nullable=False)
+    details = db.Column(db.JSON)
+    
+    ip_address = db.Column(db.String(45))
+    user_agent = db.Column(db.Text)
+    endpoint = db.Column(db.String(200))
+    method = db.Column(db.String(10))
+    
+    created_at = db.Column(db.DateTime, default=lambda: datetime.now(timezone.utc))
+
+
+class AgentExecution(db.Model):
+    __tablename__ = 'agent_executions'
+
+    id = db.Column(db.Integer, primary_key=True)
+    tenant_id = db.Column(db.Integer, db.ForeignKey('tenants.id'), nullable=False)
+    
+    agent_name = db.Column(db.String(100), nullable=False)
+    execution_type = db.Column(db.String(50), nullable=False)
+    input_data = db.Column(db.JSON)
+    output_data = db.Column(db.JSON)
+    error_message = db.Column(db.Text)
+    
+    status = db.Column(db.String(20), default='running')
+    started_at = db.Column(db.DateTime, default=lambda: datetime.now(timezone.utc))
+    completed_at = db.Column(db.DateTime)
+    execution_time_seconds = db.Column(db.Integer)
+    
+    created_at = db.Column(db.DateTime, default=lambda: datetime.now(timezone.utc))
+    updated_at = db.Column(db.DateTime, default=lambda: datetime.now(timezone.utc), onupdate=lambda: datetime.now(timezone.utc))
