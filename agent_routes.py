@@ -57,7 +57,7 @@ def dashboard():
 @agent_bp.route('/communication')
 @login_required
 @admin_required
-def communication_agent():
+def communicationai():
     """Communication & AI Agent interface"""
     try:
         coord = get_coordinator()

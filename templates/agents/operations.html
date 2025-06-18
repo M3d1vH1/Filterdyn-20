@@ -1,0 +1,218 @@
+{% extends "base.html" %}
+{% set active_page = "agents" %}
+
+{% block title %}{{ _('Operations & Data Agent') }}{% endblock %}
+
+{% block content %}
+<div class="container-fluid">
+    <div class="d-flex justify-content-between flex-wrap flex-md-nowrap align-items-center pt-3 pb-2 mb-3 border-bottom">
+        <h1 class="h2">{{ _('Operations & Data Agent') }}</h1>
+        <div class="btn-toolbar mb-2 mb-md-0">
+            <div class="btn-group me-2">
+                <a href="{{ url_for('agents.dashboard') }}" class="btn btn-sm btn-outline-secondary">
+                    <i data-feather="arrow-left"></i> {{ _('Back to Dashboard') }}
+                </a>
+                <button type="button" class="btn btn-sm btn-primary" onclick="generateReports()">
+                    <i data-feather="file-text"></i> {{ _('Generate Reports') }}
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Service Reminders -->
+    <div class="row mb-4">
+        <div class="col">
+            <div class="card">
+                <div class="card-header">
+                    <h5 class="card-title mb-0">{{ _('Upcoming Service Reminders') }}</h5>
+                </div>
+                <div class="card-body">
+                    {% if reminders %}
+                    <div class="table-responsive">
+                        <table class="table table-striped">
+                            <thead>
+                                <tr>
+                                    <th>{{ _('Equipment') }}</th>
+                                    <th>{{ _('Customer') }}</th>
+                                    <th>{{ _('Service Type') }}</th>
+                                    <th>{{ _('Due Date') }}</th>
+                                    <th>{{ _('Priority') }}</th>
+                                    <th>{{ _('Actions') }}</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                {% for reminder in reminders %}
+                                <tr>
+                                    <td>{{ reminder.equipment_number }}</td>
+                                    <td>{{ reminder.customer_name }}</td>
+                                    <td>{{ reminder.service_type }}</td>
+                                    <td>{{ reminder.next_service_date.strftime('%Y-%m-%d') if reminder.next_service_date else 'N/A' }}</td>
+                                    <td>
+                                        <span class="badge {% if reminder.priority == 'urgent' %}bg-danger{% elif reminder.priority == 'high' %}bg-warning{% else %}bg-info{% endif %}">
+                                            {{ reminder.priority|title }}
+                                        </span>
+                                    </td>
+                                    <td>
+                                        <button class="btn btn-sm btn-outline-primary" onclick="sendReminder({{ reminder.equipment_id }})">
+                                            <i data-feather="send"></i> {{ _('Send Reminder') }}
+                                        </button>
+                                    </td>
+                                </tr>
+                                {% endfor %}
+                            </tbody>
+                        </table>
+                    </div>
+                    {% else %}
+                    <p class="text-muted">{{ _('No upcoming service reminders') }}</p>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Water Quality Alerts -->
+    <div class="row mb-4">
+        <div class="col">
+            <div class="card">
+                <div class="card-header">
+                    <h5 class="card-title mb-0">{{ _('Water Quality Alerts') }}</h5>
+                </div>
+                <div class="card-body">
+                    {% if alerts %}
+                    <div class="table-responsive">
+                        <table class="table table-striped">
+                            <thead>
+                                <tr>
+                                    <th>{{ _('Equipment') }}</th>
+                                    <th>{{ _('Customer') }}</th>
+                                    <th>{{ _('Parameter') }}</th>
+                                    <th>{{ _('Value') }}</th>
+                                    <th>{{ _('Threshold') }}</th>
+                                    <th>{{ _('Alert Type') }}</th>
+                                    <th>{{ _('Timestamp') }}</th>
+                                    <th>{{ _('Actions') }}</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                {% for alert in alerts %}
+                                <tr>
+                                    <td>{{ alert.equipment_number }}</td>
+                                    <td>{{ alert.customer_name }}</td>
+                                    <td>{{ alert.parameter }}</td>
+                                    <td>{{ alert.value }}</td>
+                                    <td>{{ alert.threshold }}</td>
+                                    <td>
+                                        <span class="badge {% if alert.alert_type == 'critical' %}bg-danger{% else %}bg-warning{% endif %}">
+                                            {{ alert.alert_type|title }}
+                                        </span>
+                                    </td>
+                                    <td>{{ alert.timestamp.strftime('%Y-%m-%d %H:%M') if alert.timestamp else 'N/A' }}</td>
+                                    <td>
+                                        <button class="btn btn-sm btn-outline-danger" onclick="sendAlert({{ alert.equipment_id }})">
+                                            <i data-feather="alert-triangle"></i> {{ _('Send Alert') }}
+                                        </button>
+                                    </td>
+                                </tr>
+                                {% endfor %}
+                            </tbody>
+                        </table>
+                    </div>
+                    {% else %}
+                    <p class="text-muted">{{ _('No current water quality alerts') }}</p>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Data Analytics Preview -->
+    <div class="row">
+        <div class="col-md-6">
+            <div class="card">
+                <div class="card-header">
+                    <h5 class="card-title mb-0">{{ _('Performance Metrics') }}</h5>
+                </div>
+                <div class="card-body">
+                    <div class="row text-center">
+                        <div class="col-6">
+                            <div class="h4 mb-0 text-primary">{{ reminders|length if reminders else 0 }}</div>
+                            <small class="text-muted">{{ _('Pending Reminders') }}</small>
+                        </div>
+                        <div class="col-6">
+                            <div class="h4 mb-0 text-warning">{{ alerts|length if alerts else 0 }}</div>
+                            <small class="text-muted">{{ _('Active Alerts') }}</small>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+        
+        <div class="col-md-6">
+            <div class="card">
+                <div class="card-header">
+                    <h5 class="card-title mb-0">{{ _('Quick Actions') }}</h5>
+                </div>
+                <div class="card-body">
+                    <button class="btn btn-outline-primary me-2 mb-2" onclick="exportData()">
+                        <i data-feather="download"></i> {{ _('Export Data') }}
+                    </button>
+                    <button class="btn btn-outline-secondary me-2 mb-2" onclick="scheduleAnalysis()">
+                        <i data-feather="calendar"></i> {{ _('Schedule Analysis') }}
+                    </button>
+                    <button class="btn btn-outline-info mb-2" onclick="viewTrends()">
+                        <i data-feather="trending-up"></i> {{ _('View Trends') }}
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+function sendReminder(equipmentId) {
+    if (confirm('{{ _("Send service reminder for this equipment?") }}')) {
+        // Implementation for sending reminder
+        alert('{{ _("Service reminder functionality will be implemented") }}');
+    }
+}
+
+function sendAlert(equipmentId) {
+    if (confirm('{{ _("Send water quality alert for this equipment?") }}')) {
+        // Implementation for sending alert
+        alert('{{ _("Water quality alert functionality will be implemented") }}');
+    }
+}
+
+function generateReports() {
+    fetch('/agents/generate-service-reports', {
+        method: 'POST',
+        headers: {
+            'Content-Type': 'application/json',
+        }
+    })
+    .then(response => response.json())
+    .then(data => {
+        if (data.success) {
+            alert('{{ _("Service reports generated successfully!") }}');
+        } else {
+            alert('{{ _("Error generating reports") }}: ' + data.error);
+        }
+    })
+    .catch(error => {
+        alert('{{ _("Error generating reports") }}: ' + error);
+    });
+}
+
+function exportData() {
+    alert('{{ _("Data export functionality will be implemented") }}');
+}
+
+function scheduleAnalysis() {
+    alert('{{ _("Analysis scheduling functionality will be implemented") }}');
+}
+
+function viewTrends() {
+    window.location.href = '{{ url_for("agents.analytics_dashboard") }}';
+}
+</script>
+{% endblock %}

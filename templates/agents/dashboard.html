@@ -73,7 +73,7 @@
                                 <i data-feather="more-horizontal"></i>
                             </button>
                             <ul class="dropdown-menu">
-                                <li><a class="dropdown-item" href="{{ url_for('agents.' + agent_name.replace('_', '')) }}">{{ _('View Details') }}</a></li>
+                                <li><a class="dropdown-item" href="#" onclick="viewAgentDetails('{{ agent_name }}')">{{ _('View Details') }}</a></li>
                                 <li><a class="dropdown-item" href="#" onclick="restartAgent('{{ agent_name }}')">{{ _('Restart') }}</a></li>
                             </ul>
                         </div>
