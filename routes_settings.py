@@ -9,7 +9,7 @@ from flask import Blueprint, render_template, request, redirect, url_for, flash,
 from flask_login import login_required, current_user
 from flask_babel import gettext as _
 from app import db
-from models_settings import AgentConfiguration, APIKeyConfiguration
+# Import models inside functions to avoid circular imports
 import os
 from agents.gemini_client import GeminiClient
 import json
