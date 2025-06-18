@@ -128,23 +128,14 @@ The Filterdyn Operations Suite is a comprehensive multi-tenant business manageme
 ## Changelog
 
 - June 18, 2025: Initial setup and multi-agent system integration
-  - Integrated comprehensive multi-agent system with Gmail API and analytics
+  - Integrated comprehensive multi-agent system with Gmail API, OpenAI, and analytics
   - Added Communication & AI Agent for email automation and AI-powered content generation
   - Added Operations & Data Agent for service reminders and water quality monitoring
   - Added Platform & Integration Agent for analytics dashboard and API endpoints
   - Added Testing & Quality Agent for automated testing and quality assurance
   - Created agent coordination system with unified management interface
   - Built Flask routes and templates for agent system UI integration
-  - Installed dependencies: Google APIs, pandas, numpy, matplotlib, seaborn
-
-- June 18, 2025: Gemini AI Integration and Settings Management
-  - Replaced OpenAI with Google Gemini AI for cost optimization
-  - Created unified GeminiClient for AI-powered email generation and content analysis
-  - Built comprehensive settings management system with API key validation
-  - Added real-time Gemini API testing and configuration interface
-  - Updated Communication & AI Agent to use Gemini instead of OpenAI
-  - Created secure API key storage and management system
-  - Added agent configuration management with auto-run scheduling
+  - Installed dependencies: Google APIs, OpenAI, pandas, numpy, matplotlib, seaborn
 
 ## User Preferences
 
