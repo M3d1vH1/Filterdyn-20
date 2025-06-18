@@ -49,3 +49,4 @@ python-dateutil
 seaborn
 sqlalchemy
 wtforms
+openai
