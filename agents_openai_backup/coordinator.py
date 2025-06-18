@@ -15,9 +15,7 @@ from dataclasses import dataclass
 from .communication_ai import CommunicationAIAgent
 from .operations_data import OperationsDataAgent
 from .platform_integration import PlatformIntegrationAgent
-from operational_suite_features.agents.testing_quality.test_runner import run_tests
-from operational_suite_features.agents.testing_quality.test_analysis import analyze_results
-from operational_suite_features.agents.testing_quality.test_reporter import generate_report
+from .testing_quality import TestingQualityAgent
 
 
 @dataclass
@@ -29,21 +27,11 @@ class AgentStatus:
     error_message: Optional[str] = None
 
 
-class TestingQualityAgent:
-    def __init__(self):
-        self.run_tests = run_tests
-        self.analyze_results = analyze_results
-        self.generate_report = generate_report
-
-
 class AgentCoordinator:
     """Main coordinator for all agents"""
     
-    def __init__(self, config: Optional[Dict[str, Any]] = None):
-        if config is None:
-            self.config = self._load_default_config()
-        else:
-            self.config = config
+    def __init__(self, config: Dict[str, Any] = None):
+        self.config = config or self._load_default_config()
         self.agents = {}
         self.agent_status = {}
         self.initialize_agents()
@@ -54,13 +42,8 @@ class AgentCoordinator:
             'db_path': 'instance/test.db',
             'gmail_credentials_path': 'credentials.json',
             'gmail_token_path': 'token.json',
-            'gemini_api_key': os.getenv('GEMINI_API_KEY'),
+            'openai_api_key': os.getenv('OPENAI_API_KEY'),
             'default_from_email': 'noreply@filterdyn.com',
-            'gemini_model': os.getenv('GEMINI_MODEL', 'gemini-1.5-flash'),
-            'gemini_max_tokens': os.getenv('GEMINI_MAX_TOKENS', 1000),
-            'gemini_temperature': os.getenv('GEMINI_TEMPERATURE', 0.7),
-            'gemini_top_p': os.getenv('GEMINI_TOP_P', 0.8),
-            'gemini_top_k': os.getenv('GEMINI_TOP_K', 40),
             'grandstream': {
                 'base_url': os.getenv('GRANDSTREAM_URL', ''),
                 'username': os.getenv('GRANDSTREAM_USERNAME', ''),
@@ -85,7 +68,7 @@ class AgentCoordinator:
             print("✅ Communication & AI Agent initialized")
             
             # Initialize Operations & Data Agent
-            self.agents['operations_data'] = OperationsDataAgent(self.config.get('db_path', 'instance/test.db'))
+            self.agents['operations_data'] = OperationsDataAgent(self.config.get('db_path'))
             self.agent_status['operations_data'] = AgentStatus(
                 name='Operations & Data Agent',
                 status='active',
