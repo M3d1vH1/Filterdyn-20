@@ -19,4 +19,7 @@ dependencies = [
     "fpdf2>=2.8.3",
     "flask-wtf>=1.2.2",
     "openai>=1.88.0",
+    "oauthlib>=3.3.0",
+    "pyjwt>=2.10.1",
+    "flask-dance>=7.1.0",
 ]
