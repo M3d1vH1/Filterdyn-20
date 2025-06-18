@@ -137,7 +137,7 @@
                                 </td>
                                 <td>
                                     {% if task.due_date %}
-                                    {{ task.due_date.strftime('%d/%m/%Y') }}
+                                    {{ safe_date_format(task.due_date, '%d/%m/%Y') }}
                                     {% if task.is_overdue %}
                                     <br><small class="text-danger">{{ _('Overdue') }}</small>
                                     {% endif %}
@@ -304,7 +304,7 @@
                             <tr>
                                 <td><strong>{{ _('Due Date') }}:</strong></td>
                                 <td>
-                                    {{ task.due_date.strftime('%d/%m/%Y') }}
+                                    {{ safe_date_format(task.due_date, '%d/%m/%Y') }}
                                     {% if task.is_overdue %}
                                     <br><small class="text-danger">{{ _('Overdue') }}</small>
                                     {% endif %}
