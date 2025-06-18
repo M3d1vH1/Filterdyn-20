@@ -28,7 +28,7 @@ def get_coordinator():
     global coordinator
     if coordinator is None:
         config = {
-            'db_path': os.getenv('DATABASE_URL', 'instance/test.db'),
+            'db_path': os.getenv('DATABASE_URL', 'postgresql://user:password@localhost/filterdyn'),
             'gmail_credentials_path': 'credentials.json',
             'gmail_token_path': 'token.json',
             'gemini_api_key': os.getenv('GEMINI_API_KEY'),
