@@ -169,11 +169,11 @@
                                         </button>
                                         
                                         {% if current_user.role in ['admin', 'manager'] or task.created_by == current_user.id %}
-                                        <a href="{{ url_for('main.edit_task', task_id=task.id) }}" 
-                                           class="btn btn-sm btn-outline-primary" 
-                                           data-bs-toggle="tooltip" title="{{ _('Edit') }}">
+                                        <button class="btn btn-sm btn-outline-primary" 
+                                                onclick="alert('Edit task functionality coming soon')"
+                                                data-bs-toggle="tooltip" title="{{ _('Edit') }}">
                                             <i data-feather="edit-2"></i>
-                                        </a>
+                                        </button>
                                         {% endif %}
                                     </div>
                                 </td>
@@ -285,7 +285,7 @@
                             </tr>
                             <tr>
                                 <td><strong>{{ _('Created') }}:</strong></td>
-                                <td>{{ task.created_at.strftime('%d/%m/%Y %H:%M') }}</td>
+                                <td>{{ task.created_at.strftime('%d/%m/%Y %H:%M') if task.created_at else '-' }}</td>
                             </tr>
                             <tr>
                                 <td><strong>{{ _('Created by') }}:</strong></td>
@@ -314,7 +314,7 @@
                             {% if task.completed_at %}
                             <tr>
                                 <td><strong>{{ _('Completed') }}:</strong></td>
-                                <td>{{ task.completed_at.strftime('%d/%m/%Y %H:%M') }}</td>
+                                <td>{{ task.completed_at.strftime('%d/%m/%Y %H:%M') if task.completed_at else '-' }}</td>
                             </tr>
                             {% endif %}
                             {% if task.customer %}
