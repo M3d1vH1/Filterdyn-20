@@ -347,6 +347,6 @@ Filterdyn Operations Team
 DEFAULT_CONFIG = {
     'gmail_credentials_path': 'credentials.json',
     'gmail_token_path': 'token.json',
-    'openai_api_key': os.getenv('OPENAI_API_KEY'),
+    'gemini_api_key': os.getenv('GEMINI_API_KEY'),
     'default_from_email': 'noreply@filterdyn.com'
 } 
