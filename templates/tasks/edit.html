@@ -1,19 +1,30 @@
 {% extends "base.html" %}
 
-{% block title %}{{ _('Create Task') }} - {{ super() }}{% endblock %}
+{% block title %}{{ _('Edit Task') }} - {{ super() }}{% endblock %}
 
 {% block content %}
 <div class="row">
     <div class="col-12">
         <div class="d-flex justify-content-between align-items-center mb-4">
             <h1 class="h3">
-                <i data-feather="plus-square" class="me-2"></i>
-                {{ _('Create Task') }}
+                <i data-feather="edit-2" class="me-2"></i>
+                {{ _('Edit Task') }}: {{ task.title }}
             </h1>
-            <a href="{{ url_for('main.tasks') }}" class="btn btn-outline-secondary">
-                <i data-feather="arrow-left" class="me-2"></i>
-                {{ _('Back to Tasks') }}
-            </a>
+            <div class="d-flex gap-2">
+                <a href="{{ url_for('main.tasks') }}" class="btn btn-outline-secondary">
+                    <i data-feather="arrow-left" class="me-2"></i>
+                    {{ _('Back to Tasks') }}
+                </a>
+                {% if task.status == 'pending' %}
+                <form method="POST" action="{{ url_for('main.complete_task', task_id=task.id) }}" class="d-inline">
+                    <button type="submit" class="btn btn-success" 
+                            onclick="return confirm('{{ _('Mark this task as completed?') }}')">
+                        <i data-feather="check" class="me-2"></i>
+                        {{ _('Mark Complete') }}
+                    </button>
+                </form>
+                {% endif %}
+            </div>
         </div>
     </div>
 </div>
@@ -56,7 +67,7 @@
 
                         <div class="col-12 mb-3">
                             <div class="form-floating">
-                                {{ form.description(class="form-control", style="height: 120px", data_auto_resize="true") }}
+                                {{ form.description(class="form-control", style="height: 120px") }}
                                 {{ form.description.label(class="form-label") }}
                             </div>
                             {% if form.description.errors %}
@@ -69,22 +80,33 @@
                         </div>
                     </div>
 
-                    <!-- Classification & Priority -->
+                    <!-- Status & Classification -->
                     <div class="row mb-4">
                         <div class="col-12">
                             <h6 class="text-primary border-bottom pb-2 mb-3">
                                 <i data-feather="tag" class="me-2"></i>
-                                {{ _('Classification & Priority') }}
+                                {{ _('Status & Classification') }}
                             </h6>
+                        </div>
+
+                        <div class="col-md-6 mb-3">
+                            <div class="form-floating">
+                                {{ form.status(class="form-select", required=true) }}
+                                {{ form.status.label(class="form-label") }}
+                            </div>
+                            {% if form.status.errors %}
+                            <div class="text-danger small mt-1">
+                                {% for error in form.status.errors %}
+                                <div>{{ error }}</div>
+                                {% endfor %}
+                            </div>
+                            {% endif %}
                         </div>
 
                         <div class="col-md-6 mb-3">
                             <div class="form-floating">
                                 {{ form.priority(class="form-select", required=true) }}
                                 {{ form.priority.label(class="form-label") }}
-                                <div class="invalid-feedback">
-                                    {{ _('Please select a priority.') }}
-                                </div>
                             </div>
                             {% if form.priority.errors %}
                             <div class="text-danger small mt-1">
@@ -113,9 +135,6 @@
                             <div class="form-floating">
                                 {{ form.assigned_to(class="form-select", required=true) }}
                                 {{ form.assigned_to.label(class="form-label") }}
-                                <div class="invalid-feedback">
-                                    {{ _('Please assign the task to someone.') }}
-                                </div>
                             </div>
                             {% if form.assigned_to.errors %}
                             <div class="text-danger small mt-1">
@@ -135,24 +154,11 @@
                             </div>
                             {% endif %}
                         </div>
-                    </div>
 
-                    <!-- Related Information -->
-                    <div class="row mb-4">
-                        <div class="col-12">
-                            <h6 class="text-primary border-bottom pb-2 mb-3">
-                                <i data-feather="link" class="me-2"></i>
-                                {{ _('Related Information') }}
-                            </h6>
-                        </div>
-
-                        <div class="col-12 mb-3">
+                        <div class="col-md-6 mb-3">
                             <div class="form-floating">
                                 {{ form.customer_id(class="form-select") }}
                                 {{ form.customer_id.label(class="form-label") }}
-                            </div>
-                            <div class="form-text">
-                                {{ _('Optional: Link this task to a specific customer') }}
                             </div>
                             {% if form.customer_id.errors %}
                             <div class="text-danger small mt-1">
@@ -164,6 +170,28 @@
                         </div>
                     </div>
 
+                    <!-- Notes -->
+                    {% if task.status in ['completed', 'cancelled'] %}
+                    <div class="row mb-4">
+                        <div class="col-12">
+                            <h6 class="text-primary border-bottom pb-2 mb-3">
+                                <i data-feather="file-text" class="me-2"></i>
+                                {{ _('Notes') }}
+                            </h6>
+                        </div>
+
+                        <div class="col-12 mb-3">
+                            <div class="form-floating">
+                                {{ form.notes(class="form-control", style="height: 120px") }}
+                                {{ form.notes.label(class="form-label") }}
+                            </div>
+                            <div class="form-text">
+                                {{ _('Add completion notes or cancellation reason') }}
+                            </div>
+                        </div>
+                    </div>
+                    {% endif %}
+
                     <!-- Actions -->
                     <div class="row">
                         <div class="col-12">
@@ -174,17 +202,31 @@
                                 </a>
                                 <button type="submit" class="btn btn-primary">
                                     <i data-feather="save" class="me-2"></i>
-                                    {{ _('Create Task') }}
+                                    {{ _('Update Task') }}
                                 </button>
                             </div>
                         </div>
                     </div>
                 </form>
 
+                <!-- Task History -->
                 <div class="mt-4">
                     <div class="alert alert-info">
-                        <i data-feather="info" class="me-2"></i>
-                        {{ _('Tasks help you track follow-ups, service reminders, and general activities. Assign them to team members and set due dates for better organization.') }}
+                        <div class="row">
+                            <div class="col-md-6">
+                                <small>
+                                    <strong>{{ _('Created:') }}</strong> {{ task.created_at.strftime('%d/%m/%Y %H:%M') }}<br>
+                                    <strong>{{ _('Created by:') }}</strong> {{ task.creator.full_name }}
+                                </small>
+                            </div>
+                            <div class="col-md-6">
+                                {% if task.completed_at %}
+                                <small>
+                                    <strong>{{ _('Completed:') }}</strong> {{ task.completed_at.strftime('%d/%m/%Y %H:%M') }}
+                                </small>
+                                {% endif %}
+                            </div>
+                        </div>
                     </div>
                 </div>
             </div>
@@ -195,22 +237,16 @@
 
 {% block js %}
 <script>
-// Set default due date to tomorrow
-document.addEventListener('DOMContentLoaded', function() {
-    var dueDateField = document.getElementById('due_date');
-    if (dueDateField && !dueDateField.value) {
-        var tomorrow = new Date();
-        tomorrow.setDate(tomorrow.getDate() + 1);
-        tomorrow.setHours(9, 0, 0, 0); // Set to 9 AM
+// Status change handler
+document.getElementById('status').addEventListener('change', function() {
+    var status = this.value;
+    var notesSection = document.querySelector('.notes-section');
 
-        // Format for datetime-local input
-        var year = tomorrow.getFullYear();
-        var month = String(tomorrow.getMonth() + 1).padStart(2, '0');
-        var day = String(tomorrow.getDate()).padStart(2, '0');
-        var hours = String(tomorrow.getHours()).padStart(2, '0');
-        var minutes = String(tomorrow.getMinutes()).padStart(2, '0');
-
-        dueDateField.value = `${year}-${month}-${day}T${hours}:${minutes}`;
+    // Show/hide notes section based on status
+    if (status === 'completed' || status === 'cancelled') {
+        if (notesSection) {
+            notesSection.style.display = 'block';
+        }
     }
 });
 
@@ -225,6 +261,16 @@ document.getElementById('priority').addEventListener('change', function() {
     // Add current priority class
     if (priority) {
         parentDiv.classList.add('priority-' + priority);
+    }
+});
+
+// Format datetime for datetime-local input
+document.addEventListener('DOMContentLoaded', function() {
+    var dueDateField = document.getElementById('due_date');
+    if (dueDateField && dueDateField.value) {
+        // The value should already be formatted correctly by Jinja2
+        // but we can handle any adjustments here if needed
+        // We now expect the format to be datetime-local compatible
     }
 });
 </script>
