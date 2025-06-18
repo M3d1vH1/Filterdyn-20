@@ -374,8 +374,7 @@
                         </h5>
                     </div>
                     <div class="card-body">
-                        <form method="POST" action="{{ url_for('main.settings') }}">
-                            <input type="hidden" name="section" value="integrations">
+                        <form method="POST" action="{{ url_for('settings.save_api_keys') }}">
                             
                             <!-- OpenAI Integration -->
                             <div class="card mb-4">
@@ -566,8 +565,10 @@
                     <div class="card-body">
                         <div class="alert alert-info mb-4">
                             <i data-feather="info" class="me-2"></i>
-                            {{ _('AI Agents require API integrations to be configured first. Ensure OpenAI and Gmail settings are saved before enabling agents.') }}
+                            {{ _('AI Agents require API integrations to be configured first. Ensure Gemini AI and Gmail settings are saved before enabling agents.') }}
                         </div>
+                        
+                        <form method="POST" action="{{ url_for('settings.save_agents_config') }}">
                         
                         <!-- Communication AI Agent -->
                         <div class="card mb-4">
