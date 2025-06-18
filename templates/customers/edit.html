@@ -1,0 +1,267 @@
+{% extends "base.html" %}
+
+{% block title %}
+{% if customer %}{{ _('Edit Customer') }}{% else %}{{ _('Add Customer') }}{% endif %} - {{ super() }}
+{% endblock %}
+
+{% block content %}
+<div class="row">
+    <div class="col-12">
+        <div class="d-flex justify-content-between align-items-center mb-4">
+            <h1 class="h3">
+                <i data-feather="{% if customer %}edit-2{% else %}user-plus{% endif %}" class="me-2"></i>
+                {% if customer %}{{ _('Edit Customer') }}{% else %}{{ _('Add Customer') }}{% endif %}
+            </h1>
+            <a href="{{ url_for('main.customers') }}" class="btn btn-outline-secondary">
+                <i data-feather="arrow-left" class="me-2"></i>
+                {{ _('Back to Customers') }}
+            </a>
+        </div>
+    </div>
+</div>
+
+<div class="row justify-content-center">
+    <div class="col-lg-8">
+        <div class="card">
+            <div class="card-header">
+                <h5 class="mb-0">{{ _('Customer Information') }}</h5>
+            </div>
+            <div class="card-body">
+                <form method="POST" class="needs-validation" novalidate>
+                    {{ form.hidden_tag() }}
+                    
+                    <!-- Company Information -->
+                    <div class="row mb-4">
+                        <div class="col-12">
+                            <h6 class="text-primary border-bottom pb-2 mb-3">
+                                <i data-feather="briefcase" class="me-2"></i>
+                                {{ _('Company Information') }}
+                            </h6>
+                        </div>
+                        
+                        <div class="col-md-6 mb-3">
+                            <div class="form-floating">
+                                {{ form.name(class="form-control", required=true) }}
+                                {{ form.name.label(class="form-label") }}
+                                <div class="invalid-feedback">
+                                    {{ _('Please provide a company name.') }}
+                                </div>
+                            </div>
+                            {% if form.name.errors %}
+                            <div class="text-danger small mt-1">
+                                {% for error in form.name.errors %}
+                                <div>{{ error }}</div>
+                                {% endfor %}
+                            </div>
+                            {% endif %}
+                        </div>
+                        
+                        <div class="col-md-6 mb-3">
+                            <div class="form-floating">
+                                {{ form.contact_person(class="form-control") }}
+                                {{ form.contact_person.label(class="form-label") }}
+                            </div>
+                            {% if form.contact_person.errors %}
+                            <div class="text-danger small mt-1">
+                                {% for error in form.contact_person.errors %}
+                                <div>{{ error }}</div>
+                                {% endfor %}
+                            </div>
+                            {% endif %}
+                        </div>
+                        
+                        <div class="col-md-6 mb-3">
+                            <div class="form-floating">
+                                {{ form.tax_number(class="form-control") }}
+                                {{ form.tax_number.label(class="form-label") }}
+                            </div>
+                            {% if form.tax_number.errors %}
+                            <div class="text-danger small mt-1">
+                                {% for error in form.tax_number.errors %}
+                                <div>{{ error }}</div>
+                                {% endfor %}
+                            </div>
+                            {% endif %}
+                        </div>
+                        
+                        <div class="col-md-6 mb-3">
+                            <div class="form-floating">
+                                {{ form.industry(class="form-control") }}
+                                {{ form.industry.label(class="form-label") }}
+                            </div>
+                            {% if form.industry.errors %}
+                            <div class="text-danger small mt-1">
+                                {% for error in form.industry.errors %}
+                                <div>{{ error }}</div>
+                                {% endfor %}
+                            </div>
+                            {% endif %}
+                        </div>
+                    </div>
+                    
+                    <!-- Contact Information -->
+                    <div class="row mb-4">
+                        <div class="col-12">
+                            <h6 class="text-primary border-bottom pb-2 mb-3">
+                                <i data-feather="phone" class="me-2"></i>
+                                {{ _('Contact Information') }}
+                            </h6>
+                        </div>
+                        
+                        <div class="col-md-6 mb-3">
+                            <div class="form-floating">
+                                {{ form.email(class="form-control", type="email") }}
+                                {{ form.email.label(class="form-label") }}
+                                <div class="invalid-feedback">
+                                    {{ _('Please provide a valid email address.') }}
+                                </div>
+                            </div>
+                            {% if form.email.errors %}
+                            <div class="text-danger small mt-1">
+                                {% for error in form.email.errors %}
+                                <div>{{ error }}</div>
+                                {% endfor %}
+                            </div>
+                            {% endif %}
+                        </div>
+                        
+                        <div class="col-md-6 mb-3">
+                            <div class="form-floating">
+                                {{ form.phone(class="form-control") }}
+                                {{ form.phone.label(class="form-label") }}
+                            </div>
+                            {% if form.phone.errors %}
+                            <div class="text-danger small mt-1">
+                                {% for error in form.phone.errors %}
+                                <div>{{ error }}</div>
+                                {% endfor %}
+                            </div>
+                            {% endif %}
+                        </div>
+                        
+                        <div class="col-md-6 mb-3">
+                            <div class="form-floating">
+                                {{ form.mobile(class="form-control") }}
+                                {{ form.mobile.label(class="form-label") }}
+                            </div>
+                            {% if form.mobile.errors %}
+                            <div class="text-danger small mt-1">
+                                {% for error in form.mobile.errors %}
+                                <div>{{ error }}</div>
+                                {% endfor %}
+                            </div>
+                            {% endif %}
+                        </div>
+                    </div>
+                    
+                    <!-- Address Information -->
+                    <div class="row mb-4">
+                        <div class="col-12">
+                            <h6 class="text-primary border-bottom pb-2 mb-3">
+                                <i data-feather="map-pin" class="me-2"></i>
+                                {{ _('Address Information') }}
+                            </h6>
+                        </div>
+                        
+                        <div class="col-12 mb-3">
+                            <div class="form-floating">
+                                {{ form.address(class="form-control", style="height: 100px", data_auto_resize="true") }}
+                                {{ form.address.label(class="form-label") }}
+                            </div>
+                            {% if form.address.errors %}
+                            <div class="text-danger small mt-1">
+                                {% for error in form.address.errors %}
+                                <div>{{ error }}</div>
+                                {% endfor %}
+                            </div>
+                            {% endif %}
+                        </div>
+                        
+                        <div class="col-md-4 mb-3">
+                            <div class="form-floating">
+                                {{ form.city(class="form-control") }}
+                                {{ form.city.label(class="form-label") }}
+                            </div>
+                            {% if form.city.errors %}
+                            <div class="text-danger small mt-1">
+                                {% for error in form.city.errors %}
+                                <div>{{ error }}</div>
+                                {% endfor %}
+                            </div>
+                            {% endif %}
+                        </div>
+                        
+                        <div class="col-md-4 mb-3">
+                            <div class="form-floating">
+                                {{ form.postal_code(class="form-control") }}
+                                {{ form.postal_code.label(class="form-label") }}
+                            </div>
+                            {% if form.postal_code.errors %}
+                            <div class="text-danger small mt-1">
+                                {% for error in form.postal_code.errors %}
+                                <div>{{ error }}</div>
+                                {% endfor %}
+                            </div>
+                            {% endif %}
+                        </div>
+                        
+                        <div class="col-md-4 mb-3">
+                            <div class="form-floating">
+                                {{ form.country(class="form-control") }}
+                                {{ form.country.label(class="form-label") }}
+                            </div>
+                            {% if form.country.errors %}
+                            <div class="text-danger small mt-1">
+                                {% for error in form.country.errors %}
+                                <div>{{ error }}</div>
+                                {% endfor %}
+                            </div>
+                            {% endif %}
+                        </div>
+                    </div>
+                    
+                    <!-- Notes -->
+                    <div class="row mb-4">
+                        <div class="col-12">
+                            <h6 class="text-primary border-bottom pb-2 mb-3">
+                                <i data-feather="file-text" class="me-2"></i>
+                                {{ _('Additional Information') }}
+                            </h6>
+                        </div>
+                        
+                        <div class="col-12 mb-3">
+                            <div class="form-floating">
+                                {{ form.notes(class="form-control", style="height: 120px", data_auto_resize="true") }}
+                                {{ form.notes.label(class="form-label") }}
+                            </div>
+                            {% if form.notes.errors %}
+                            <div class="text-danger small mt-1">
+                                {% for error in form.notes.errors %}
+                                <div>{{ error }}</div>
+                                {% endfor %}
+                            </div>
+                            {% endif %}
+                        </div>
+                    </div>
+                    
+                    <!-- Actions -->
+                    <div class="row">
+                        <div class="col-12">
+                            <div class="d-flex justify-content-end gap-2">
+                                <a href="{{ url_for('main.customers') }}" class="btn btn-outline-secondary">
+                                    <i data-feather="x" class="me-2"></i>
+                                    {{ _('Cancel') }}
+                                </a>
+                                <button type="submit" class="btn btn-primary">
+                                    <i data-feather="save" class="me-2"></i>
+                                    {{ _('Save Customer') }}
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

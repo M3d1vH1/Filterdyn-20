@@ -1,0 +1,235 @@
+{% extends "base.html" %}
+
+{% block title %}{{ _('Create Task') }} - {{ super() }}{% endblock %}
+
+{% block content %}
+<div class="row">
+    <div class="col-12">
+        <div class="d-flex justify-content-between align-items-center mb-4">
+            <h1 class="h3">
+                <i data-feather="plus-square" class="me-2"></i>
+                {{ _('Create Task') }}
+            </h1>
+            <a href="{{ url_for('main.tasks') }}" class="btn btn-outline-secondary">
+                <i data-feather="arrow-left" class="me-2"></i>
+                {{ _('Back to Tasks') }}
+            </a>
+        </div>
+    </div>
+</div>
+
+<div class="row justify-content-center">
+    <div class="col-lg-8">
+        <div class="card">
+            <div class="card-header">
+                <h5 class="mb-0">{{ _('Task Information') }}</h5>
+            </div>
+            <div class="card-body">
+                <form method="POST" class="needs-validation" novalidate>
+                    {{ form.hidden_tag() }}
+                    
+                    <!-- Basic Information -->
+                    <div class="row mb-4">
+                        <div class="col-12">
+                            <h6 class="text-primary border-bottom pb-2 mb-3">
+                                <i data-feather="info" class="me-2"></i>
+                                {{ _('Basic Information') }}
+                            </h6>
+                        </div>
+                        
+                        <div class="col-12 mb-3">
+                            <div class="form-floating">
+                                {{ form.title(class="form-control", required=true) }}
+                                {{ form.title.label(class="form-label") }}
+                                <div class="invalid-feedback">
+                                    {{ _('Please provide a task title.') }}
+                                </div>
+                            </div>
+                            {% if form.title.errors %}
+                            <div class="text-danger small mt-1">
+                                {% for error in form.title.errors %}
+                                <div>{{ error }}</div>
+                                {% endfor %}
+                            </div>
+                            {% endif %}
+                        </div>
+                        
+                        <div class="col-12 mb-3">
+                            <div class="form-floating">
+                                {{ form.description(class="form-control", style="height: 120px", data_auto_resize="true") }}
+                                {{ form.description.label(class="form-label") }}
+                            </div>
+                            {% if form.description.errors %}
+                            <div class="text-danger small mt-1">
+                                {% for error in form.description.errors %}
+                                <div>{{ error }}</div>
+                                {% endfor %}
+                            </div>
+                            {% endif %}
+                        </div>
+                    </div>
+                    
+                    <!-- Classification & Priority -->
+                    <div class="row mb-4">
+                        <div class="col-12">
+                            <h6 class="text-primary border-bottom pb-2 mb-3">
+                                <i data-feather="tag" class="me-2"></i>
+                                {{ _('Classification & Priority') }}
+                            </h6>
+                        </div>
+                        
+                        <div class="col-md-6 mb-3">
+                            <div class="form-floating">
+                                {{ form.priority(class="form-select", required=true) }}
+                                {{ form.priority.label(class="form-label") }}
+                                <div class="invalid-feedback">
+                                    {{ _('Please select a priority.') }}
+                                </div>
+                            </div>
+                            {% if form.priority.errors %}
+                            <div class="text-danger small mt-1">
+                                {% for error in form.priority.errors %}
+                                <div>{{ error }}</div>
+                                {% endfor %}
+                            </div>
+                            {% endif %}
+                        </div>
+                        
+                        <div class="col-md-6 mb-3">
+                            <div class="form-floating">
+                                {{ form.category(class="form-select") }}
+                                {{ form.category.label(class="form-label") }}
+                            </div>
+                            {% if form.category.errors %}
+                            <div class="text-danger small mt-1">
+                                {% for error in form.category.errors %}
+                                <div>{{ error }}</div>
+                                {% endfor %}
+                            </div>
+                            {% endif %}
+                        </div>
+                        
+                        <div class="col-md-6 mb-3">
+                            <div class="form-floating">
+                                {{ form.assigned_to(class="form-select", required=true) }}
+                                {{ form.assigned_to.label(class="form-label") }}
+                                <div class="invalid-feedback">
+                                    {{ _('Please assign the task to someone.') }}
+                                </div>
+                            </div>
+                            {% if form.assigned_to.errors %}
+                            <div class="text-danger small mt-1">
+                                {% for error in form.assigned_to.errors %}
+                                <div>{{ error }}</div>
+                                {% endfor %}
+                            </div>
+                            {% endif %}
+                        </div>
+                        
+                        <div class="col-md-6 mb-3">
+                            <div class="form-floating">
+                                {{ form.due_date(class="form-control", type="datetime-local") }}
+                                {{ form.due_date.label(class="form-label") }}
+                            </div>
+                            {% if form.due_date.errors %}
+                            <div class="text-danger small mt-1">
+                                {% for error in form.due_date.errors %}
+                                <div>{{ error }}</div>
+                                {% endfor %}
+                            </div>
+                            {% endif %}
+                        </div>
+                    </div>
+                    
+                    <!-- Related Information -->
+                    <div class="row mb-4">
+                        <div class="col-12">
+                            <h6 class="text-primary border-bottom pb-2 mb-3">
+                                <i data-feather="link" class="me-2"></i>
+                                {{ _('Related Information') }}
+                            </h6>
+                        </div>
+                        
+                        <div class="col-12 mb-3">
+                            <div class="form-floating">
+                                {{ form.customer_id(class="form-select") }}
+                                {{ form.customer_id.label(class="form-label") }}
+                            </div>
+                            <div class="form-text">
+                                {{ _('Optional: Link this task to a specific customer') }}
+                            </div>
+                            {% if form.customer_id.errors %}
+                            <div class="text-danger small mt-1">
+                                {% for error in form.customer_id.errors %}
+                                <div>{{ error }}</div>
+                                {% endfor %}
+                            </div>
+                            {% endif %}
+                        </div>
+                    </div>
+                    
+                    <!-- Actions -->
+                    <div class="row">
+                        <div class="col-12">
+                            <div class="d-flex justify-content-end gap-2">
+                                <a href="{{ url_for('main.tasks') }}" class="btn btn-outline-secondary">
+                                    <i data-feather="x" class="me-2"></i>
+                                    {{ _('Cancel') }}
+                                </a>
+                                <button type="submit" class="btn btn-primary">
+                                    <i data-feather="save" class="me-2"></i>
+                                    {{ _('Create Task') }}
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+                </form>
+                
+                <div class="mt-4">
+                    <div class="alert alert-info">
+                        <i data-feather="info" class="me-2"></i>
+                        {{ _('Tasks help you track follow-ups, service reminders, and general activities. Assign them to team members and set due dates for better organization.') }}
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block js %}
+<script>
+// Set default due date to tomorrow
+document.addEventListener('DOMContentLoaded', function() {
+    var dueDateField = document.getElementById('due_date');
+    if (dueDateField && !dueDateField.value) {
+        var tomorrow = new Date();
+        tomorrow.setDate(tomorrow.getDate() + 1);
+        tomorrow.setHours(9, 0, 0, 0); // Set to 9 AM
+        
+        // Format for datetime-local input
+        var year = tomorrow.getFullYear();
+        var month = String(tomorrow.getMonth() + 1).padStart(2, '0');
+        var day = String(tomorrow.getDate()).padStart(2, '0');
+        var hours = String(tomorrow.getHours()).padStart(2, '0');
+        var minutes = String(tomorrow.getMinutes()).padStart(2, '0');
+        
+        dueDateField.value = `${year}-${month}-${day}T${hours}:${minutes}`;
+    }
+});
+
+// Priority color indicator
+document.getElementById('priority').addEventListener('change', function() {
+    var priority = this.value;
+    var parentDiv = this.closest('.form-floating');
+    
+    // Remove all priority classes
+    parentDiv.classList.remove('priority-low', 'priority-medium', 'priority-high', 'priority-urgent');
+    
+    // Add current priority class
+    if (priority) {
+        parentDiv.classList.add('priority-' + priority);
+    }
+});
+</script>
+{% endblock %}

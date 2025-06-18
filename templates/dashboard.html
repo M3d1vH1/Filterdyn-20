@@ -1,0 +1,233 @@
+{% extends "base.html" %}
+
+{% block title %}{{ _('Dashboard') }} - {{ super() }}{% endblock %}
+
+{% block content %}
+<div class="row">
+    <div class="col-12">
+        <h1 class="h3 mb-4">
+            <i data-feather="home" class="me-2"></i>
+            {{ _('Welcome') }}, {{ current_user.full_name }}
+        </h1>
+    </div>
+</div>
+
+<!-- Quick Actions -->
+<div class="quick-actions">
+    <h5 class="mb-3">{{ _('Quick Actions') }}</h5>
+    <div class="row">
+        <div class="col-md-3 col-6">
+            <a href="{{ url_for('main.create_quote') }}" class="quick-action-btn">
+                <i data-feather="file-plus" class="me-2"></i>
+                {{ _('Create New Quote') }}
+            </a>
+        </div>
+        <div class="col-md-3 col-6">
+            <a href="{{ url_for('main.create_customer') }}" class="quick-action-btn">
+                <i data-feather="user-plus" class="me-2"></i>
+                {{ _('Add Customer') }}
+            </a>
+        </div>
+        <div class="col-md-3 col-6">
+            <a href="{{ url_for('main.create_task') }}" class="quick-action-btn">
+                <i data-feather="plus-square" class="me-2"></i>
+                {{ _('Create Task') }}
+            </a>
+        </div>
+        <div class="col-md-3 col-6">
+            <a href="{{ url_for('main.customers') }}" class="quick-action-btn">
+                <i data-feather="search" class="me-2"></i>
+                {{ _('Find Customer') }}
+            </a>
+        </div>
+    </div>
+</div>
+
+<!-- Statistics Cards -->
+<div class="row mb-4">
+    <div class="col-lg-3 col-md-6">
+        <div class="stats-card position-relative">
+            <div class="stats-number">{{ stats.active_quotes }}</div>
+            <div class="stats-label">{{ _('Active Quotes') }}</div>
+            <i data-feather="file-text" class="stats-icon"></i>
+        </div>
+    </div>
+    <div class="col-lg-3 col-md-6">
+        <div class="stats-card position-relative">
+            <div class="stats-number">{{ stats.pending_orders }}</div>
+            <div class="stats-label">{{ _('Pending Orders') }}</div>
+            <i data-feather="shopping-cart" class="stats-icon"></i>
+        </div>
+    </div>
+    <div class="col-lg-3 col-md-6">
+        <div class="stats-card position-relative">
+            <div class="stats-number">{{ stats.my_tasks|length }}</div>
+            <div class="stats-label">{{ _('My Tasks') }}</div>
+            <i data-feather="check-square" class="stats-icon"></i>
+        </div>
+    </div>
+    <div class="col-lg-3 col-md-6">
+        <div class="stats-card position-relative">
+            <div class="stats-number {% if stats.overdue_tasks > 0 %}text-warning{% endif %}">
+                {{ stats.overdue_tasks }}
+            </div>
+            <div class="stats-label">{{ _('Overdue Tasks') }}</div>
+            <i data-feather="alert-triangle" class="stats-icon"></i>
+        </div>
+    </div>
+</div>
+
+<!-- Main Content Row -->
+<div class="row">
+    <!-- My Tasks -->
+    <div class="col-lg-6 mb-4">
+        <div class="card">
+            <div class="card-header d-flex justify-content-between align-items-center">
+                <h5 class="mb-0">
+                    <i data-feather="check-square" class="me-2"></i>
+                    {{ _('My Tasks') }}
+                </h5>
+                <a href="{{ url_for('main.tasks') }}" class="btn btn-sm btn-outline-primary">
+                    {{ _('View All') }}
+                </a>
+            </div>
+            <div class="card-body">
+                {% if stats.my_tasks %}
+                <div class="list-group list-group-flush">
+                    {% for task in stats.my_tasks %}
+                    <div class="list-group-item {% if task.is_overdue %}task-overdue{% endif %}">
+                        <div class="d-flex justify-content-between align-items-start">
+                            <div>
+                                <h6 class="mb-1">{{ task.title }}</h6>
+                                <p class="mb-1 text-muted small">{{ task.description[:100] }}...</p>
+                                {% if task.customer %}
+                                <small class="text-muted">
+                                    <i data-feather="user" class="me-1"></i>
+                                    {{ task.customer.name }}
+                                </small>
+                                {% endif %}
+                            </div>
+                            <div class="text-end">
+                                <span class="badge priority-{{ task.priority }}">
+                                    {{ task.priority.title() }}
+                                </span>
+                                {% if task.due_date %}
+                                <br><small class="text-muted">
+                                    {{ task.due_date.strftime('%d/%m/%Y') }}
+                                </small>
+                                {% endif %}
+                            </div>
+                        </div>
+                    </div>
+                    {% endfor %}
+                </div>
+                {% else %}
+                <div class="text-center py-4">
+                    <i data-feather="check-circle" class="text-muted mb-3" style="width: 48px; height: 48px;"></i>
+                    <p class="text-muted">{{ _('No pending tasks') }}</p>
+                </div>
+                {% endif %}
+            </div>
+        </div>
+    </div>
+    
+    <!-- Recent Quotes -->
+    <div class="col-lg-6 mb-4">
+        <div class="card">
+            <div class="card-header d-flex justify-content-between align-items-center">
+                <h5 class="mb-0">
+                    <i data-feather="file-text" class="me-2"></i>
+                    {{ _('Recent Quotes') }}
+                </h5>
+                <a href="{{ url_for('main.quotes') }}" class="btn btn-sm btn-outline-primary">
+                    {{ _('View All') }}
+                </a>
+            </div>
+            <div class="card-body">
+                {% if stats.recent_quotes %}
+                <div class="list-group list-group-flush">
+                    {% for quote in stats.recent_quotes %}
+                    <div class="list-group-item">
+                        <div class="d-flex justify-content-between align-items-start">
+                            <div>
+                                <h6 class="mb-1">{{ quote.quote_number }}</h6>
+                                <p class="mb-1">{{ quote.title }}</p>
+                                <small class="text-muted">
+                                    <i data-feather="user" class="me-1"></i>
+                                    {{ quote.customer.name }}
+                                </small>
+                            </div>
+                            <div class="text-end">
+                                <span class="badge status-{{ quote.status }}">
+                                    {{ quote.status.replace('_', ' ').title() }}
+                                </span>
+                                <br><small class="text-muted">
+                                    €{{ "%.2f"|format(quote.total_amount or 0) }}
+                                </small>
+                            </div>
+                        </div>
+                    </div>
+                    {% endfor %}
+                </div>
+                {% else %}
+                <div class="text-center py-4">
+                    <i data-feather="file-text" class="text-muted mb-3" style="width: 48px; height: 48px;"></i>
+                    <p class="text-muted">{{ _('No recent quotes') }}</p>
+                </div>
+                {% endif %}
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Recent Orders -->
+{% if stats.recent_orders %}
+<div class="row">
+    <div class="col-12">
+        <div class="card">
+            <div class="card-header d-flex justify-content-between align-items-center">
+                <h5 class="mb-0">
+                    <i data-feather="shopping-cart" class="me-2"></i>
+                    {{ _('Recent Orders') }}
+                </h5>
+                <a href="{{ url_for('main.orders') }}" class="btn btn-sm btn-outline-primary">
+                    {{ _('View All') }}
+                </a>
+            </div>
+            <div class="card-body">
+                <div class="table-responsive">
+                    <table class="table table-hover">
+                        <thead>
+                            <tr>
+                                <th>{{ _('Order Number') }}</th>
+                                <th>{{ _('Customer') }}</th>
+                                <th>{{ _('Title') }}</th>
+                                <th>{{ _('Status') }}</th>
+                                <th>{{ _('Total') }}</th>
+                                <th>{{ _('Date') }}</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {% for order in stats.recent_orders %}
+                            <tr>
+                                <td><strong>{{ order.order_number }}</strong></td>
+                                <td>{{ order.customer.name }}</td>
+                                <td>{{ order.title }}</td>
+                                <td>
+                                    <span class="badge status-{{ order.status }}">
+                                        {{ order.status.replace('_', ' ').title() }}
+                                    </span>
+                                </td>
+                                <td>€{{ "%.2f"|format(order.total_amount or 0) }}</td>
+                                <td>{{ order.created_at.strftime('%d/%m/%Y') }}</td>
+                            </tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endif %}
+{% endblock %}
