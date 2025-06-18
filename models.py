@@ -27,6 +27,8 @@ class Tenant(db.Model):
     quotes = db.relationship('Quote', backref='tenant', lazy=True)
     orders = db.relationship('Order', backref='tenant', lazy=True)
     tasks = db.relationship('Task', backref='tenant', lazy=True)
+    equipment = db.relationship('Equipment', backref='tenant', lazy=True)
+    water_quality_data = db.relationship('WaterQualityData', backref='tenant', lazy=True)
 
 class User(UserMixin, db.Model):
     __tablename__ = 'users'
