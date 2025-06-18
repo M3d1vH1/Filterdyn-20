@@ -23,8 +23,8 @@ def create_app():
     app = Flask(__name__)
     
     # Configuration
-    app.secret_key = os.environ.get("SESSION_SECRET") or "dev-secret-key-change-in-production"
-    app.config["SQLALCHEMY_DATABASE_URI"] = os.environ.get("DATABASE_URL") or "sqlite:///filterdyn.db"
+    app.secret_key = os.environ.get("SESSION_SECRET")
+    app.config["SQLALCHEMY_DATABASE_URI"] = os.environ.get("DATABASE_URL")
     app.config["SQLALCHEMY_ENGINE_OPTIONS"] = {
         "pool_recycle": 300,
         "pool_pre_ping": True,
@@ -84,11 +84,9 @@ def create_app():
     # Register blueprints
     from routes import main_bp
     from auth import auth_bp
-    from agent_routes import agent_bp
     
     app.register_blueprint(main_bp)
     app.register_blueprint(auth_bp)
-    app.register_blueprint(agent_bp)
     
     # Context processors
     @app.context_processor

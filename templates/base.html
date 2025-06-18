@@ -79,15 +79,6 @@
                             {{ _('Tasks') }}
                         </a>
                     </li>
-                    {% if current_user.role in ['admin', 'superadmin'] %}
-                    <li class="nav-item">
-                        <a class="nav-link {% if request.endpoint.startswith('agents.') %}active{% endif %}" 
-                           href="{{ url_for('agents.dashboard') }}">
-                            <i data-feather="cpu" class="me-1"></i>
-                            {{ _('AI Agents') }}
-                        </a>
-                    </li>
-                    {% endif %}
                 </ul>
                 
                 <!-- Right side navigation -->

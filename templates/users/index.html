@@ -111,7 +111,7 @@
                                 </td>
                                 <td>
                                     {% if user.last_login %}
-                                    {{ user.last_login.strftime('%d/%m/%Y %H:%M') if user.last_login else 'N/A' }}
+                                    {{ user.last_login.strftime('%d/%m/%Y %H:%M') }}
                                     {% else %}
                                     <span class="text-muted">{{ _('Never') }}</span>
                                     {% endif %}
@@ -221,13 +221,13 @@
                     </tr>
                     <tr>
                         <td><strong>{{ _('Created') }}:</strong></td>
-                        <td>{{ user.created_at.strftime('%d/%m/%Y') if user.created_at else 'N/A' }}</td>
+                        <td>{{ user.created_at.strftime('%d/%m/%Y') }}</td>
                     </tr>
                     <tr>
                         <td><strong>{{ _('Last Login') }}:</strong></td>
                         <td>
                             {% if user.last_login %}
-                            {{ user.last_login.strftime('%d/%m/%Y %H:%M') if user.last_login else 'N/A' }}
+                            {{ user.last_login.strftime('%d/%m/%Y %H:%M') }}
                             {% else %}
                             <span class="text-muted">{{ _('Never logged in') }}</span>
                             {% endif %}

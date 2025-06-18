@@ -27,7 +27,7 @@
             <div class="card-body">
                 <form method="POST" class="needs-validation" novalidate>
                     {{ form.hidden_tag() }}
-
+                    
                     <!-- Basic Information -->
                     <div class="row mb-4">
                         <div class="col-12">
@@ -36,7 +36,7 @@
                                 {{ _('Basic Information') }}
                             </h6>
                         </div>
-
+                        
                         <div class="col-12 mb-3">
                             <div class="form-floating">
                                 {{ form.title(class="form-control", required=true) }}
@@ -53,7 +53,7 @@
                             </div>
                             {% endif %}
                         </div>
-
+                        
                         <div class="col-12 mb-3">
                             <div class="form-floating">
                                 {{ form.description(class="form-control", style="height: 120px", data_auto_resize="true") }}
@@ -68,7 +68,7 @@
                             {% endif %}
                         </div>
                     </div>
-
+                    
                     <!-- Classification & Priority -->
                     <div class="row mb-4">
                         <div class="col-12">
@@ -77,7 +77,7 @@
                                 {{ _('Classification & Priority') }}
                             </h6>
                         </div>
-
+                        
                         <div class="col-md-6 mb-3">
                             <div class="form-floating">
                                 {{ form.priority(class="form-select", required=true) }}
@@ -94,7 +94,7 @@
                             </div>
                             {% endif %}
                         </div>
-
+                        
                         <div class="col-md-6 mb-3">
                             <div class="form-floating">
                                 {{ form.category(class="form-select") }}
@@ -108,7 +108,7 @@
                             </div>
                             {% endif %}
                         </div>
-
+                        
                         <div class="col-md-6 mb-3">
                             <div class="form-floating">
                                 {{ form.assigned_to(class="form-select", required=true) }}
@@ -125,18 +125,22 @@
                             </div>
                             {% endif %}
                         </div>
-
+                        
                         <div class="col-md-6 mb-3">
-                            {{ form.due_date.label(class="form-label") }}
-                            {{ form.due_date(class="form-control", type="datetime-local") }}
+                            <div class="form-floating">
+                                {{ form.due_date(class="form-control", type="datetime-local") }}
+                                {{ form.due_date.label(class="form-label") }}
+                            </div>
                             {% if form.due_date.errors %}
-                            <div class="invalid-feedback d-block">
-                                {% for error in form.due_date.errors %}{{ error }}{% endfor %}
+                            <div class="text-danger small mt-1">
+                                {% for error in form.due_date.errors %}
+                                <div>{{ error }}</div>
+                                {% endfor %}
                             </div>
                             {% endif %}
                         </div>
                     </div>
-
+                    
                     <!-- Related Information -->
                     <div class="row mb-4">
                         <div class="col-12">
@@ -145,7 +149,7 @@
                                 {{ _('Related Information') }}
                             </h6>
                         </div>
-
+                        
                         <div class="col-12 mb-3">
                             <div class="form-floating">
                                 {{ form.customer_id(class="form-select") }}
@@ -163,7 +167,7 @@
                             {% endif %}
                         </div>
                     </div>
-
+                    
                     <!-- Actions -->
                     <div class="row">
                         <div class="col-12">
@@ -180,7 +184,7 @@
                         </div>
                     </div>
                 </form>
-
+                
                 <div class="mt-4">
                     <div class="alert alert-info">
                         <i data-feather="info" class="me-2"></i>
@@ -202,14 +206,14 @@ document.addEventListener('DOMContentLoaded', function() {
         var tomorrow = new Date();
         tomorrow.setDate(tomorrow.getDate() + 1);
         tomorrow.setHours(9, 0, 0, 0); // Set to 9 AM
-
+        
         // Format for datetime-local input
         var year = tomorrow.getFullYear();
         var month = String(tomorrow.getMonth() + 1).padStart(2, '0');
         var day = String(tomorrow.getDate()).padStart(2, '0');
         var hours = String(tomorrow.getHours()).padStart(2, '0');
         var minutes = String(tomorrow.getMinutes()).padStart(2, '0');
-
+        
         dueDateField.value = `${year}-${month}-${day}T${hours}:${minutes}`;
     }
 });
@@ -218,10 +222,10 @@ document.addEventListener('DOMContentLoaded', function() {
 document.getElementById('priority').addEventListener('change', function() {
     var priority = this.value;
     var parentDiv = this.closest('.form-floating');
-
+    
     // Remove all priority classes
     parentDiv.classList.remove('priority-low', 'priority-medium', 'priority-high', 'priority-urgent');
-
+    
     // Add current priority class
     if (priority) {
         parentDiv.classList.add('priority-' + priority);

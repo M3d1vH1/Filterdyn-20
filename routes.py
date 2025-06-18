@@ -535,171 +535,11 @@ def settings():
             current_user.tenant.primary_color = request.form.get('primary_color')
             current_user.tenant.secondary_color = request.form.get('secondary_color')
             
-        elif section == 'defaults':
-            # Handle default settings
-            flash(_('Default settings updated successfully'), 'success')
-            
-        elif section == 'integrations':
-            # Handle API integrations
-            from models_settings import SystemSetting
-            
-            # OpenAI settings
-            openai_key = request.form.get('openai_api_key')
-            if openai_key:
-                SystemSetting.set_setting(
-                    current_user.tenant_id, 
-                    'openai_api_key', 
-                    openai_key, 
-                    'api_keys', 
-                    'OpenAI API Key for AI content generation',
-                    current_user.id,
-                    encrypt=True
-                )
-            
-            SystemSetting.set_setting(
-                current_user.tenant_id, 
-                'openai_default_model', 
-                request.form.get('openai_default_model', 'gpt-4o'), 
-                'api_keys', 
-                'Default OpenAI model'
-            )
-            
-            # Gmail settings
-            gmail_client_id = request.form.get('gmail_client_id')
-            if gmail_client_id:
-                SystemSetting.set_setting(
-                    current_user.tenant_id, 
-                    'gmail_client_id', 
-                    gmail_client_id, 
-                    'api_keys', 
-                    'Gmail OAuth Client ID'
-                )
-            
-            gmail_client_secret = request.form.get('gmail_client_secret')
-            if gmail_client_secret:
-                SystemSetting.set_setting(
-                    current_user.tenant_id, 
-                    'gmail_client_secret', 
-                    gmail_client_secret, 
-                    'api_keys', 
-                    'Gmail OAuth Client Secret',
-                    current_user.id,
-                    encrypt=True
-                )
-            
-            # Twilio settings
-            twilio_sid = request.form.get('twilio_account_sid')
-            if twilio_sid:
-                SystemSetting.set_setting(
-                    current_user.tenant_id, 
-                    'twilio_account_sid', 
-                    twilio_sid, 
-                    'api_keys', 
-                    'Twilio Account SID'
-                )
-            
-            twilio_token = request.form.get('twilio_auth_token')
-            if twilio_token:
-                SystemSetting.set_setting(
-                    current_user.tenant_id, 
-                    'twilio_auth_token', 
-                    twilio_token, 
-                    'api_keys', 
-                    'Twilio Auth Token',
-                    current_user.id,
-                    encrypt=True
-                )
-            
-            flash(_('API integration settings saved successfully'), 'success')
-            
         db.session.commit()
         flash(_('Settings updated successfully'), 'success')
         return redirect(url_for('main.settings'))
     
-    # Get data for template
-    from models_settings import SystemSetting
-    from models import ProductCategory
-    
-    categories = ProductCategory.query.filter_by(tenant_id=current_user.tenant_id).all()
-    
-    # Get current settings
-    settings = {
-        'openai_api_key': SystemSetting.get_setting(current_user.tenant_id, 'openai_api_key'),
-        'openai_default_model': SystemSetting.get_setting(current_user.tenant_id, 'openai_default_model', 'gpt-4o'),
-        'gmail_client_id': SystemSetting.get_setting(current_user.tenant_id, 'gmail_client_id'),
-        'twilio_account_sid': SystemSetting.get_setting(current_user.tenant_id, 'twilio_account_sid'),
-    }
-    
-    return render_template('settings/index.html', categories=categories, settings=settings)
-
-@main_bp.route('/settings/categories/add', methods=['POST'])
-@login_required
-@admin_required
-def add_category():
-    """Add a new product category"""
-    try:
-        category = ProductCategory(
-            tenant_id=current_user.tenant_id,
-            name_en=request.form.get('category_name_en'),
-            name_el=request.form.get('category_name_el'),
-            description_en=request.form.get('category_description_en'),
-            description_el=request.form.get('category_description_el'),
-            is_active=True
-        )
-        
-        db.session.add(category)
-        db.session.commit()
-        
-        flash(_('Category added successfully'), 'success')
-    except Exception as e:
-        flash(_('Error adding category'), 'error')
-        db.session.rollback()
-    
-    return redirect(url_for('main.settings') + '#nav-categories')
-
-@main_bp.route('/settings/categories/<int:category_id>/edit', methods=['POST'])
-@login_required
-@admin_required
-def edit_category(category_id):
-    """Edit a product category"""
-    category = ProductCategory.query.filter_by(
-        id=category_id, 
-        tenant_id=current_user.tenant_id
-    ).first_or_404()
-    
-    try:
-        category.name_en = request.form.get('category_name_en')
-        category.name_el = request.form.get('category_name_el')
-        category.description_en = request.form.get('category_description_en')
-        category.description_el = request.form.get('category_description_el')
-        
-        db.session.commit()
-        flash(_('Category updated successfully'), 'success')
-    except Exception as e:
-        flash(_('Error updating category'), 'error')
-        db.session.rollback()
-    
-    return redirect(url_for('main.settings') + '#nav-categories')
-
-@main_bp.route('/settings/categories/<int:category_id>/delete', methods=['POST'])
-@login_required
-@admin_required
-def delete_category(category_id):
-    """Delete a product category"""
-    category = ProductCategory.query.filter_by(
-        id=category_id, 
-        tenant_id=current_user.tenant_id
-    ).first_or_404()
-    
-    # Check if category has products
-    if category.products:
-        flash(_('Cannot delete category with existing products'), 'error')
-    else:
-        db.session.delete(category)
-        db.session.commit()
-        flash(_('Category deleted successfully'), 'success')
-    
-    return redirect(url_for('main.settings') + '#nav-categories')
+    return render_template('settings/index.html')
 
 # Task routes
 @main_bp.route('/tasks')
@@ -736,32 +576,24 @@ def tasks():
 @login_required
 def create_task():
     form = TaskForm()
-    
-    # Populate choices for dropdowns
-    users = User.query.filter_by(tenant_id=current_user.tenant_id, is_active=True).all()
-    customers = Customer.query.filter_by(tenant_id=current_user.tenant_id).all()
-    
-    form.assigned_to.choices = [(u.id, u.full_name) for u in users]
-    form.customer_id.choices = [(0, _('None'))] + [(c.id, c.name) for c in customers]
+    form.assigned_to.choices = [
+        (u.id, u.full_name) for u in User.query.filter_by(tenant_id=current_user.tenant_id, is_active=True).all()
+    ]
+    form.customer_id.choices = [(0, _('Select Customer'))] + [
+        (c.id, c.name) for c in Customer.query.filter_by(tenant_id=current_user.tenant_id).all()
+    ]
     
     if form.validate_on_submit():
-        # Handle due_date timezone
-        due_date = form.due_date.data
-        if due_date and due_date.tzinfo is None:
-            due_date = due_date.replace(tzinfo=timezone.utc)
-        
         task = Task(
             tenant_id=current_user.tenant_id,
             created_by=current_user.id,
             assigned_to=form.assigned_to.data,
             title=form.title.data,
             description=form.description.data,
-            status=form.status.data,
             priority=form.priority.data,
             category=form.category.data,
-            customer_id=form.customer_id.data if form.customer_id.data != 0 else None,
-            due_date=due_date,
-            notes=form.notes.data
+            customer_id=form.customer_id.data if form.customer_id.data else None,
+            due_date=form.due_date.data
         )
         
         db.session.add(task)
@@ -769,73 +601,7 @@ def create_task():
         flash(_('Task created successfully'), 'success')
         return redirect(url_for('main.tasks'))
     
-    # Debug form errors
-    if request.method == 'POST' and not form.validate():
-        for field, errors in form.errors.items():
-            for error in errors:
-                flash(f'Error in {field}: {error}', 'error')
-    
     return render_template('tasks/create.html', form=form)
-
-@main_bp.route('/tasks/<int:task_id>/edit', methods=['GET', 'POST'])
-@login_required
-def edit_task(task_id):
-    task = Task.query.filter_by(id=task_id, tenant_id=current_user.tenant_id).first_or_404()
-    
-    # Check permissions
-    if current_user.role == 'user' and task.created_by != current_user.id and task.assigned_to != current_user.id:
-        flash(_('You can only edit tasks you created or are assigned to'), 'error')
-        return redirect(url_for('main.tasks'))
-    
-    form = TaskForm(obj=task)
-    form.assigned_to.choices = [
-        (u.id, u.full_name) for u in User.query.filter_by(tenant_id=current_user.tenant_id, is_active=True).all()
-    ]
-    form.customer_id.choices = [(0, _('None'))] + [
-        (c.id, c.name) for c in Customer.query.filter_by(tenant_id=current_user.tenant_id).all()
-    ]
-    
-    # Set initial values for GET request
-    if request.method == 'GET':
-        if task.due_date:
-            # Format datetime for datetime-local input
-            form.due_date.data = task.due_date.replace(tzinfo=None) if task.due_date.tzinfo else task.due_date
-        if task.customer_id:
-            form.customer_id.data = task.customer_id
-        else:
-            form.customer_id.data = 0
-    
-    if form.validate_on_submit():
-        old_status = task.status
-        
-        # Handle due_date timezone
-        due_date = form.due_date.data
-        if due_date and due_date.tzinfo is None:
-            due_date = due_date.replace(tzinfo=timezone.utc)
-        
-        task.title = form.title.data
-        task.description = form.description.data
-        task.status = form.status.data
-        task.priority = form.priority.data
-        task.category = form.category.data
-        task.assigned_to = form.assigned_to.data
-        task.customer_id = form.customer_id.data if form.customer_id.data else None
-        task.due_date = due_date
-        task.notes = form.notes.data
-        task.updated_at = datetime.now(timezone.utc)
-        
-        # Handle status changes
-        if old_status != form.status.data:
-            if form.status.data == 'completed':
-                task.completed_at = datetime.now(timezone.utc)
-            elif old_status == 'completed':
-                task.completed_at = None
-        
-        db.session.commit()
-        flash(_('Task updated successfully'), 'success')
-        return redirect(url_for('main.tasks'))
-    
-    return render_template('tasks/edit.html', form=form, task=task)
 
 @main_bp.route('/tasks/<int:task_id>/complete', methods=['POST'])
 @login_required

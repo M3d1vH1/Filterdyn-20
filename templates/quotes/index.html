@@ -115,7 +115,7 @@
                                         {{ quote.status.replace('_', ' ').title() }}
                                     </span>
                                 </td>
-                                <td>{{ quote.created_at.strftime('%d/%m/%Y') if quote.created_at else 'N/A' }}</td>
+                                <td>{{ quote.created_at.strftime('%d/%m/%Y') }}</td>
                                 <td>
                                     <div class="btn-group" role="group">
                                         <!-- View/Edit button -->
@@ -269,7 +269,7 @@
                             </tr>
                             <tr>
                                 <td><strong>{{ _('Created') }}:</strong></td>
-                                <td>{{ quote.created_at.strftime('%d/%m/%Y %H:%M') if quote.created_at else 'N/A' }}</td>
+                                <td>{{ quote.created_at.strftime('%d/%m/%Y %H:%M') }}</td>
                             </tr>
                             <tr>
                                 <td><strong>{{ _('Created by') }}:</strong></td>
