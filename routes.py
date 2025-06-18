@@ -539,6 +539,79 @@ def settings():
             # Handle default settings
             flash(_('Default settings updated successfully'), 'success')
             
+        elif section == 'integrations':
+            # Handle API integrations
+            from models_settings import SystemSetting
+            
+            # OpenAI settings
+            openai_key = request.form.get('openai_api_key')
+            if openai_key:
+                SystemSetting.set_setting(
+                    current_user.tenant_id, 
+                    'openai_api_key', 
+                    openai_key, 
+                    'api_keys', 
+                    'OpenAI API Key for AI content generation',
+                    current_user.id,
+                    encrypt=True
+                )
+            
+            SystemSetting.set_setting(
+                current_user.tenant_id, 
+                'openai_default_model', 
+                request.form.get('openai_default_model', 'gpt-4o'), 
+                'api_keys', 
+                'Default OpenAI model'
+            )
+            
+            # Gmail settings
+            gmail_client_id = request.form.get('gmail_client_id')
+            if gmail_client_id:
+                SystemSetting.set_setting(
+                    current_user.tenant_id, 
+                    'gmail_client_id', 
+                    gmail_client_id, 
+                    'api_keys', 
+                    'Gmail OAuth Client ID'
+                )
+            
+            gmail_client_secret = request.form.get('gmail_client_secret')
+            if gmail_client_secret:
+                SystemSetting.set_setting(
+                    current_user.tenant_id, 
+                    'gmail_client_secret', 
+                    gmail_client_secret, 
+                    'api_keys', 
+                    'Gmail OAuth Client Secret',
+                    current_user.id,
+                    encrypt=True
+                )
+            
+            # Twilio settings
+            twilio_sid = request.form.get('twilio_account_sid')
+            if twilio_sid:
+                SystemSetting.set_setting(
+                    current_user.tenant_id, 
+                    'twilio_account_sid', 
+                    twilio_sid, 
+                    'api_keys', 
+                    'Twilio Account SID'
+                )
+            
+            twilio_token = request.form.get('twilio_auth_token')
+            if twilio_token:
+                SystemSetting.set_setting(
+                    current_user.tenant_id, 
+                    'twilio_auth_token', 
+                    twilio_token, 
+                    'api_keys', 
+                    'Twilio Auth Token',
+                    current_user.id,
+                    encrypt=True
+                )
+            
+            flash(_('API integration settings saved successfully'), 'success')
+            
         db.session.commit()
         flash(_('Settings updated successfully'), 'success')
         return redirect(url_for('main.settings'))
