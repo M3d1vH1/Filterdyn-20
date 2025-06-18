@@ -1,0 +1,330 @@
+{% extends "base.html" %}
+
+{% block title %}{{ _('Order') }} {{ order.order_number }} - {{ super() }}{% endblock %}
+
+{% block content %}
+<div class="row">
+    <div class="col-12">
+        <div class="d-flex justify-content-between align-items-center mb-4">
+            <h1 class="h3">
+                <i data-feather="package" class="me-2"></i>
+                {{ _('Order') }} {{ order.order_number }}
+            </h1>
+            <div class="btn-group">
+                <a href="{{ url_for('main.orders') }}" class="btn btn-outline-secondary">
+                    <i data-feather="arrow-left" class="me-2"></i>
+                    {{ _('Back to Orders') }}
+                </a>
+                {% if current_user.role in ['admin', 'manager'] %}
+                <a href="{{ url_for('main.edit_order', order_id=order.id) }}" class="btn btn-primary">
+                    <i data-feather="edit" class="me-2"></i>
+                    {{ _('Edit Order') }}
+                </a>
+                {% endif %}
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Order Header -->
+<div class="row mb-4">
+    <div class="col-12">
+        <div class="card">
+            <div class="card-header">
+                <h5 class="mb-0">
+                    <i data-feather="info" class="me-2"></i>
+                    {{ _('Order Information') }}
+                </h5>
+            </div>
+            <div class="card-body">
+                <div class="row">
+                    <div class="col-md-6">
+                        <table class="table table-borderless">
+                            <tr>
+                                <td class="fw-bold">{{ _('Order Number') }}:</td>
+                                <td>{{ order.order_number }}</td>
+                            </tr>
+                            <tr>
+                                <td class="fw-bold">{{ _('Customer') }}:</td>
+                                <td>
+                                    <a href="{{ url_for('main.customers') }}?search={{ order.customer.name }}" 
+                                       class="text-decoration-none">
+                                        {{ order.customer.name }}
+                                    </a>
+                                </td>
+                            </tr>
+                            <tr>
+                                <td class="fw-bold">{{ _('Contact Person') }}:</td>
+                                <td>{{ order.customer.contact_person or '-' }}</td>
+                            </tr>
+                            <tr>
+                                <td class="fw-bold">{{ _('Title') }}:</td>
+                                <td>{{ order.title }}</td>
+                            </tr>
+                            <tr>
+                                <td class="fw-bold">{{ _('Type') }}:</td>
+                                <td>
+                                    <span class="badge bg-info">
+                                        {{ order.order_type.replace('_', ' ').title() }}
+                                    </span>
+                                </td>
+                            </tr>
+                        </table>
+                    </div>
+                    <div class="col-md-6">
+                        <table class="table table-borderless">
+                            <tr>
+                                <td class="fw-bold">{{ _('Status') }}:</td>
+                                <td>
+                                    {% set status_colors = {
+                                        'pending': 'warning',
+                                        'processing': 'info',
+                                        'shipped': 'primary',
+                                        'delivered': 'success',
+                                        'cancelled': 'danger'
+                                    } %}
+                                    <span class="badge bg-{{ status_colors.get(order.status, 'secondary') }}">
+                                        {{ order.status.title() }}
+                                    </span>
+                                </td>
+                            </tr>
+                            <tr>
+                                <td class="fw-bold">{{ _('Created Date') }}:</td>
+                                <td>{{ order.created_at.strftime('%d/%m/%Y %H:%M') }}</td>
+                            </tr>
+                            <tr>
+                                <td class="fw-bold">{{ _('Created By') }}:</td>
+                                <td>{{ order.creator.first_name }} {{ order.creator.last_name }} ({{ order.creator.username }})</td>
+                            </tr>
+                            {% if order.delivery_date %}
+                            <tr>
+                                <td class="fw-bold">{{ _('Delivery Date') }}:</td>
+                                <td>{{ order.delivery_date.strftime('%d/%m/%Y') }}</td>
+                            </tr>
+                            {% endif %}
+                            {% if order.quote %}
+                            <tr>
+                                <td class="fw-bold">{{ _('Related Quote') }}:</td>
+                                <td>
+                                    <a href="{{ url_for('main.quotes') }}?search={{ order.quote.quote_number }}" 
+                                       class="text-decoration-none">
+                                        {{ order.quote.quote_number }}
+                                    </a>
+                                </td>
+                            </tr>
+                            {% endif %}
+                        </table>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Description -->
+{% if order.description %}
+<div class="row mb-4">
+    <div class="col-12">
+        <div class="card">
+            <div class="card-header">
+                <h5 class="mb-0">
+                    <i data-feather="file-text" class="me-2"></i>
+                    {{ _('Description') }}
+                </h5>
+            </div>
+            <div class="card-body">
+                <p class="mb-0">{{ order.description }}</p>
+            </div>
+        </div>
+    </div>
+</div>
+{% endif %}
+
+<!-- Order Items -->
+{% if order.items %}
+<div class="row mb-4">
+    <div class="col-12">
+        <div class="card">
+            <div class="card-header">
+                <h5 class="mb-0">
+                    <i data-feather="list" class="me-2"></i>
+                    {{ _('Order Items') }}
+                </h5>
+            </div>
+            <div class="card-body">
+                <div class="table-responsive">
+                    <table class="table table-hover">
+                        <thead>
+                            <tr>
+                                <th>{{ _('Description') }}</th>
+                                <th class="text-center">{{ _('Quantity') }}</th>
+                                <th class="text-end">{{ _('Unit Price') }}</th>
+                                <th class="text-end">{{ _('Total') }}</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {% for item in order.items %}
+                            <tr>
+                                <td>{{ item.description }}</td>
+                                <td class="text-center">{{ "%.1f"|format(item.quantity) }}</td>
+                                <td class="text-end">€{{ "%.2f"|format(item.unit_price) }}</td>
+                                <td class="text-end">€{{ "%.2f"|format(item.line_total) }}</td>
+                            </tr>
+                            {% endfor %}
+                        </tbody>
+                        <tfoot>
+                            <tr class="table-active">
+                                <th colspan="3" class="text-end">{{ _('Subtotal') }}:</th>
+                                <th class="text-end">€{{ "%.2f"|format(order.subtotal or 0) }}</th>
+                            </tr>
+                            <tr class="table-active">
+                                <th colspan="3" class="text-end">{{ _('VAT') }} ({{ order.tax_rate or 24 }}%):</th>
+                                <th class="text-end">€{{ "%.2f"|format(order.tax_amount or 0) }}</th>
+                            </tr>
+                            <tr class="table-primary">
+                                <th colspan="3" class="text-end">{{ _('Total Amount') }}:</th>
+                                <th class="text-end">€{{ "%.2f"|format(order.total_amount or 0) }}</th>
+                            </tr>
+                        </tfoot>
+                    </table>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endif %}
+
+<!-- Delivery Information -->
+<div class="row mb-4">
+    <div class="col-md-6">
+        <div class="card">
+            <div class="card-header">
+                <h5 class="mb-0">
+                    <i data-feather="truck" class="me-2"></i>
+                    {{ _('Delivery Information') }}
+                </h5>
+            </div>
+            <div class="card-body">
+                {% if order.delivery_address %}
+                <div class="mb-3">
+                    <strong>{{ _('Delivery Address') }}:</strong>
+                    <div class="mt-1">{{ order.delivery_address }}</div>
+                </div>
+                {% endif %}
+                
+                {% if order.delivery_date %}
+                <div class="mb-3">
+                    <strong>{{ _('Delivery Date') }}:</strong>
+                    <div class="mt-1">{{ order.delivery_date.strftime('%d/%m/%Y') }}</div>
+                </div>
+                {% endif %}
+                
+                {% if order.delivery_notes %}
+                <div class="mb-3">
+                    <strong>{{ _('Delivery Notes') }}:</strong>
+                    <div class="mt-1">{{ order.delivery_notes }}</div>
+                </div>
+                {% endif %}
+                
+                {% if not order.delivery_address and not order.delivery_date and not order.delivery_notes %}
+                <p class="text-muted mb-0">{{ _('No delivery information specified') }}</p>
+                {% endif %}
+            </div>
+        </div>
+    </div>
+    
+    <!-- Customer Information -->
+    <div class="col-md-6">
+        <div class="card">
+            <div class="card-header">
+                <h5 class="mb-0">
+                    <i data-feather="user" class="me-2"></i>
+                    {{ _('Customer Details') }}
+                </h5>
+            </div>
+            <div class="card-body">
+                <div class="mb-2">
+                    <strong>{{ _('Company') }}:</strong> {{ order.customer.name }}
+                </div>
+                {% if order.customer.contact_person %}
+                <div class="mb-2">
+                    <strong>{{ _('Contact') }}:</strong> {{ order.customer.contact_person }}
+                </div>
+                {% endif %}
+                {% if order.customer.email %}
+                <div class="mb-2">
+                    <strong>{{ _('Email') }}:</strong> 
+                    <a href="mailto:{{ order.customer.email }}">{{ order.customer.email }}</a>
+                </div>
+                {% endif %}
+                {% if order.customer.phone %}
+                <div class="mb-2">
+                    <strong>{{ _('Phone') }}:</strong> 
+                    <a href="tel:{{ order.customer.phone }}">{{ order.customer.phone }}</a>
+                </div>
+                {% endif %}
+                {% if order.customer.address %}
+                <div class="mb-2">
+                    <strong>{{ _('Address') }}:</strong>
+                    <div>{{ order.customer.address }}</div>
+                    {% if order.customer.city %}
+                    <div>{{ order.customer.city }} {{ order.customer.postal_code }}</div>
+                    {% endif %}
+                </div>
+                {% endif %}
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Order Status Actions -->
+{% if current_user.role in ['admin', 'manager'] %}
+<div class="row">
+    <div class="col-12">
+        <div class="card">
+            <div class="card-header">
+                <h5 class="mb-0">
+                    <i data-feather="settings" class="me-2"></i>
+                    {{ _('Order Actions') }}
+                </h5>
+            </div>
+            <div class="card-body">
+                <div class="row">
+                    <div class="col-md-6">
+                        <h6>{{ _('Update Status') }}</h6>
+                        <form method="POST" class="d-inline">
+                            <input type="hidden" name="action" value="update_status">
+                            <div class="input-group">
+                                <select name="new_status" class="form-select">
+                                    <option value="pending" {{ 'selected' if order.status == 'pending' }}>{{ _('Pending') }}</option>
+                                    <option value="processing" {{ 'selected' if order.status == 'processing' }}>{{ _('Processing') }}</option>
+                                    <option value="shipped" {{ 'selected' if order.status == 'shipped' }}>{{ _('Shipped') }}</option>
+                                    <option value="delivered" {{ 'selected' if order.status == 'delivered' }}>{{ _('Delivered') }}</option>
+                                    <option value="cancelled" {{ 'selected' if order.status == 'cancelled' }}>{{ _('Cancelled') }}</option>
+                                </select>
+                                <button type="submit" class="btn btn-primary">
+                                    <i data-feather="check" class="me-2"></i>{{ _('Update') }}
+                                </button>
+                            </div>
+                        </form>
+                    </div>
+                    <div class="col-md-6">
+                        <h6>{{ _('Quick Actions') }}</h6>
+                        <div class="btn-group">
+                            <a href="{{ url_for('main.edit_order', order_id=order.id) }}" class="btn btn-outline-primary">
+                                <i data-feather="edit" class="me-2"></i>{{ _('Edit Order') }}
+                            </a>
+                            {% if order.quote %}
+                            <a href="{{ url_for('main.quotes') }}?search={{ order.quote.quote_number }}" class="btn btn-outline-info">
+                                <i data-feather="file-text" class="me-2"></i>{{ _('View Quote') }}
+                            </a>
+                            {% endif %}
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endif %}
+{% endblock %}

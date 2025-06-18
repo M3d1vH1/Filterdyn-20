@@ -7,8 +7,8 @@
     <div class="col-12">
         <div class="d-flex justify-content-between align-items-center mb-4">
             <h1 class="h3">
-                <i data-feather="shopping-cart" class="me-2"></i>
-                {{ _('Create Order') }}
+                <i data-feather="plus-circle" class="me-2"></i>
+                {{ _('Create New Order') }}
             </h1>
             <a href="{{ url_for('main.orders') }}" class="btn btn-outline-secondary">
                 <i data-feather="arrow-left" class="me-2"></i>
@@ -18,210 +18,114 @@
     </div>
 </div>
 
-<div class="row justify-content-center">
-    <div class="col-lg-8">
+<div class="row">
+    <div class="col-12">
         <div class="card">
             <div class="card-header">
-                <h5 class="mb-0">{{ _('Order Information') }}</h5>
+                <h5 class="mb-0">
+                    <i data-feather="edit" class="me-2"></i>
+                    {{ _('Order Details') }}
+                </h5>
             </div>
             <div class="card-body">
-                <form method="POST" class="needs-validation" novalidate>
+                <form method="POST">
                     {{ form.hidden_tag() }}
                     
-                    <!-- Customer & Basic Info -->
-                    <div class="row mb-4">
-                        <div class="col-12">
-                            <h6 class="text-primary border-bottom pb-2 mb-3">
-                                <i data-feather="user" class="me-2"></i>
-                                {{ _('Customer & Basic Information') }}
-                            </h6>
-                        </div>
-                        
-                        <div class="col-md-6 mb-3">
-                            <div class="form-floating">
-                                {{ form.customer_id(class="form-select", required=true) }}
-                                {{ form.customer_id.label(class="form-label") }}
-                                <div class="invalid-feedback">
-                                    {{ _('Please select a customer.') }}
-                                </div>
-                            </div>
+                    <div class="row mb-3">
+                        <div class="col-md-6">
+                            {{ form.customer_id.label(class="form-label") }}
+                            {{ form.customer_id(class="form-select" + (" is-invalid" if form.customer_id.errors else "")) }}
                             {% if form.customer_id.errors %}
-                            <div class="text-danger small mt-1">
-                                {% for error in form.customer_id.errors %}
-                                <div>{{ error }}</div>
-                                {% endfor %}
+                            <div class="invalid-feedback">
+                                {% for error in form.customer_id.errors %}{{ error }}{% endfor %}
                             </div>
                             {% endif %}
                         </div>
-                        
-                        <div class="col-md-6 mb-3">
-                            <div class="form-floating">
-                                {{ form.order_type(class="form-select", required=true) }}
-                                {{ form.order_type.label(class="form-label") }}
-                                <div class="invalid-feedback">
-                                    {{ _('Please select an order type.') }}
-                                </div>
-                            </div>
+                        <div class="col-md-6">
+                            {{ form.quote_id.label(class="form-label") }}
+                            {{ form.quote_id(class="form-select") }}
+                            <div class="form-text">{{ _('Optional: Link this order to an approved quote') }}</div>
+                        </div>
+                    </div>
+                    
+                    <div class="row mb-3">
+                        <div class="col-md-6">
+                            {{ form.order_type.label(class="form-label") }}
+                            {{ form.order_type(class="form-select" + (" is-invalid" if form.order_type.errors else "")) }}
                             {% if form.order_type.errors %}
-                            <div class="text-danger small mt-1">
-                                {% for error in form.order_type.errors %}
-                                <div>{{ error }}</div>
-                                {% endfor %}
+                            <div class="invalid-feedback">
+                                {% for error in form.order_type.errors %}{{ error }}{% endfor %}
                             </div>
                             {% endif %}
                         </div>
-                        
-                        <div class="col-12 mb-3">
-                            <div class="form-floating">
-                                {{ form.quote_id(class="form-select") }}
-                                {{ form.quote_id.label(class="form-label") }}
-                            </div>
-                            <div class="form-text">
-                                {{ _('Optional: Link this order to an existing quote') }}
-                            </div>
-                            {% if form.quote_id.errors %}
-                            <div class="text-danger small mt-1">
-                                {% for error in form.quote_id.errors %}
-                                <div>{{ error }}</div>
-                                {% endfor %}
-                            </div>
-                            {% endif %}
-                        </div>
-                        
-                        <div class="col-12 mb-3">
-                            <div class="form-floating">
-                                {{ form.title(class="form-control", required=true) }}
-                                {{ form.title.label(class="form-label") }}
-                                <div class="invalid-feedback">
-                                    {{ _('Please provide a title.') }}
-                                </div>
-                            </div>
-                            {% if form.title.errors %}
-                            <div class="text-danger small mt-1">
-                                {% for error in form.title.errors %}
-                                <div>{{ error }}</div>
-                                {% endfor %}
-                            </div>
-                            {% endif %}
-                        </div>
-                        
-                        <div class="col-12 mb-3">
-                            <div class="form-floating">
-                                {{ form.description(class="form-control", style="height: 100px", data_auto_resize="true") }}
-                                {{ form.description.label(class="form-label") }}
-                            </div>
-                            {% if form.description.errors %}
-                            <div class="text-danger small mt-1">
-                                {% for error in form.description.errors %}
-                                <div>{{ error }}</div>
-                                {% endfor %}
-                            </div>
-                            {% endif %}
+                        <div class="col-md-6">
+                            {{ form.delivery_date.label(class="form-label") }}
+                            {{ form.delivery_date(class="form-control", type="date") }}
                         </div>
                     </div>
                     
-                    <!-- Delivery Information -->
-                    <div class="row mb-4">
-                        <div class="col-12">
-                            <h6 class="text-primary border-bottom pb-2 mb-3">
-                                <i data-feather="truck" class="me-2"></i>
-                                {{ _('Delivery Information') }}
-                            </h6>
+                    <div class="mb-3">
+                        {{ form.title.label(class="form-label") }}
+                        {{ form.title(class="form-control" + (" is-invalid" if form.title.errors else "")) }}
+                        {% if form.title.errors %}
+                        <div class="invalid-feedback">
+                            {% for error in form.title.errors %}{{ error }}{% endfor %}
                         </div>
-                        
-                        <div class="col-md-6 mb-3">
-                            <div class="form-floating">
-                                {{ form.delivery_date(class="form-control", type="date") }}
-                                {{ form.delivery_date.label(class="form-label") }}
-                            </div>
-                            {% if form.delivery_date.errors %}
-                            <div class="text-danger small mt-1">
-                                {% for error in form.delivery_date.errors %}
-                                <div>{{ error }}</div>
-                                {% endfor %}
-                            </div>
-                            {% endif %}
-                        </div>
-                        
-                        <div class="col-12 mb-3">
-                            <div class="form-floating">
-                                {{ form.delivery_address(class="form-control", style="height: 100px", data_auto_resize="true") }}
-                                {{ form.delivery_address.label(class="form-label") }}
-                            </div>
-                            <div class="form-text">
-                                {{ _('Leave empty to use customer address') }}
-                            </div>
-                            {% if form.delivery_address.errors %}
-                            <div class="text-danger small mt-1">
-                                {% for error in form.delivery_address.errors %}
-                                <div>{{ error }}</div>
-                                {% endfor %}
-                            </div>
-                            {% endif %}
-                        </div>
-                        
-                        <div class="col-12 mb-3">
-                            <div class="form-floating">
-                                {{ form.delivery_notes(class="form-control", style="height: 80px", data_auto_resize="true") }}
-                                {{ form.delivery_notes.label(class="form-label") }}
-                            </div>
-                            {% if form.delivery_notes.errors %}
-                            <div class="text-danger small mt-1">
-                                {% for error in form.delivery_notes.errors %}
-                                <div>{{ error }}</div>
-                                {% endfor %}
-                            </div>
-                            {% endif %}
-                        </div>
+                        {% endif %}
                     </div>
                     
-                    <!-- Actions -->
-                    <div class="row">
-                        <div class="col-12">
-                            <div class="d-flex justify-content-end gap-2">
-                                <a href="{{ url_for('main.orders') }}" class="btn btn-outline-secondary">
-                                    <i data-feather="x" class="me-2"></i>
-                                    {{ _('Cancel') }}
-                                </a>
-                                <button type="submit" class="btn btn-primary">
-                                    <i data-feather="save" class="me-2"></i>
-                                    {{ _('Create Order') }}
-                                </button>
-                            </div>
-                        </div>
+                    <div class="mb-3">
+                        {{ form.description.label(class="form-label") }}
+                        {{ form.description(class="form-control", rows="4") }}
+                        <div class="form-text">{{ _('Detailed description of the order requirements') }}</div>
+                    </div>
+                    
+                    <div class="mb-3">
+                        {{ form.delivery_address.label(class="form-label") }}
+                        {{ form.delivery_address(class="form-control", rows="3") }}
+                        <div class="form-text">{{ _('Specific delivery address if different from customer address') }}</div>
+                    </div>
+                    
+                    <div class="mb-3">
+                        {{ form.delivery_notes.label(class="form-label") }}
+                        {{ form.delivery_notes(class="form-control", rows="2") }}
+                        <div class="form-text">{{ _('Special instructions for delivery') }}</div>
+                    </div>
+                    
+                    <div class="d-flex justify-content-end">
+                        <a href="{{ url_for('main.orders') }}" class="btn btn-secondary me-2">
+                            <i data-feather="x" class="me-2"></i>
+                            {{ _('Cancel') }}
+                        </a>
+                        <button type="submit" class="btn btn-primary">
+                            <i data-feather="save" class="me-2"></i>
+                            {{ _('Create Order') }}
+                        </button>
                     </div>
                 </form>
-                
-                <div class="mt-4">
-                    <div class="alert alert-info">
-                        <i data-feather="info" class="me-2"></i>
-                        {{ _('After creating the order, you will be able to add items and manage delivery details.') }}
-                    </div>
-                </div>
             </div>
         </div>
     </div>
 </div>
 {% endblock %}
 
-{% block js %}
+{% block scripts %}
 <script>
-// Auto-populate fields when quote is selected
-document.getElementById('quote_id').addEventListener('change', function() {
-    var quoteId = this.value;
-    if (quoteId) {
-        // You could fetch quote details via AJAX here
-        // For now, just show a helpful message
-        console.log('Quote selected:', quoteId);
+// Auto-populate delivery address from customer address when customer is selected
+document.getElementById('customer_id').addEventListener('change', function() {
+    const customerId = this.value;
+    if (customerId && customerId !== '0') {
+        // You can add AJAX call here to fetch customer address if needed
+        console.log('Customer selected:', customerId);
     }
 });
 
-// Auto-populate delivery address when customer is selected
-document.getElementById('customer_id').addEventListener('change', function() {
-    var customerId = this.value;
-    if (customerId) {
-        // You could fetch customer address via AJAX here
-        console.log('Customer selected:', customerId);
+// Auto-populate from quote when quote is selected
+document.getElementById('quote_id').addEventListener('change', function() {
+    const quoteId = this.value;
+    if (quoteId && quoteId !== '0') {
+        // You can add AJAX call here to fetch quote details if needed
+        console.log('Quote selected:', quoteId);
     }
 });
 </script>

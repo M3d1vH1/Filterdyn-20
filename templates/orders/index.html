@@ -7,7 +7,7 @@
     <div class="col-12">
         <div class="d-flex justify-content-between align-items-center mb-4">
             <h1 class="h3">
-                <i data-feather="shopping-cart" class="me-2"></i>
+                <i data-feather="package" class="me-2"></i>
                 {{ _('Orders') }}
             </h1>
             <a href="{{ url_for('main.create_order') }}" class="btn btn-primary">
@@ -18,44 +18,30 @@
     </div>
 </div>
 
-<!-- Filters -->
+<!-- Filters and Search -->
 <div class="row mb-4">
     <div class="col-12">
         <div class="card">
             <div class="card-body">
                 <form method="GET" class="row g-3">
-                    <div class="col-md-3">
-                        <div class="form-floating">
-                            <select class="form-select" id="status" name="status">
-                                <option value="">{{ _('All Statuses') }}</option>
-                                <option value="pending" {% if status == 'pending' %}selected{% endif %}>{{ _('Pending') }}</option>
-                                <option value="confirmed" {% if status == 'confirmed' %}selected{% endif %}>{{ _('Confirmed') }}</option>
-                                <option value="processing" {% if status == 'processing' %}selected{% endif %}>{{ _('Processing') }}</option>
-                                <option value="shipped" {% if status == 'shipped' %}selected{% endif %}>{{ _('Shipped') }}</option>
-                                <option value="delivered" {% if status == 'delivered' %}selected{% endif %}>{{ _('Delivered') }}</option>
-                                <option value="cancelled" {% if status == 'cancelled' %}selected{% endif %}>{{ _('Cancelled') }}</option>
-                            </select>
-                            <label for="status">{{ _('Status') }}</label>
-                        </div>
+                    <div class="col-md-4">
+                        <input type="text" class="form-control" name="search" 
+                               placeholder="{{ _('Search orders...') }}" value="{{ search or '' }}">
                     </div>
-                    <div class="col-md-7">
-                        <div class="form-floating">
-                            <input type="text" class="form-control" id="search" name="search" 
-                                   value="{{ search }}" placeholder="{{ _('Search orders...') }}">
-                            <label for="search">{{ _('Search orders...') }}</label>
-                        </div>
+                    <div class="col-md-3">
+                        <select class="form-select" name="status">
+                            <option value="">{{ _('All Statuses') }}</option>
+                            <option value="pending" {{ 'selected' if status == 'pending' }}>{{ _('Pending') }}</option>
+                            <option value="processing" {{ 'selected' if status == 'processing' }}>{{ _('Processing') }}</option>
+                            <option value="shipped" {{ 'selected' if status == 'shipped' }}>{{ _('Shipped') }}</option>
+                            <option value="delivered" {{ 'selected' if status == 'delivered' }}>{{ _('Delivered') }}</option>
+                            <option value="cancelled" {{ 'selected' if status == 'cancelled' }}>{{ _('Cancelled') }}</option>
+                        </select>
                     </div>
                     <div class="col-md-2">
-                        <button type="submit" class="btn btn-outline-primary me-2">
-                            <i data-feather="search" class="me-2"></i>
-                            {{ _('Search') }}
+                        <button type="submit" class="btn btn-outline-primary">
+                            <i data-feather="search" class="me-2"></i>{{ _('Filter') }}
                         </button>
-                        {% if search or status %}
-                        <a href="{{ url_for('main.orders') }}" class="btn btn-outline-secondary">
-                            <i data-feather="x" class="me-2"></i>
-                            {{ _('Clear') }}
-                        </a>
-                        {% endif %}
                     </div>
                 </form>
             </div>
@@ -63,18 +49,12 @@
     </div>
 </div>
 
-<!-- Results -->
+<!-- Orders Table -->
 <div class="row">
     <div class="col-12">
         <div class="card">
-            <div class="card-header">
-                <h5 class="mb-0">
-                    {{ _('Order List') }}
-                    <span class="badge bg-primary ms-2">{{ orders.total if orders else 0 }}</span>
-                </h5>
-            </div>
             <div class="card-body">
-                {% if orders and orders.items %}
+                {% if orders.items %}
                 <div class="table-responsive">
                     <table class="table table-hover">
                         <thead>
@@ -83,20 +63,19 @@
                                 <th>{{ _('Customer') }}</th>
                                 <th>{{ _('Title') }}</th>
                                 <th>{{ _('Type') }}</th>
-                                <th>{{ _('Total') }}</th>
                                 <th>{{ _('Status') }}</th>
                                 <th>{{ _('Date') }}</th>
-                                <th width="150">{{ _('Actions') }}</th>
+                                <th>{{ _('Actions') }}</th>
                             </tr>
                         </thead>
                         <tbody>
                             {% for order in orders.items %}
                             <tr>
                                 <td>
-                                    <strong>{{ order.order_number }}</strong>
-                                    {% if order.quote %}
-                                    <br><small class="text-muted">{{ _('From Quote') }}: {{ order.quote.quote_number }}</small>
-                                    {% endif %}
+                                    <a href="{{ url_for('main.view_order', order_id=order.id) }}" 
+                                       class="text-decoration-none fw-bold">
+                                        {{ order.order_number }}
+                                    </a>
                                 </td>
                                 <td>{{ order.customer.name }}</td>
                                 <td>{{ order.title }}</td>
@@ -106,30 +85,30 @@
                                     </span>
                                 </td>
                                 <td>
-                                    {% if order.total_amount %}
-                                    <strong>€{{ "%.2f"|format(order.total_amount) }}</strong>
-                                    {% else %}
-                                    <span class="text-muted">-</span>
-                                    {% endif %}
-                                </td>
-                                <td>
-                                    <span class="badge status-{{ order.status }}">
-                                        {{ order.status.replace('_', ' ').title() }}
+                                    {% set status_colors = {
+                                        'pending': 'warning',
+                                        'processing': 'info',
+                                        'shipped': 'primary',
+                                        'delivered': 'success',
+                                        'cancelled': 'danger'
+                                    } %}
+                                    <span class="badge bg-{{ status_colors.get(order.status, 'secondary') }}">
+                                        {{ order.status.title() }}
                                     </span>
                                 </td>
                                 <td>{{ order.created_at.strftime('%d/%m/%Y') }}</td>
                                 <td>
-                                    <div class="btn-group" role="group">
-                                        <a href="{{ url_for('main.edit_order', order_id=order.id) }}" 
-                                           class="btn btn-sm btn-outline-primary" 
-                                           data-bs-toggle="tooltip" title="{{ _('Edit') }}">
-                                            <i data-feather="edit-2"></i>
-                                        </a>
-                                        <button type="button" class="btn btn-sm btn-outline-info" 
-                                                data-bs-toggle="modal" data-bs-target="#orderModal{{ order.id }}"
-                                                title="{{ _('View Details') }}">
+                                    <div class="btn-group btn-group-sm">
+                                        <a href="{{ url_for('main.view_order', order_id=order.id) }}" 
+                                           class="btn btn-outline-primary" title="{{ _('View') }}">
                                             <i data-feather="eye"></i>
-                                        </button>
+                                        </a>
+                                        {% if current_user.role in ['admin', 'manager'] %}
+                                        <a href="{{ url_for('main.edit_order', order_id=order.id) }}" 
+                                           class="btn btn-outline-secondary" title="{{ _('Edit') }}">
+                                            <i data-feather="edit"></i>
+                                        </a>
+                                        {% endif %}
                                     </div>
                                 </td>
                             </tr>
@@ -137,42 +116,42 @@
                         </tbody>
                     </table>
                 </div>
-                
+
                 <!-- Pagination -->
                 {% if orders.pages > 1 %}
-                <nav aria-label="Order pagination">
+                <nav aria-label="Orders pagination" class="mt-4">
                     <ul class="pagination justify-content-center">
                         {% if orders.has_prev %}
                         <li class="page-item">
-                            <a class="page-link" href="{{ url_for('main.orders', page=orders.prev_num, status=status, search=search) }}">
+                            <a class="page-link" href="{{ url_for('main.orders', page=orders.prev_num, search=search, status=status) }}">
                                 {{ _('Previous') }}
                             </a>
                         </li>
                         {% endif %}
                         
                         {% for page_num in orders.iter_pages() %}
-                        {% if page_num %}
-                        {% if page_num != orders.page %}
-                        <li class="page-item">
-                            <a class="page-link" href="{{ url_for('main.orders', page=page_num, status=status, search=search) }}">
-                                {{ page_num }}
-                            </a>
-                        </li>
-                        {% else %}
-                        <li class="page-item active">
-                            <span class="page-link">{{ page_num }}</span>
-                        </li>
-                        {% endif %}
-                        {% else %}
-                        <li class="page-item disabled">
-                            <span class="page-link">…</span>
-                        </li>
-                        {% endif %}
+                            {% if page_num %}
+                                {% if page_num != orders.page %}
+                                <li class="page-item">
+                                    <a class="page-link" href="{{ url_for('main.orders', page=page_num, search=search, status=status) }}">
+                                        {{ page_num }}
+                                    </a>
+                                </li>
+                                {% else %}
+                                <li class="page-item active">
+                                    <span class="page-link">{{ page_num }}</span>
+                                </li>
+                                {% endif %}
+                            {% else %}
+                            <li class="page-item disabled">
+                                <span class="page-link">…</span>
+                            </li>
+                            {% endif %}
                         {% endfor %}
                         
                         {% if orders.has_next %}
                         <li class="page-item">
-                            <a class="page-link" href="{{ url_for('main.orders', page=orders.next_num, status=status, search=search) }}">
+                            <a class="page-link" href="{{ url_for('main.orders', page=orders.next_num, search=search, status=status) }}">
                                 {{ _('Next') }}
                             </a>
                         </li>
@@ -182,162 +161,17 @@
                 {% endif %}
                 {% else %}
                 <div class="text-center py-5">
-                    <i data-feather="shopping-cart" class="text-muted mb-3" style="width: 64px; height: 64px;"></i>
+                    <i data-feather="package" class="mb-3" style="width: 48px; height: 48px; color: #6c757d;"></i>
                     <h5 class="text-muted">{{ _('No orders found') }}</h5>
-                    {% if search or status %}
-                    <p class="text-muted">{{ _('Try adjusting your search criteria') }}</p>
-                    <a href="{{ url_for('main.orders') }}" class="btn btn-outline-primary">
-                        {{ _('View All Orders') }}
-                    </a>
-                    {% else %}
-                    <p class="text-muted">{{ _('Get started by creating your first order') }}</p>
+                    <p class="text-muted">{{ _('Start by creating your first order') }}</p>
                     <a href="{{ url_for('main.create_order') }}" class="btn btn-primary">
                         <i data-feather="plus" class="me-2"></i>
-                        {{ _('New Order') }}
+                        {{ _('Create Order') }}
                     </a>
-                    {% endif %}
                 </div>
                 {% endif %}
             </div>
         </div>
     </div>
 </div>
-
-<!-- Order Detail Modals -->
-{% if orders and orders.items %}
-{% for order in orders.items %}
-<div class="modal fade" id="orderModal{{ order.id }}" tabindex="-1" aria-hidden="true">
-    <div class="modal-dialog modal-xl">
-        <div class="modal-content">
-            <div class="modal-header">
-                <h5 class="modal-title">{{ _('Order') }} {{ order.order_number }}</h5>
-                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
-            </div>
-            <div class="modal-body">
-                <div class="row">
-                    <div class="col-md-6">
-                        <h6>{{ _('Order Information') }}</h6>
-                        <table class="table table-sm">
-                            <tr>
-                                <td><strong>{{ _('Customer') }}:</strong></td>
-                                <td>{{ order.customer.name }}</td>
-                            </tr>
-                            <tr>
-                                <td><strong>{{ _('Title') }}:</strong></td>
-                                <td>{{ order.title }}</td>
-                            </tr>
-                            <tr>
-                                <td><strong>{{ _('Type') }}:</strong></td>
-                                <td>{{ order.order_type.replace('_', ' ').title() }}</td>
-                            </tr>
-                            <tr>
-                                <td><strong>{{ _('Status') }}:</strong></td>
-                                <td>
-                                    <span class="badge status-{{ order.status }}">
-                                        {{ order.status.replace('_', ' ').title() }}
-                                    </span>
-                                </td>
-                            </tr>
-                            <tr>
-                                <td><strong>{{ _('Created') }}:</strong></td>
-                                <td>{{ order.created_at.strftime('%d/%m/%Y %H:%M') }}</td>
-                            </tr>
-                            <tr>
-                                <td><strong>{{ _('Created by') }}:</strong></td>
-                                <td>{{ order.creator.full_name }}</td>
-                            </tr>
-                        </table>
-                    </div>
-                    <div class="col-md-6">
-                        <h6>{{ _('Delivery Information') }}</h6>
-                        <table class="table table-sm">
-                            {% if order.delivery_date %}
-                            <tr>
-                                <td><strong>{{ _('Delivery Date') }}:</strong></td>
-                                <td>{{ order.delivery_date.strftime('%d/%m/%Y') }}</td>
-                            </tr>
-                            {% endif %}
-                            {% if order.delivery_address %}
-                            <tr>
-                                <td><strong>{{ _('Delivery Address') }}:</strong></td>
-                                <td>{{ order.delivery_address }}</td>
-                            </tr>
-                            {% endif %}
-                            {% if order.delivery_notes %}
-                            <tr>
-                                <td><strong>{{ _('Delivery Notes') }}:</strong></td>
-                                <td>{{ order.delivery_notes }}</td>
-                            </tr>
-                            {% endif %}
-                        </table>
-                    </div>
-                </div>
-                
-                {% if order.description %}
-                <div class="row mt-3">
-                    <div class="col-12">
-                        <h6>{{ _('Description') }}</h6>
-                        <p>{{ order.description }}</p>
-                    </div>
-                </div>
-                {% endif %}
-                
-                {% if order.items %}
-                <div class="row mt-3">
-                    <div class="col-12">
-                        <h6>{{ _('Items') }}</h6>
-                        <div class="table-responsive">
-                            <table class="table table-sm">
-                                <thead>
-                                    <tr>
-                                        <th>{{ _('Description') }}</th>
-                                        <th>{{ _('Quantity') }}</th>
-                                        <th>{{ _('Delivered') }}</th>
-                                        <th>{{ _('Unit Price') }}</th>
-                                        <th>{{ _('Total') }}</th>
-                                    </tr>
-                                </thead>
-                                <tbody>
-                                    {% for item in order.items %}
-                                    <tr>
-                                        <td>{{ item.description }}</td>
-                                        <td>{{ item.quantity }}</td>
-                                        <td>{{ item.quantity_delivered or 0 }}</td>
-                                        <td>€{{ "%.2f"|format(item.unit_price) }}</td>
-                                        <td>€{{ "%.2f"|format(item.line_total) }}</td>
-                                    </tr>
-                                    {% endfor %}
-                                </tbody>
-                                <tfoot>
-                                    <tr>
-                                        <td colspan="4"><strong>{{ _('Subtotal') }}</strong></td>
-                                        <td><strong>€{{ "%.2f"|format(order.subtotal or 0) }}</strong></td>
-                                    </tr>
-                                    <tr>
-                                        <td colspan="4"><strong>{{ _('Tax') }} ({{ order.tax_rate }}%)</strong></td>
-                                        <td><strong>€{{ "%.2f"|format(order.tax_amount or 0) }}</strong></td>
-                                    </tr>
-                                    <tr class="table-primary">
-                                        <td colspan="4"><strong>{{ _('Total') }}</strong></td>
-                                        <td><strong>€{{ "%.2f"|format(order.total_amount or 0) }}</strong></td>
-                                    </tr>
-                                </tfoot>
-                            </table>
-                        </div>
-                    </div>
-                </div>
-                {% endif %}
-            </div>
-            <div class="modal-footer">
-                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">{{ _('Close') }}</button>
-                <a href="{{ url_for('main.edit_order', order_id=order.id) }}" class="btn btn-primary">
-                    <i data-feather="edit-2" class="me-2"></i>
-                    {{ _('Edit Order') }}
-                </a>
-            </div>
-        </div>
-    </div>
-</div>
-{% endfor %}
-{% endif %}
 {% endblock %}

@@ -421,6 +421,126 @@ def approve_quote(quote_id):
     
     return render_template('quotes/approve.html', quote=quote)
 
+# Order routes
+@main_bp.route('/orders')
+@login_required
+def orders():
+    page = request.args.get('page', 1, type=int)
+    per_page = 20
+    
+    # Base query filtered by tenant
+    query = Order.query.filter_by(tenant_id=current_user.tenant_id)
+    
+    # Filter by status if provided
+    status = request.args.get('status')
+    if status and status != 'all':
+        query = query.filter_by(status=status)
+    
+    # Search functionality
+    search = request.args.get('search', '').strip()
+    if search:
+        query = query.join(Customer).filter(
+            db.or_(
+                Order.order_number.ilike(f'%{search}%'),
+                Order.title.ilike(f'%{search}%'),
+                Customer.name.ilike(f'%{search}%')
+            )
+        )
+    
+    orders = query.order_by(Order.created_at.desc()).paginate(
+        page=page, per_page=per_page, error_out=False
+    )
+    
+    return render_template('orders/index.html', orders=orders, search=search, status=status)
+
+@main_bp.route('/orders/create', methods=['GET', 'POST'])
+@login_required
+def create_order():
+    form = OrderForm()
+    
+    # Populate dropdowns
+    form.customer_id.choices = [(c.id, c.name) for c in Customer.query.filter_by(tenant_id=current_user.tenant_id).all()]
+    form.quote_id.choices = [(0, _('None'))] + [(q.id, f"{q.quote_number} - {q.title}") for q in Quote.query.filter_by(tenant_id=current_user.tenant_id, status='approved').all()]
+    
+    if form.validate_on_submit():
+        order = Order(
+            tenant_id=current_user.tenant_id,
+            customer_id=form.customer_id.data,
+            quote_id=form.quote_id.data if form.quote_id.data != 0 else None,
+            order_type=form.order_type.data,
+            title=form.title.data,
+            description=form.description.data,
+            delivery_address=form.delivery_address.data,
+            delivery_date=form.delivery_date.data,
+            delivery_notes=form.delivery_notes.data,
+            status='pending',
+            created_by=current_user.id,
+            created_at=datetime.now(timezone.utc)
+        )
+        
+        # Generate order number
+        order.order_number = f"ORD-{datetime.now().strftime('%Y%m%d')}-{Order.query.filter_by(tenant_id=current_user.tenant_id).count() + 1:04d}"
+        
+        db.session.add(order)
+        db.session.commit()
+        
+        flash(_('Order created successfully'), 'success')
+        return redirect(url_for('main.orders'))
+    
+    return render_template('orders/create.html', form=form)
+
+@main_bp.route('/orders/<int:order_id>')
+@login_required
+def view_order(order_id):
+    order = Order.query.filter_by(id=order_id, tenant_id=current_user.tenant_id).first_or_404()
+    return render_template('orders/view.html', order=order)
+
+@main_bp.route('/orders/<int:order_id>/edit', methods=['GET', 'POST'])
+@login_required
+@manager_required
+def edit_order(order_id):
+    order = Order.query.filter_by(id=order_id, tenant_id=current_user.tenant_id).first_or_404()
+    form = OrderForm(obj=order)
+    
+    # Populate dropdowns
+    form.customer_id.choices = [(c.id, c.name) for c in Customer.query.filter_by(tenant_id=current_user.tenant_id).all()]
+    form.quote_id.choices = [(0, _('None'))] + [(q.id, f"{q.quote_number} - {q.title}") for q in Quote.query.filter_by(tenant_id=current_user.tenant_id, status='approved').all()]
+    
+    if form.validate_on_submit():
+        form.populate_obj(order)
+        order.quote_id = form.quote_id.data if form.quote_id.data != 0 else None
+        db.session.commit()
+        
+        flash(_('Order updated successfully'), 'success')
+        return redirect(url_for('main.view_order', order_id=order.id))
+    
+    return render_template('orders/edit.html', form=form, order=order)
+
+# Settings routes
+@main_bp.route('/settings', methods=['GET', 'POST'])
+@login_required
+@admin_required
+def settings():
+    if request.method == 'POST':
+        section = request.form.get('section')
+        
+        if section == 'company':
+            current_user.tenant.name = request.form.get('company_name')
+            current_user.tenant.company_email = request.form.get('company_email')
+            current_user.tenant.company_phone = request.form.get('company_phone')
+            current_user.tenant.logo_url = request.form.get('logo_url')
+            current_user.tenant.company_address = request.form.get('company_address')
+            
+        elif section == 'branding':
+            current_user.tenant.primary_color = request.form.get('primary_color')
+            current_user.tenant.secondary_color = request.form.get('secondary_color')
+            
+        db.session.commit()
+        flash(_('Settings updated successfully'), 'success')
+        return redirect(url_for('main.settings'))
+    
+    return render_template('settings/index.html')
+
 # Task routes
 @main_bp.route('/tasks')
 @login_required
