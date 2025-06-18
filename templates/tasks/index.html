@@ -137,7 +137,7 @@
                                 </td>
                                 <td>
                                     {% if task.due_date %}
-                                    {{ task.due_date.strftime('%d/%m/%Y') if .strftime('%d/%m/%Y').split('.')[0] else 'N/A' }}
+                                    {{ task.due_date.strftime('%d/%m/%Y') if task.due_date else 'N/A' }}
                                     {% if task.is_overdue %}
                                     <br><small class="text-danger">{{ _('Overdue') }}</small>
                                     {% endif %}
@@ -285,7 +285,7 @@
                             </tr>
                             <tr>
                                 <td><strong>{{ _('Created') }}:</strong></td>
-                                <td>{{ task.created_at.strftime('%d/%m/%Y %H:%M') if .strftime('%d/%m/%Y %H:%M').split('.')[0] else 'N/A' if task.created_at else 'N/A' }}</td>
+                                <td>{{ task.created_at.strftime('%d/%m/%Y %H:%M') if task.created_at else 'N/A' }}</td>
                             </tr>
                             <tr>
                                 <td><strong>{{ _('Created by') }}:</strong></td>
@@ -304,7 +304,7 @@
                             <tr>
                                 <td><strong>{{ _('Due Date') }}:</strong></td>
                                 <td>
-                                    {{ task.due_date.strftime('%d/%m/%Y') if .strftime('%d/%m/%Y').split('.')[0] else 'N/A' }}
+                                    {{ task.due_date.strftime('%d/%m/%Y') if task.due_date else 'N/A' }}
                                     {% if task.is_overdue %}
                                     <br><small class="text-danger">{{ _('Overdue') }}</small>
                                     {% endif %}

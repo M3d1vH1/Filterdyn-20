@@ -96,7 +96,7 @@
                                         {{ order.status.title() }}
                                     </span>
                                 </td>
-                                <td>{{ order.created_at.strftime('%d/%m/%Y') if .strftime('%d/%m/%Y').split('.')[0] else 'N/A' if order.created_at else 'N/A' }}</td>
+                                <td>{{ order.created_at.strftime('%d/%m/%Y') if order.created_at else 'N/A' }}</td>
                                 <td>
                                     <div class="btn-group btn-group-sm">
                                         <a href="{{ url_for('main.view_order', order_id=order.id) }}" 
