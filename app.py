@@ -85,10 +85,12 @@ def create_app():
     from routes import main_bp
     from auth import auth_bp
     from agent_routes import agent_bp
+    from routes_settings import settings_bp
     
     app.register_blueprint(main_bp)
     app.register_blueprint(auth_bp)
     app.register_blueprint(agent_bp)
+    app.register_blueprint(settings_bp)
     
     # Context processors
     @app.context_processor
