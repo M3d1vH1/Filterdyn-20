@@ -50,4 +50,3 @@ seaborn
 sqlalchemy
 wtforms
 openai
-google-generativeai
