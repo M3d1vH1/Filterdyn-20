@@ -127,6 +127,39 @@ class AgentConfiguration(db.Model):
             return self.configuration.get(key, default)
         return default
 
+
+class APIKeyConfiguration(db.Model):
+    """Configuration for API keys and external services"""
+    __tablename__ = 'api_key_configurations'
+
+    id = db.Column(db.Integer, primary_key=True)
+    tenant_id = db.Column(db.Integer, db.ForeignKey('tenants.id'), nullable=False)
+    
+    service_name = db.Column(db.String(100), nullable=False)  # gemini, gmail, twilio, etc.
+    is_configured = db.Column(db.Boolean, default=False)
+    
+    # Configuration as JSON (without actual API keys)
+    configuration = db.Column(db.JSON)
+    
+    created_at = db.Column(db.DateTime, default=lambda: datetime.now(timezone.utc))
+    updated_at = db.Column(db.DateTime, default=lambda: datetime.now(timezone.utc), onupdate=lambda: datetime.now(timezone.utc))
+
+    # Unique constraint
+    __table_args__ = (
+        db.UniqueConstraint('tenant_id', 'service_name', name='unique_tenant_service'),
+    )
+
+    @classmethod
+    def get_config(cls, tenant_id, service_name):
+        """Get API key configuration"""
+        return cls.query.filter_by(tenant_id=tenant_id, service_name=service_name).first()
+
+    def get_config_value(self, key, default=None):
+        """Get specific configuration value"""
+        if self.configuration and isinstance(self.configuration, dict):
+            return self.configuration.get(key, default)
+        return default
+
     def set_config_value(self, key, value):
         """Set specific configuration value"""
         if not self.configuration:
