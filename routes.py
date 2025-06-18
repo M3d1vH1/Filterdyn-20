@@ -585,6 +585,11 @@ def create_task():
     form.customer_id.choices = [(0, _('None'))] + [(c.id, c.name) for c in customers]
     
     if form.validate_on_submit():
+        # Handle due_date timezone
+        due_date = form.due_date.data
+        if due_date and due_date.tzinfo is None:
+            due_date = due_date.replace(tzinfo=timezone.utc)
+        
         task = Task(
             tenant_id=current_user.tenant_id,
             created_by=current_user.id,
@@ -595,7 +600,7 @@ def create_task():
             priority=form.priority.data,
             category=form.category.data,
             customer_id=form.customer_id.data if form.customer_id.data != 0 else None,
-            due_date=form.due_date.data,
+            due_date=due_date,
             notes=form.notes.data
         )
         
@@ -643,6 +648,11 @@ def edit_task(task_id):
     if form.validate_on_submit():
         old_status = task.status
         
+        # Handle due_date timezone
+        due_date = form.due_date.data
+        if due_date and due_date.tzinfo is None:
+            due_date = due_date.replace(tzinfo=timezone.utc)
+        
         task.title = form.title.data
         task.description = form.description.data
         task.status = form.status.data
@@ -650,7 +660,7 @@ def edit_task(task_id):
         task.category = form.category.data
         task.assigned_to = form.assigned_to.data
         task.customer_id = form.customer_id.data if form.customer_id.data else None
-        task.due_date = form.due_date.data
+        task.due_date = due_date
         task.notes = form.notes.data
         task.updated_at = datetime.now(timezone.utc)
         
