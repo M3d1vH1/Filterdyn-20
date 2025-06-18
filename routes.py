@@ -603,6 +603,56 @@ def create_task():
     
     return render_template('tasks/create.html', form=form)
 
+@main_bp.route('/tasks/<int:task_id>/edit', methods=['GET', 'POST'])
+@login_required
+def edit_task(task_id):
+    task = Task.query.filter_by(id=task_id, tenant_id=current_user.tenant_id).first_or_404()
+    
+    # Check permissions
+    if current_user.role == 'user' and task.created_by != current_user.id and task.assigned_to != current_user.id:
+        flash(_('You can only edit tasks you created or are assigned to'), 'error')
+        return redirect(url_for('main.tasks'))
+    
+    form = TaskForm(obj=task)
+    form.assigned_to.choices = [
+        (u.id, u.full_name) for u in User.query.filter_by(tenant_id=current_user.tenant_id, is_active=True).all()
+    ]
+    form.customer_id.choices = [(0, _('Select Customer'))] + [
+        (c.id, c.name) for c in Customer.query.filter_by(tenant_id=current_user.tenant_id).all()
+    ]
+    
+    # Handle datetime formatting for the form
+    if request.method == 'GET' and task.due_date:
+        # Format datetime for datetime-local input
+        form.due_date.data = task.due_date.replace(tzinfo=None) if task.due_date.tzinfo else task.due_date
+    
+    if form.validate_on_submit():
+        old_status = task.status
+        
+        task.title = form.title.data
+        task.description = form.description.data
+        task.status = form.status.data
+        task.priority = form.priority.data
+        task.category = form.category.data
+        task.assigned_to = form.assigned_to.data
+        task.customer_id = form.customer_id.data if form.customer_id.data else None
+        task.due_date = form.due_date.data
+        task.notes = form.notes.data
+        task.updated_at = datetime.now(timezone.utc)
+        
+        # Handle status changes
+        if old_status != form.status.data:
+            if form.status.data == 'completed':
+                task.completed_at = datetime.now(timezone.utc)
+            elif old_status == 'completed':
+                task.completed_at = None
+        
+        db.session.commit()
+        flash(_('Task updated successfully'), 'success')
+        return redirect(url_for('main.tasks'))
+    
+    return render_template('tasks/edit.html', form=form, task=task)
+
 @main_bp.route('/tasks/<int:task_id>/complete', methods=['POST'])
 @login_required
 def complete_task(task_id):

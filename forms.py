@@ -85,6 +85,12 @@ class OrderForm(FlaskForm):
 class TaskForm(FlaskForm):
     title = StringField(_l('Title'), validators=[DataRequired(), Length(max=200)])
     description = TextAreaField(_l('Description'), validators=[Optional()])
+    status = SelectField(_l('Status'), choices=[
+        ('pending', _l('Pending')),
+        ('in_progress', _l('In Progress')),
+        ('completed', _l('Completed')),
+        ('cancelled', _l('Cancelled'))
+    ], validators=[DataRequired()], default='pending')
     priority = SelectField(_l('Priority'), choices=[
         ('low', _l('Low')),
         ('medium', _l('Medium')),
@@ -99,3 +105,4 @@ class TaskForm(FlaskForm):
     assigned_to = SelectField(_l('Assigned To'), coerce=int, validators=[DataRequired()])
     customer_id = SelectField(_l('Customer (Optional)'), coerce=int, validators=[Optional()])
     due_date = DateTimeField(_l('Due Date'), validators=[Optional()], format='%Y-%m-%d %H:%M')
+    notes = TextAreaField(_l('Notes'), validators=[Optional()])
