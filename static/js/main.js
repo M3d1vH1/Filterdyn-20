@@ -1,5 +1,8 @@
 // Filterdyn Operations Suite - Main JavaScript
 document.addEventListener('DOMContentLoaded', function() {
+    // Initialize loading overlay
+    initializeLoadingOverlay();
+    
     // Initialize tooltips
     var tooltipTriggerList = [].slice.call(document.querySelectorAll('[data-bs-toggle="tooltip"]'));
     var tooltipList = tooltipTriggerList.map(function (tooltipTriggerEl) {
@@ -303,10 +306,68 @@ function refreshFeatherIcons() {
     setTimeout(initializeFeatherIcons, 100);
 }
 
+// Loading overlay functionality
+function initializeLoadingOverlay() {
+    // Create loading overlay if it doesn't exist
+    if (!document.getElementById('loading-overlay')) {
+        var overlay = document.createElement('div');
+        overlay.id = 'loading-overlay';
+        overlay.className = 'loading-overlay';
+        overlay.innerHTML = '<div class="loading-spinner"></div>';
+        document.body.appendChild(overlay);
+    }
+    
+    // Show loading on navigation links
+    document.addEventListener('click', function(e) {
+        var target = e.target.closest('a');
+        if (target && target.href && !target.hasAttribute('data-no-loading')) {
+            // Skip if it's a modal trigger, dropdown, or external link
+            if (target.getAttribute('data-bs-toggle') || 
+                target.getAttribute('href').startsWith('#') ||
+                target.getAttribute('href').startsWith('javascript:') ||
+                target.getAttribute('target') === '_blank') {
+                return;
+            }
+            showLoadingOverlay();
+        }
+    });
+    
+    // Show loading on form submissions
+    document.addEventListener('submit', function(e) {
+        var form = e.target;
+        if (!form.hasAttribute('data-no-loading')) {
+            showLoadingOverlay();
+        }
+    });
+    
+    // Hide loading when page is fully loaded
+    window.addEventListener('pageshow', function() {
+        hideLoadingOverlay();
+    });
+}
+
+function showLoadingOverlay() {
+    var overlay = document.getElementById('loading-overlay');
+    if (overlay) {
+        overlay.style.display = 'flex';
+        document.body.classList.add('loading');
+    }
+}
+
+function hideLoadingOverlay() {
+    var overlay = document.getElementById('loading-overlay');
+    if (overlay) {
+        overlay.style.display = 'none';
+        document.body.classList.remove('loading');
+    }
+}
+
 // Export functions for use in templates
 window.FilterdynApp = {
     calculateLineTotal: calculateLineTotal,
     formatCurrency: formatCurrency,
     formatDate: formatDate,
-    refreshFeatherIcons: refreshFeatherIcons
+    refreshFeatherIcons: refreshFeatherIcons,
+    showLoadingOverlay: showLoadingOverlay,
+    hideLoadingOverlay: hideLoadingOverlay
 };
