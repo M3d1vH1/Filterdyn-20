@@ -3,7 +3,7 @@ from flask_login import login_required, current_user
 from flask_babel import _, get_locale
 from datetime import datetime, timezone, timedelta
 from decimal import Decimal
-from models import Customer, Product, ProductCategory, Quote, QuoteItem, Order, OrderItem, Task
+from models import User, Customer, Product, ProductCategory, Quote, QuoteItem, Order, OrderItem, Task
 from app import db
 from forms import CustomerForm, ProductForm, ProductCategoryForm, QuoteForm, OrderForm, TaskForm
 from utils import admin_required, manager_required, generate_pdf_quote
