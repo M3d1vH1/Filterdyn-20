@@ -658,6 +658,7 @@ def edit_task(task_id):
 
 @main_bp.route('/tasks/create', methods=['GET', 'POST'])
 @login_required
+@manager_required
 def create_task():
     form = TaskForm()
     form.assigned_to.choices = [
@@ -668,6 +669,10 @@ def create_task():
     ]
     
     if form.validate_on_submit():
+        assigned_user = User.query.filter_by(id=form.assigned_to.data, tenant_id=current_user.tenant_id, is_active=True).first()
+        if not assigned_user:
+            flash(_('Invalid assignee. Please select an active user in your organization.'), 'error')
+            return redirect(url_for('main.tasks'))
         task = Task(
             tenant_id=current_user.tenant_id,
             created_by=current_user.id,
@@ -677,30 +682,28 @@ def create_task():
             priority=form.priority.data,
             category=form.category.data,
             customer_id=form.customer_id.data if form.customer_id.data else None,
-            due_date=form.process_due_date()
+            due_date=form.due_date.data
         )
-        
         db.session.add(task)
         db.session.commit()
         flash(_('Task created successfully'), 'success')
         return redirect(url_for('main.tasks'))
-    
     return render_template('tasks/create.html', form=form)
 
 @main_bp.route('/tasks/<int:task_id>/complete', methods=['POST'])
 @login_required
 def complete_task(task_id):
     task = Task.query.filter_by(id=task_id, tenant_id=current_user.tenant_id).first_or_404()
-    
     # Check permissions
     if current_user.role == 'user' and task.assigned_to != current_user.id:
-        flash(_('You can only complete tasks assigned to you'), 'error')
+        flash(_('You can only complete tasks assigned to you.'), 'error')
         return redirect(url_for('main.tasks'))
-    
+    if task.status == 'completed':
+        flash(_('Task is already completed.'), 'info')
+        return redirect(url_for('main.tasks'))
     task.status = 'completed'
     task.completed_at = datetime.now(timezone.utc)
     task.notes = request.form.get('notes', task.notes)
-    
     db.session.commit()
     flash(_('Task completed successfully'), 'success')
     return redirect(url_for('main.tasks'))
