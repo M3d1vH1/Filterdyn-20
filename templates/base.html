@@ -72,12 +72,27 @@
                             {{ _('Orders') }}
                         </a>
                     </li>
-                    <li class="nav-item">
-                        <a class="nav-link {% if request.endpoint.startswith('main.tasks') %}active{% endif %}" 
-                           href="{{ url_for('main.tasks') }}">
+                    <li class="nav-item dropdown">
+                        <a class="nav-link dropdown-toggle {% if request.endpoint.startswith('main.tasks') or request.endpoint.startswith('main.kanban') %}active{% endif %}" 
+                           href="#" role="button" data-bs-toggle="dropdown">
                             <i data-feather="check-square" class="me-1"></i>
                             {{ _('Tasks') }}
                         </a>
+                        <ul class="dropdown-menu">
+                            <li><a class="dropdown-item" href="{{ url_for('main.tasks') }}">
+                                <i data-feather="list" class="me-2"></i>
+                                {{ _('Task List') }}
+                            </a></li>
+                            <li><a class="dropdown-item" href="{{ url_for('main.kanban_board') }}">
+                                <i data-feather="trello" class="me-2"></i>
+                                {{ _('Kanban Board') }}
+                            </a></li>
+                            <li><hr class="dropdown-divider"></li>
+                            <li><a class="dropdown-item" href="{{ url_for('main.tasks_create') }}">
+                                <i data-feather="plus" class="me-2"></i>
+                                {{ _('New Task') }}
+                            </a></li>
+                        </ul>
                     </li>
                     {% if current_user.role in ['admin', 'superadmin'] %}
                     <li class="nav-item">

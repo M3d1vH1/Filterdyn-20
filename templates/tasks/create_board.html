@@ -1,0 +1,184 @@
+{% extends "base.html" %}
+
+{% block title %}{{ _('Create Board') }} - {{ super() }}{% endblock %}
+
+{% block content %}
+<div class="row">
+    <div class="col-12">
+        <div class="d-flex justify-content-between align-items-center mb-4">
+            <h1 class="h3">
+                <i data-feather="plus-square" class="me-2"></i>
+                {{ _('Create New Board') }}
+            </h1>
+            <a href="{{ url_for('main.kanban_board') }}" class="btn btn-outline-secondary">
+                <i data-feather="arrow-left" class="me-2"></i>
+                {{ _('Back to Boards') }}
+            </a>
+        </div>
+    </div>
+</div>
+
+<div class="row justify-content-center">
+    <div class="col-lg-8">
+        <div class="card">
+            <div class="card-header">
+                <h5 class="mb-0">
+                    <i data-feather="settings" class="me-2"></i>
+                    {{ _('Board Configuration') }}
+                </h5>
+            </div>
+            <div class="card-body">
+                <form method="POST" class="needs-validation" novalidate>
+                    {{ form.hidden_tag() }}
+                    
+                    <!-- Basic Information -->
+                    <div class="row mb-4">
+                        <div class="col-12">
+                            <h6 class="text-primary border-bottom pb-2 mb-3">
+                                <i data-feather="info" class="me-2"></i>
+                                {{ _('Basic Information') }}
+                            </h6>
+                        </div>
+                        
+                        <div class="col-12 mb-3">
+                            <div class="form-floating">
+                                {{ form.name(class="form-control", required=true, placeholder=_('Enter board name')) }}
+                                {{ form.name.label(class="form-label") }}
+                                <div class="invalid-feedback">
+                                    {{ _('Please provide a board name.') }}
+                                </div>
+                            </div>
+                            {% if form.name.errors %}
+                            <div class="text-danger small mt-1">
+                                {% for error in form.name.errors %}
+                                <div>{{ error }}</div>
+                                {% endfor %}
+                            </div>
+                            {% endif %}
+                        </div>
+                        
+                        <div class="col-12 mb-3">
+                            <div class="form-floating">
+                                {{ form.description(class="form-control", style="height: 100px", placeholder=_('Describe the board purpose...')) }}
+                                {{ form.description.label(class="form-label") }}
+                            </div>
+                            {% if form.description.errors %}
+                            <div class="text-danger small mt-1">
+                                {% for error in form.description.errors %}
+                                <div>{{ error }}</div>
+                                {% endfor %}
+                            </div>
+                            {% endif %}
+                        </div>
+                    </div>
+
+                    <!-- Board Settings -->
+                    <div class="row mb-4">
+                        <div class="col-12">
+                            <h6 class="text-primary border-bottom pb-2 mb-3">
+                                <i data-feather="settings" class="me-2"></i>
+                                {{ _('Board Settings') }}
+                            </h6>
+                        </div>
+                        
+                        <div class="col-md-6 mb-3">
+                            <div class="form-floating">
+                                {{ form.board_type(class="form-select") }}
+                                {{ form.board_type.label(class="form-label") }}
+                            </div>
+                            {% if form.board_type.errors %}
+                            <div class="text-danger small mt-1">
+                                {% for error in form.board_type.errors %}
+                                <div>{{ error }}</div>
+                                {% endfor %}
+                            </div>
+                            {% endif %}
+                        </div>
+                        
+                        <div class="col-md-6 mb-3">
+                            <div class="form-floating">
+                                {{ form.color_scheme(class="form-select") }}
+                                {{ form.color_scheme.label(class="form-label") }}
+                            </div>
+                            {% if form.color_scheme.errors %}
+                            <div class="text-danger small mt-1">
+                                {% for error in form.color_scheme.errors %}
+                                <div>{{ error }}</div>
+                                {% endfor %}
+                            </div>
+                            {% endif %}
+                        </div>
+                        
+                        <div class="col-md-6 mb-3">
+                            <div class="form-floating">
+                                {{ form.auto_archive_days(class="form-control", placeholder=_('Days')) }}
+                                {{ form.auto_archive_days.label(class="form-label") }}
+                            </div>
+                            {% if form.auto_archive_days.errors %}
+                            <div class="text-danger small mt-1">
+                                {% for error in form.auto_archive_days.errors %}
+                                <div>{{ error }}</div>
+                                {% endfor %}
+                            </div>
+                            {% endif %}
+                        </div>
+                        
+                        <div class="col-12">
+                            <div class="form-check">
+                                {{ form.is_public(class="form-check-input") }}
+                                {{ form.is_public.label(class="form-check-label") }}
+                            </div>
+                            {% if form.is_public.errors %}
+                            <div class="text-danger small mt-1">
+                                {% for error in form.is_public.errors %}
+                                <div>{{ error }}</div>
+                                {% endfor %}
+                            </div>
+                            {% endif %}
+                            <small class="text-muted">{{ _('Public boards can be viewed by all team members') }}</small>
+                        </div>
+                    </div>
+
+                    <div class="row">
+                        <div class="col-12">
+                            <div class="d-flex gap-2">
+                                <button type="submit" class="btn btn-primary">
+                                    <i data-feather="save" class="me-2"></i>
+                                    {{ _('Create Board') }}
+                                </button>
+                                <a href="{{ url_for('main.kanban_board') }}" class="btn btn-outline-secondary">
+                                    {{ _('Cancel') }}
+                                </a>
+                            </div>
+                        </div>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block js %}
+<script>
+// Initialize form validation
+(function() {
+    'use strict';
+    window.addEventListener('load', function() {
+        var forms = document.getElementsByClassName('needs-validation');
+        var validation = Array.prototype.filter.call(forms, function(form) {
+            form.addEventListener('submit', function(event) {
+                if (form.checkValidity() === false) {
+                    event.preventDefault();
+                    event.stopPropagation();
+                }
+                form.classList.add('was-validated');
+            }, false);
+        });
+    }, false);
+})();
+
+// Feather icons
+feather.replace();
+</script>
+{% endblock %}
