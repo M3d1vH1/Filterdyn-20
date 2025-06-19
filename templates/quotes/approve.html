@@ -50,7 +50,7 @@
                             </tr>
                             <tr>
                                 <td><strong>{{ _('Created') }}:</strong></td>
-                                <td>{{ quote.created_at.strftime('%d/%m/%Y %H:%M') }}</td>
+                                <td>{{ quote.created_at|safe_date }}</td>
                             </tr>
                             <tr>
                                 <td><strong>{{ _('Created by') }}:</strong></td>

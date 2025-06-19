@@ -88,6 +88,10 @@ def create_app():
     app.register_blueprint(main_bp)
     app.register_blueprint(auth_bp)
     
+    # Register custom template filters
+    from template_filters import register_filters
+    register_filters(app)
+    
     # Context processors
     @app.context_processor
     def inject_globals():

@@ -96,7 +96,7 @@
                                         {{ order.status.title() }}
                                     </span>
                                 </td>
-                                <td>{{ order.created_at.strftime('%d/%m/%Y') }}</td>
+                                <td>{{ order.created_at|safe_date }}</td>
                                 <td>
                                     <div class="btn-group btn-group-sm">
                                         <a href="{{ url_for('main.view_order', order_id=order.id) }}" 

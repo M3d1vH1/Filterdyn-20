@@ -137,8 +137,10 @@ User Request -> Tenant Verification -> Data Filtering by tenant_id -> Response D
 
 ## Changelog
 
-Changelog:
-- June 18, 2025. Initial setup
+- June 19, 2025: Successfully integrated Gmail AI features with OAuth authentication, email management, smart replies, and AI learning dashboard
+- June 19, 2025: Implemented comprehensive timezone handling system to prevent datetime comparison errors
+- June 19, 2025: Added custom template filters for safe datetime formatting across all templates
+- June 18, 2025: Initial setup
 
 ## User Preferences
 

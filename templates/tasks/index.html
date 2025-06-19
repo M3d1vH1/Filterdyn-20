@@ -137,7 +137,7 @@
                                 </td>
                                 <td>
                                     {% if task.due_date %}
-                                    {{ task.due_date.strftime('%d/%m/%Y') }}
+                                    {{ task.due_date|safe_date }}
                                     {% if task.is_overdue %}
                                     <br><small class="text-danger">{{ _('Overdue') }}</small>
                                     {% endif %}
@@ -285,7 +285,7 @@
                             </tr>
                             <tr>
                                 <td><strong>{{ _('Created') }}:</strong></td>
-                                <td>{{ task.created_at.strftime('%d/%m/%Y %H:%M') }}</td>
+                                <td>{{ task.created_at|safe_date }}</td>
                             </tr>
                             <tr>
                                 <td><strong>{{ _('Created by') }}:</strong></td>
@@ -304,7 +304,7 @@
                             <tr>
                                 <td><strong>{{ _('Due Date') }}:</strong></td>
                                 <td>
-                                    {{ task.due_date.strftime('%d/%m/%Y') }}
+                                    {{ task.due_date|safe_date }}
                                     {% if task.is_overdue %}
                                     <br><small class="text-danger">{{ _('Overdue') }}</small>
                                     {% endif %}
@@ -314,7 +314,7 @@
                             {% if task.completed_at %}
                             <tr>
                                 <td><strong>{{ _('Completed') }}:</strong></td>
-                                <td>{{ task.completed_at.strftime('%d/%m/%Y %H:%M') }}</td>
+                                <td>{{ task.completed_at|safe_date }}</td>
                             </tr>
                             {% endif %}
                             {% if task.customer %}
