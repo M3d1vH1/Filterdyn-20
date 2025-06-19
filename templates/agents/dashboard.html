@@ -1,0 +1,177 @@
+{% extends "base.html" %}
+{% set active_page = "agents" %}
+
+{% block title %}{{ _('AI Agents Dashboard') }}{% endblock %}
+
+{% block content %}
+<div class="container-fluid">
+    <div class="d-flex justify-content-between flex-wrap flex-md-nowrap align-items-center pt-3 pb-2 mb-3 border-bottom">
+        <h1 class="h2">{{ _('AI Agents Dashboard') }}</h1>
+        <div class="btn-toolbar mb-2 mb-md-0">
+            <div class="btn-group me-2">
+                <button type="button" class="btn btn-sm btn-outline-secondary" onclick="location.reload()">
+                    <i data-feather="refresh-cw"></i> {{ _('Refresh') }}
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Status Overview -->
+    <div class="row mb-4">
+        <div class="col-md-3">
+            <div class="card border-primary">
+                <div class="card-body text-center">
+                    <i data-feather="message-circle" class="text-primary mb-2" style="width: 48px; height: 48px;"></i>
+                    <h5 class="card-title">{{ _('Communication Agent') }}</h5>
+                    <p class="card-text text-muted">{{ _('Email generation and customer communications') }}</p>
+                    <span class="badge bg-success">{{ _('Active') }}</span>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-3">
+            <div class="card border-info">
+                <div class="card-body text-center">
+                    <i data-feather="database" class="text-info mb-2" style="width: 48px; height: 48px;"></i>
+                    <h5 class="card-title">{{ _('Operations Agent') }}</h5>
+                    <p class="card-text text-muted">{{ _('Data processing and workflow automation') }}</p>
+                    <span class="badge bg-warning">{{ _('Development') }}</span>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-3">
+            <div class="card border-success">
+                <div class="card-body text-center">
+                    <i data-feather="mic" class="text-success mb-2" style="width: 48px; height: 48px;"></i>
+                    <h5 class="card-title">{{ _('Voice Assistant') }}</h5>
+                    <p class="card-text text-muted">{{ _('Voice-to-task conversion and commands') }}</p>
+                    <span class="badge bg-success">{{ _('Active') }}</span>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-3">
+            <div class="card border-warning">
+                <div class="card-body text-center">
+                    <i data-feather="bar-chart-2" class="text-warning mb-2" style="width: 48px; height: 48px;"></i>
+                    <h5 class="card-title">{{ _('Analytics Agent') }}</h5>
+                    <p class="card-text text-muted">{{ _('Business intelligence and reporting') }}</p>
+                    <span class="badge bg-secondary">{{ _('Planned') }}</span>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Quick Actions -->
+    <div class="row mb-4">
+        <div class="col-12">
+            <div class="card">
+                <div class="card-header">
+                    <h5 class="mb-0">{{ _('Quick Actions') }}</h5>
+                </div>
+                <div class="card-body">
+                    <div class="row">
+                        <div class="col-md-4 mb-3">
+                            <a href="{{ url_for('main.assistant_home') }}" class="btn btn-primary w-100 py-3 text-decoration-none">
+                                <i data-feather="mail" class="me-2"></i>
+                                <div>
+                                    <div class="fw-bold">{{ _('AI Email Assistant') }}</div>
+                                    <small class="text-muted">{{ _('Generate professional emails') }}</small>
+                                </div>
+                            </a>
+                        </div>
+                        <div class="col-md-4 mb-3">
+                            <a href="{{ url_for('main.kanban_board') }}" class="btn btn-success w-100 py-3 text-decoration-none">
+                                <i data-feather="trello" class="me-2"></i>
+                                <div>
+                                    <div class="fw-bold">{{ _('Task Management') }}</div>
+                                    <small class="text-muted">{{ _('Voice-powered task creation') }}</small>
+                                </div>
+                            </a>
+                        </div>
+                        <div class="col-md-4 mb-3">
+                            <button class="btn btn-info w-100 py-3" onclick="alert('{{ _('Analytics features coming soon!') }}')">
+                                <i data-feather="trending-up" class="me-2"></i>
+                                <div>
+                                    <div class="fw-bold">{{ _('Business Analytics') }}</div>
+                                    <small class="text-muted">{{ _('AI-powered insights') }}</small>
+                                </div>
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Recent AI Activity -->
+    <div class="row">
+        <div class="col-md-8">
+            <div class="card">
+                <div class="card-header">
+                    <h5 class="mb-0">{{ _('Recent AI Activity') }}</h5>
+                </div>
+                <div class="card-body">
+                    <div class="list-group list-group-flush">
+                        <div class="list-group-item">
+                            <div class="d-flex w-100 justify-content-between">
+                                <h6 class="mb-1">{{ _('Email Generation') }}</h6>
+                                <small class="text-muted">{{ _('2 hours ago') }}</small>
+                            </div>
+                            <p class="mb-1">{{ _('Generated quote follow-up email for customer ABC Ltd.') }}</p>
+                            <small class="text-success">{{ _('Completed') }}</small>
+                        </div>
+                        <div class="list-group-item">
+                            <div class="d-flex w-100 justify-content-between">
+                                <h6 class="mb-1">{{ _('Voice Task Creation') }}</h6>
+                                <small class="text-muted">{{ _('4 hours ago') }}</small>
+                            </div>
+                            <p class="mb-1">{{ _('Created task: "Follow up with customer XYZ tomorrow"') }}</p>
+                            <small class="text-success">{{ _('Completed') }}</small>
+                        </div>
+                        <div class="list-group-item">
+                            <div class="d-flex w-100 justify-content-between">
+                                <h6 class="mb-1">{{ _('System Integration') }}</h6>
+                                <small class="text-muted">{{ _('1 day ago') }}</small>
+                            </div>
+                            <p class="mb-1">{{ _('AI assistant integration completed successfully') }}</p>
+                            <small class="text-success">{{ _('Completed') }}</small>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-4">
+            <div class="card">
+                <div class="card-header">
+                    <h5 class="mb-0">{{ _('System Status') }}</h5>
+                </div>
+                <div class="card-body">
+                    <div class="mb-3">
+                        <div class="d-flex justify-content-between">
+                            <span>{{ _('AI Services') }}</span>
+                            <span class="badge bg-success">{{ _('Online') }}</span>
+                        </div>
+                    </div>
+                    <div class="mb-3">
+                        <div class="d-flex justify-content-between">
+                            <span>{{ _('Voice Recognition') }}</span>
+                            <span class="badge bg-success">{{ _('Ready') }}</span>
+                        </div>
+                    </div>
+                    <div class="mb-3">
+                        <div class="d-flex justify-content-between">
+                            <span>{{ _('Email Templates') }}</span>
+                            <span class="badge bg-success">{{ _('Loaded') }}</span>
+                        </div>
+                    </div>
+                    <div class="mb-3">
+                        <div class="d-flex justify-content-between">
+                            <span>{{ _('Analytics Engine') }}</span>
+                            <span class="badge bg-warning">{{ _('Development') }}</span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
