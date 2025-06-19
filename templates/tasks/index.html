@@ -147,7 +147,7 @@
                                 </td>
                                 <td>
                                     <span class="badge status-{{ task.status }}">
-                                        {{ task.status.replace('_', ' ').title() }}
+                                        {{ task.status.replace('_', ' ').title() if task.status else 'Not Set' }}
                                     </span>
                                 </td>
                                 <td>
@@ -275,7 +275,7 @@
                                 <td><strong>{{ _('Status') }}:</strong></td>
                                 <td>
                                     <span class="badge status-{{ task.status }}">
-                                        {{ task.status.replace('_', ' ').title() }}
+                                        {{ task.status.replace('_', ' ').title() if task.status else 'Not Set' }}
                                     </span>
                                 </td>
                             </tr>
