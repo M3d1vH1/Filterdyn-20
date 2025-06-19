@@ -88,6 +88,13 @@ def create_app():
     app.register_blueprint(main_bp)
     app.register_blueprint(auth_bp)
     
+    # Only register AI assistant if dependencies are available
+    try:
+        from ai_assistant import ai_bp
+        app.register_blueprint(ai_bp)
+    except ImportError:
+        pass
+    
     # Context processors
     @app.context_processor
     def inject_globals():
