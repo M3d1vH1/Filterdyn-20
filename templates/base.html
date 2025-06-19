@@ -80,27 +80,23 @@
                         </a>
                     </li>
                     {% if current_user.role in ['admin', 'superadmin'] %}
-                    <li class="nav-item dropdown">
-                        <a class="nav-link dropdown-toggle" href="#" id="aiDropdown" role="button" data-bs-toggle="dropdown">
-                            <i data-feather="cpu" class="me-1"></i>
-                            {{ _('AI Assistant') }}
+                    <li class="nav-item">
+                        <a class="nav-link {% if request.endpoint == 'main.ai_assistant' %}active{% endif %}" 
+                           href="{{ url_for('main.ai_assistant') }}">
+                            <i data-feather="mail" class="me-1"></i>
+                            {{ _('AI Email') }}
                         </a>
-                        <ul class="dropdown-menu">
-                            <li><a class="dropdown-item" 
-                                   href="{{ url_for('main.agents_dashboard') }}">
-                                <i data-feather="message-circle" class="me-1"></i>
-                                {{ _('Chat Assistant') }}
-                            </a></li>
+                    </li>
                     {% endif %}
                 </ul>
 
                 <!-- Right side navigation -->
-                <ul class="navbar-nav">
+                <ul class="navbar-nav ms-auto">
                     <!-- Language toggle -->
                     <li class="nav-item dropdown">
-                        <a class="nav-link dropdown-toggle" href="#" role="button" data-bs-toggle="dropdown">
+                        <a class="nav-link dropdown-toggle d-flex align-items-center" href="#" role="button" data-bs-toggle="dropdown">
                             <i data-feather="globe" class="me-1"></i>
-                            {% if get_locale() == 'el' %}ΕΛ{% else %}EN{% endif %}
+                            <span class="d-none d-md-inline">{% if get_locale() == 'el' %}ΕΛ{% else %}EN{% endif %}</span>
                         </a>
                         <ul class="dropdown-menu">
                             <li>
