@@ -572,6 +572,39 @@ def tasks():
     
     return render_template('tasks/index.html', tasks=tasks, status=status, priority=priority)
 
+@main_bp.route('/tasks/<int:task_id>/edit', methods=['GET', 'POST'])
+@login_required
+def edit_task(task_id):
+    """Edit task"""
+    task = Task.query.filter_by(
+        id=task_id,
+        tenant_id=current_user.tenant_id
+    ).first_or_404()
+    
+    if request.method == 'POST':
+        task.title = request.form.get('title')
+        task.description = request.form.get('description')
+        task.priority = request.form.get('priority')
+        task.status = request.form.get('status')
+        task.assigned_to = request.form.get('assigned_to') or None
+        task.customer_id = request.form.get('customer_id') or None
+        
+        due_date_str = request.form.get('due_date')
+        if due_date_str:
+            task.due_date = datetime.strptime(due_date_str, '%Y-%m-%dT%H:%M')
+        else:
+            task.due_date = None
+        
+        db.session.commit()
+        flash(_('Task updated successfully'), 'success')
+        return redirect(url_for('main.tasks'))
+    
+    # For GET request, populate form choices
+    users = User.query.filter_by(tenant_id=current_user.tenant_id, is_active=True).all()
+    customers = Customer.query.filter_by(tenant_id=current_user.tenant_id).all()
+    
+    return render_template('tasks/edit.html', task=task, users=users, customers=customers)
+
 @main_bp.route('/tasks/create', methods=['GET', 'POST'])
 @login_required
 def create_task():

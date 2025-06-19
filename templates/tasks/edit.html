@@ -1,0 +1,136 @@
+{% extends "base.html" %}
+{% set active_page = "tasks" %}
+
+{% block title %}{{ _('Edit Task') }}{% endblock %}
+
+{% block content %}
+<div class="container-fluid">
+    <div class="d-flex justify-content-between flex-wrap flex-md-nowrap align-items-center pt-3 pb-2 mb-3 border-bottom">
+        <h1 class="h2">{{ _('Edit Task') }}</h1>
+        <div class="btn-toolbar mb-2 mb-md-0">
+            <div class="btn-group me-2">
+                <a href="{{ url_for('main.tasks') }}" class="btn btn-sm btn-outline-secondary">
+                    <i data-feather="arrow-left"></i> {{ _('Back to Tasks') }}
+                </a>
+            </div>
+        </div>
+    </div>
+
+    <div class="row">
+        <div class="col-lg-8">
+            <div class="card">
+                <div class="card-header">
+                    <h5 class="mb-0">{{ _('Task Details') }}</h5>
+                </div>
+                <div class="card-body">
+                    <form method="POST">
+                        <div class="mb-3">
+                            <label for="title" class="form-label">{{ _('Title') }}</label>
+                            <input type="text" class="form-control" id="title" name="title" 
+                                   value="{{ task.title }}" required>
+                        </div>
+
+                        <div class="mb-3">
+                            <label for="description" class="form-label">{{ _('Description') }}</label>
+                            <textarea class="form-control" id="description" name="description" 
+                                      rows="4">{{ task.description or '' }}</textarea>
+                        </div>
+
+                        <div class="row">
+                            <div class="col-md-6">
+                                <div class="mb-3">
+                                    <label for="priority" class="form-label">{{ _('Priority') }}</label>
+                                    <select class="form-select" id="priority" name="priority" required>
+                                        <option value="low" {% if task.priority == 'low' %}selected{% endif %}>{{ _('Low') }}</option>
+                                        <option value="medium" {% if task.priority == 'medium' %}selected{% endif %}>{{ _('Medium') }}</option>
+                                        <option value="high" {% if task.priority == 'high' %}selected{% endif %}>{{ _('High') }}</option>
+                                        <option value="urgent" {% if task.priority == 'urgent' %}selected{% endif %}>{{ _('Urgent') }}</option>
+                                    </select>
+                                </div>
+                            </div>
+                            <div class="col-md-6">
+                                <div class="mb-3">
+                                    <label for="status" class="form-label">{{ _('Status') }}</label>
+                                    <select class="form-select" id="status" name="status" required>
+                                        <option value="pending" {% if task.status == 'pending' %}selected{% endif %}>{{ _('Pending') }}</option>
+                                        <option value="in_progress" {% if task.status == 'in_progress' %}selected{% endif %}>{{ _('In Progress') }}</option>
+                                        <option value="completed" {% if task.status == 'completed' %}selected{% endif %}>{{ _('Completed') }}</option>
+                                        <option value="cancelled" {% if task.status == 'cancelled' %}selected{% endif %}>{{ _('Cancelled') }}</option>
+                                    </select>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="row">
+                            <div class="col-md-6">
+                                <div class="mb-3">
+                                    <label for="assigned_to" class="form-label">{{ _('Assigned To') }}</label>
+                                    <select class="form-select" id="assigned_to" name="assigned_to">
+                                        <option value="">{{ _('Unassigned') }}</option>
+                                        {% for user in users %}
+                                        <option value="{{ user.id }}" {% if task.assigned_to == user.id %}selected{% endif %}>
+                                            {{ user.full_name }}
+                                        </option>
+                                        {% endfor %}
+                                    </select>
+                                </div>
+                            </div>
+                            <div class="col-md-6">
+                                <div class="mb-3">
+                                    <label for="customer_id" class="form-label">{{ _('Customer') }}</label>
+                                    <select class="form-select" id="customer_id" name="customer_id">
+                                        <option value="">{{ _('No Customer') }}</option>
+                                        {% for customer in customers %}
+                                        <option value="{{ customer.id }}" {% if task.customer_id == customer.id %}selected{% endif %}>
+                                            {{ customer.name }}
+                                        </option>
+                                        {% endfor %}
+                                    </select>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="mb-3">
+                            <label for="due_date" class="form-label">{{ _('Due Date') }}</label>
+                            <input type="datetime-local" class="form-control" id="due_date" name="due_date"
+                                   value="{% if task.due_date %}{{ task.due_date.strftime('%Y-%m-%dT%H:%M') if task.due_date.tzinfo is none else task.due_date.replace(tzinfo=none).strftime('%Y-%m-%dT%H:%M') }}{% endif %}">
+                        </div>
+
+                        <div class="d-grid gap-2 d-md-flex justify-content-md-end">
+                            <a href="{{ url_for('main.tasks') }}" class="btn btn-secondary me-md-2">
+                                {{ _('Cancel') }}
+                            </a>
+                            <button type="submit" class="btn btn-primary">
+                                {{ _('Update Task') }}
+                            </button>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+
+        <div class="col-lg-4">
+            <div class="card">
+                <div class="card-header">
+                    <h6 class="mb-0">{{ _('Task Information') }}</h6>
+                </div>
+                <div class="card-body">
+                    <p><strong>{{ _('Created') }}:</strong> {{ task.created_at|safe_datetime_format }}</p>
+                    <p><strong>{{ _('Last Updated') }}:</strong> {{ task.updated_at|safe_datetime_format }}</p>
+                    {% if task.is_overdue %}
+                    <div class="alert alert-warning">
+                        <i data-feather="alert-triangle" class="me-2"></i>
+                        {{ _('This task is overdue') }}
+                    </div>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+// Initialize Feather icons
+feather.replace();
+</script>
+{% endblock %}
