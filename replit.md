@@ -137,6 +137,7 @@ User Request -> Tenant Verification -> Data Filtering by tenant_id -> Response D
 
 ## Changelog
 
+- June 19, 2025: **COMPREHENSIVE README ADDED** - Created detailed documentation with installation guide, architecture overview, and feature descriptions
 - June 19, 2025: **TIMEZONE FIX COMPLETED & PUSHED TO GIT** - Resolved all naive/aware datetime comparison errors with comprehensive UTC storage and local display conversion
 - June 19, 2025: Fixed critical database connectivity issues and template errors
 - June 19, 2025: Successfully integrated Gmail AI features with OAuth authentication, email management, smart replies, and AI learning dashboard
