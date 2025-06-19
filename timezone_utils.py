@@ -20,13 +20,17 @@ def get_user_timezone() -> str:
     Get the user's timezone preference.
     Priority: 1. User profile setting 2. Session 3. Default (Europe/Athens)
     """
-    # Check if user has timezone in their profile
-    if current_user and current_user.is_authenticated and hasattr(current_user, 'timezone') and current_user.timezone:
-        return current_user.timezone
-    
-    # Check session
-    if 'user_timezone' in session:
-        return session['user_timezone']
+    try:
+        # Check if user has timezone in their profile
+        if current_user and current_user.is_authenticated and hasattr(current_user, 'timezone') and current_user.timezone:
+            return current_user.timezone
+        
+        # Check session
+        if 'user_timezone' in session:
+            return session['user_timezone']
+    except RuntimeError:
+        # Working outside of request context (e.g., during testing)
+        pass
     
     # Default timezone
     return DEFAULT_USER_TIMEZONE
