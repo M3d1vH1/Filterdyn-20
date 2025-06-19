@@ -585,7 +585,7 @@ def tasks():
 
 @main_bp.route('/tasks/create', methods=['GET', 'POST'])
 @login_required
-def create_task():
+def tasks_create():
     form = TaskForm()
     form.assigned_to.choices = [
         (u.id, u.full_name) for u in User.query.filter_by(tenant_id=current_user.tenant_id, is_active=True).all()
