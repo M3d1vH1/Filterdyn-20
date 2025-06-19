@@ -72,46 +72,35 @@
                             {{ _('Orders') }}
                         </a>
                     </li>
-                    <li class="nav-item dropdown">
-                        <a class="nav-link dropdown-toggle {% if request.endpoint.startswith('main.tasks') or request.endpoint.startswith('main.kanban') %}active{% endif %}" 
-                           href="#" role="button" data-bs-toggle="dropdown">
+                    <li class="nav-item">
+                        <a class="nav-link {% if request.endpoint.startswith('main.tasks') %}active{% endif %}" 
+                           href="{{ url_for('main.tasks') }}">
                             <i data-feather="check-square" class="me-1"></i>
                             {{ _('Tasks') }}
                         </a>
-                        <ul class="dropdown-menu">
-                            <li><a class="dropdown-item" href="{{ url_for('main.tasks') }}">
-                                <i data-feather="list" class="me-2"></i>
-                                {{ _('Task List') }}
-                            </a></li>
-                            <li><a class="dropdown-item" href="{{ url_for('main.kanban_board') }}">
-                                <i data-feather="trello" class="me-2"></i>
-                                {{ _('Kanban Board') }}
-                            </a></li>
-                            <li><hr class="dropdown-divider"></li>
-                            <li><a class="dropdown-item" href="{{ url_for('main.tasks_create') }}">
-                                <i data-feather="plus" class="me-2"></i>
-                                {{ _('New Task') }}
-                            </a></li>
-                        </ul>
                     </li>
                     {% if current_user.role in ['admin', 'superadmin'] %}
-                    <li class="nav-item">
-                        <a class="nav-link {% if request.endpoint == 'main.ai_assistant' %}active{% endif %}" 
-                           href="{{ url_for('main.ai_assistant') }}">
-                            <i data-feather="mail" class="me-1"></i>
-                            {{ _('AI Email') }}
+                    <li class="nav-item dropdown">
+                        <a class="nav-link dropdown-toggle" href="#" id="aiDropdown" role="button" data-bs-toggle="dropdown">
+                            <i data-feather="cpu" class="me-1"></i>
+                            {{ _('AI Assistant') }}
                         </a>
-                    </li>
+                        <ul class="dropdown-menu">
+                            <li><a class="dropdown-item" 
+                                   href="{{ url_for('main.agents_dashboard') }}">
+                                <i data-feather="message-circle" class="me-1"></i>
+                                {{ _('Chat Assistant') }}
+                            </a></li>
                     {% endif %}
                 </ul>
 
                 <!-- Right side navigation -->
-                <ul class="navbar-nav ms-auto">
+                <ul class="navbar-nav">
                     <!-- Language toggle -->
                     <li class="nav-item dropdown">
-                        <a class="nav-link dropdown-toggle d-flex align-items-center" href="#" role="button" data-bs-toggle="dropdown">
+                        <a class="nav-link dropdown-toggle" href="#" role="button" data-bs-toggle="dropdown">
                             <i data-feather="globe" class="me-1"></i>
-                            <span class="d-none d-md-inline">{% if get_locale() == 'el' %}ΕΛ{% else %}EN{% endif %}</span>
+                            {% if get_locale() == 'el' %}ΕΛ{% else %}EN{% endif %}
                         </a>
                         <ul class="dropdown-menu">
                             <li>
@@ -129,9 +118,9 @@
 
                     <!-- User menu -->
                     <li class="nav-item dropdown">
-                        <a class="nav-link dropdown-toggle d-flex align-items-center" href="#" role="button" data-bs-toggle="dropdown">
+                        <a class="nav-link dropdown-toggle" href="#" role="button" data-bs-toggle="dropdown">
                             <i data-feather="user" class="me-1"></i>
-                            <span class="d-none d-md-inline">{{ current_user.full_name }}</span>
+                            {{ current_user.full_name }}
                         </a>
                         <ul class="dropdown-menu">
                             <li>
