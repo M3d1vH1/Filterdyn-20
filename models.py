@@ -294,7 +294,8 @@ class Task(db.Model):
     @property
     def is_overdue(self):
         if self.due_date and self.status not in ['completed', 'cancelled']:
-            return is_overdue(self.due_date)
+            from timezone_utils import is_overdue as check_overdue
+            return check_overdue(self.due_date)
         return False
 
 class PDFTemplate(db.Model):

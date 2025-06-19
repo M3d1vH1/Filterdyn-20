@@ -115,7 +115,7 @@
                                         {{ quote.status.replace('_', ' ').title() }}
                                     </span>
                                 </td>
-                                <td>{{ quote.created_at.strftime('%d/%m/%Y') }}</td>
+                                <td>{{ quote.created_at|safe_date }}</td>
                                 <td>
                                     <div class="btn-group" role="group">
                                         <!-- View/Edit button -->
