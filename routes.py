@@ -641,7 +641,8 @@ def edit_task(task_id):
         
         due_date_str = request.form.get('due_date')
         if due_date_str:
-            task.due_date = datetime.strptime(due_date_str, '%Y-%m-%dT%H:%M')
+            from timezone_utils import parse_user_datetime
+            task.due_date = parse_user_datetime(due_date_str, '%Y-%m-%dT%H:%M')
         else:
             task.due_date = None
         
@@ -676,7 +677,7 @@ def create_task():
             priority=form.priority.data,
             category=form.category.data,
             customer_id=form.customer_id.data if form.customer_id.data else None,
-            due_date=form.due_date.data
+            due_date=form.process_due_date()
         )
         
         db.session.add(task)

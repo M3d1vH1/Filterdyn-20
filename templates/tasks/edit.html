@@ -93,7 +93,10 @@
                         <div class="mb-3">
                             <label for="due_date" class="form-label">{{ _('Due Date') }}</label>
                             <input type="datetime-local" class="form-control" id="due_date" name="due_date"
-                                   value="{% if task.due_date %}{{ task.due_date.strftime('%Y-%m-%dT%H:%M') if task.due_date.tzinfo is none else task.due_date.replace(tzinfo=none).strftime('%Y-%m-%dT%H:%M') }}{% endif %}">
+                                   value="{{ task.due_date|datetime_input }}">
+                            <div class="text-muted small mt-1">
+                                {{ _('Time zone') }}: {{ user_timezone() }}
+                            </div>
                         </div>
 
                         <div class="d-grid gap-2 d-md-flex justify-content-md-end">
