@@ -52,6 +52,15 @@
                                 </div>
                             </button>
                         </div>
+                        <div class="col-md-4 mb-3">
+                            <button class="btn btn-warning w-100 py-3" onclick="openVoiceTaskModal()">
+                                <i data-feather="mic" class="me-2"></i>
+                                <div>
+                                    <div class="fw-bold">{{ _('Create Task by Voice') }}</div>
+                                    <small class="text-muted">{{ _('Use your voice to create a new task') }}</small>
+                                </div>
+                            </button>
+                        </div>
                     </div>
                 </div>
             </div>
@@ -144,6 +153,87 @@
                     <button type="button" class="btn btn-primary" onclick="generateEmail()" id="generateBtn">
                         <i data-feather="send"></i> {{ _('Generate Email') }}
                     </button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Voice Task Modal -->
+    <div class="modal fade" id="voiceTaskModal" tabindex="-1" aria-labelledby="voiceTaskModalLabel" aria-hidden="true">
+        <div class="modal-dialog">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title" id="voiceTaskModalLabel">{{ _('Create Task by Voice') }}</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                </div>
+                <div class="modal-body">
+                    <div class="mb-3 text-center">
+                        <button id="startVoiceBtn" class="btn btn-lg btn-outline-primary" type="button" onclick="startVoiceRecognition()">
+                            <i data-feather="mic"></i> {{ _('Start Recording') }}
+                        </button>
+                        <button id="stopVoiceBtn" class="btn btn-lg btn-outline-danger ms-2 d-none" type="button" onclick="stopVoiceRecognition()">
+                            <i data-feather="square"></i> {{ _('Stop') }}
+                        </button>
+                    </div>
+                    <div class="mb-3">
+                        <label class="form-label">{{ _('Transcribed Text') }}</label>
+                        <textarea id="voiceTranscription" class="form-control" rows="3" readonly></textarea>
+                    </div>
+                    <div id="voiceTaskError" class="alert alert-danger d-none"></div>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">{{ _('Cancel') }}</button>
+                    <button type="button" class="btn btn-primary" id="processVoiceBtn" onclick="processVoiceTask()" disabled>{{ _('Next') }}</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Task Review Modal -->
+    <div class="modal fade" id="reviewTaskModal" tabindex="-1" aria-labelledby="reviewTaskModalLabel" aria-hidden="true">
+        <div class="modal-dialog">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title" id="reviewTaskModalLabel">{{ _('Review Task Details') }}</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                </div>
+                <div class="modal-body">
+                    <form id="reviewTaskForm">
+                        <div class="mb-3">
+                            <label class="form-label">{{ _('Title') }}</label>
+                            <input type="text" class="form-control" id="taskTitle" name="title" required>
+                        </div>
+                        <div class="mb-3">
+                            <label class="form-label">{{ _('Description') }}</label>
+                            <textarea class="form-control" id="taskDescription" name="description" rows="2"></textarea>
+                        </div>
+                        <div class="mb-3">
+                            <label class="form-label">{{ _('Priority') }}</label>
+                            <select class="form-select" id="taskPriority" name="priority">
+                                <option value="low">{{ _('Low') }}</option>
+                                <option value="medium">{{ _('Medium') }}</option>
+                                <option value="high">{{ _('High') }}</option>
+                                <option value="urgent">{{ _('Urgent') }}</option>
+                            </select>
+                        </div>
+                        <div class="mb-3">
+                            <label class="form-label">{{ _('Due Date') }}</label>
+                            <input type="date" class="form-control" id="taskDueDate" name="due_date">
+                        </div>
+                        <div class="mb-3">
+                            <label class="form-label">{{ _('Category') }}</label>
+                            <select class="form-select" id="taskCategory" name="category">
+                                <option value="general">{{ _('General') }}</option>
+                                <option value="follow_up">{{ _('Follow Up') }}</option>
+                                <option value="service_reminder">{{ _('Service Reminder') }}</option>
+                            </select>
+                        </div>
+                        <div id="reviewTaskError" class="alert alert-danger d-none"></div>
+                    </form>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">{{ _('Cancel') }}</button>
+                    <button type="button" class="btn btn-success" id="confirmTaskBtn" onclick="confirmVoiceTask()">{{ _('Create Task') }}</button>
                 </div>
             </div>
         </div>
