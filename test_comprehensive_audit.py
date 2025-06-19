@@ -742,7 +742,7 @@ def run_comprehensive_audit():
     print(f"Total Tests: {audit_results.total_tests}")
     print(f"Passed: {audit_results.passed_tests}")
     print(f"Failed: {audit_results.failed_tests}")
-    print(f"Success Rate: {(audit_results.passed_tests/audit_results.total_tests*100):.1f}%")
+    print(f"Success Rate: {((audit_results.passed_tests/audit_results.total_tests*100) if audit_results.total_tests > 0 else 0):.1f}%")
     
     if audit_results.critical_issues:
         print(f"\n🚨 Critical Issues: {len(audit_results.critical_issues)}")
@@ -782,7 +782,7 @@ def generate_audit_report(audit_results: AuditResult) -> Dict[str, Any]:
             'total_tests': audit_results.total_tests,
             'passed_tests': audit_results.passed_tests,
             'failed_tests': audit_results.failed_tests,
-            'success_rate': (audit_results.passed_tests / audit_results.total_tests) * 100
+            'success_rate': (audit_results.passed_tests / audit_results.total_tests) * 100 if audit_results.total_tests > 0 else 0
         },
         'weak_areas': weak_area_analysis,
         'critical_issues': audit_results.critical_issues,
@@ -912,7 +912,7 @@ def generate_markdown_report(audit_results: AuditResult) -> str:
 - **Total Tests:** {audit_results.total_tests}
 - **Passed:** {audit_results.passed_tests}
 - **Failed:** {audit_results.failed_tests}
-- **Success Rate:** {(audit_results.passed_tests/audit_results.total_tests*100):.1f}%
+- **Success Rate:** {((audit_results.passed_tests/audit_results.total_tests*100) if audit_results.total_tests > 0 else 0):.1f}%
 
 ## Critical Issues ({len(audit_results.critical_issues)})
 
