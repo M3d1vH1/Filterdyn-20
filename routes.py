@@ -572,6 +572,56 @@ def tasks():
     
     return render_template('tasks/index.html', tasks=tasks, status=status, priority=priority)
 
+# AI Assistant Routes
+@main_bp.route('/ai-assistant')
+@login_required
+def ai_assistant():
+    """AI Assistant Dashboard"""
+    if current_user.role not in ['admin', 'superadmin']:
+        flash(_('Access denied'), 'error')
+        return redirect(url_for('main.dashboard'))
+    
+    stats = {
+        'total_emails': 50,
+        'emails_processed': 35,
+        'ai_responses': 20,
+        'accuracy_rate': 85
+    }
+    
+    return render_template('ai_assistant/dashboard.html', stats=stats)
+
+@main_bp.route('/ai-assistant/gmail')
+@login_required
+def gmail_inbox():
+    """Gmail Inbox Integration"""
+    if current_user.role not in ['admin', 'superadmin']:
+        flash(_('Access denied'), 'error')
+        return redirect(url_for('main.dashboard'))
+    
+    return render_template('ai_assistant/gmail_setup.html')
+
+@main_bp.route('/ai-assistant/learning')
+@login_required
+def ai_learning_dashboard():
+    """AI Learning Statistics Dashboard"""
+    if current_user.role not in ['admin', 'superadmin']:
+        flash(_('Access denied'), 'error')
+        return redirect(url_for('main.dashboard'))
+    
+    learning_stats = {
+        'total_interactions': 150,
+        'successful_responses': 128,
+        'user_corrections': 22,
+        'learning_accuracy': 85.3,
+        'recent_improvements': [
+            {'area': 'Email Classification', 'improvement': '+12%'},
+            {'area': 'Response Quality', 'improvement': '+8%'},
+            {'area': 'Context Understanding', 'improvement': '+15%'}
+        ]
+    }
+    
+    return render_template('ai_assistant/learning.html', stats=learning_stats)
+
 @main_bp.route('/tasks/<int:task_id>/edit', methods=['GET', 'POST'])
 @login_required
 def edit_task(task_id):

@@ -1,0 +1,155 @@
+{% extends "base.html" %}
+{% set active_page = "ai_assistant" %}
+
+{% block title %}{{ _('AI Assistant Dashboard') }}{% endblock %}
+
+{% block content %}
+<div class="container-fluid">
+    <div class="d-flex justify-content-between flex-wrap flex-md-nowrap align-items-center pt-3 pb-2 mb-3 border-bottom">
+        <h1 class="h2">{{ _('AI Assistant Dashboard') }}</h1>
+        <div class="btn-toolbar mb-2 mb-md-0">
+            <div class="btn-group me-2">
+                <a href="{{ url_for('main.gmail_inbox') }}" class="btn btn-sm btn-outline-primary">
+                    <i data-feather="mail"></i> {{ _('Gmail Integration') }}
+                </a>
+                <a href="{{ url_for('main.ai_learning_dashboard') }}" class="btn btn-sm btn-outline-secondary">
+                    <i data-feather="bar-chart-2"></i> {{ _('Learning Stats') }}
+                </a>
+            </div>
+        </div>
+    </div>
+
+    <!-- Statistics Cards -->
+    <div class="row mb-4">
+        <div class="col-xl-3 col-md-6 mb-4">
+            <div class="card border-left-primary shadow h-100 py-2">
+                <div class="card-body">
+                    <div class="row no-gutters align-items-center">
+                        <div class="col mr-2">
+                            <div class="text-xs font-weight-bold text-primary text-uppercase mb-1">
+                                {{ _('Total Emails') }}
+                            </div>
+                            <div class="h5 mb-0 font-weight-bold text-gray-800">{{ stats.total_emails }}</div>
+                        </div>
+                        <div class="col-auto">
+                            <i data-feather="mail" class="text-gray-300"></i>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="col-xl-3 col-md-6 mb-4">
+            <div class="card border-left-success shadow h-100 py-2">
+                <div class="card-body">
+                    <div class="row no-gutters align-items-center">
+                        <div class="col mr-2">
+                            <div class="text-xs font-weight-bold text-success text-uppercase mb-1">
+                                {{ _('Emails Processed') }}
+                            </div>
+                            <div class="h5 mb-0 font-weight-bold text-gray-800">{{ stats.emails_processed }}</div>
+                        </div>
+                        <div class="col-auto">
+                            <i data-feather="check-circle" class="text-gray-300"></i>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="col-xl-3 col-md-6 mb-4">
+            <div class="card border-left-info shadow h-100 py-2">
+                <div class="card-body">
+                    <div class="row no-gutters align-items-center">
+                        <div class="col mr-2">
+                            <div class="text-xs font-weight-bold text-info text-uppercase mb-1">
+                                {{ _('AI Responses') }}
+                            </div>
+                            <div class="h5 mb-0 font-weight-bold text-gray-800">{{ stats.ai_responses }}</div>
+                        </div>
+                        <div class="col-auto">
+                            <i data-feather="cpu" class="text-gray-300"></i>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="col-xl-3 col-md-6 mb-4">
+            <div class="card border-left-warning shadow h-100 py-2">
+                <div class="card-body">
+                    <div class="row no-gutters align-items-center">
+                        <div class="col mr-2">
+                            <div class="text-xs font-weight-bold text-warning text-uppercase mb-1">
+                                {{ _('Accuracy Rate') }}
+                            </div>
+                            <div class="h5 mb-0 font-weight-bold text-gray-800">{{ stats.accuracy_rate }}%</div>
+                        </div>
+                        <div class="col-auto">
+                            <i data-feather="target" class="text-gray-300"></i>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Feature Cards -->
+    <div class="row">
+        <div class="col-lg-6 mb-4">
+            <div class="card shadow">
+                <div class="card-header py-3">
+                    <h6 class="m-0 font-weight-bold text-primary">{{ _('Gmail Integration') }}</h6>
+                </div>
+                <div class="card-body">
+                    <p class="mb-3">{{ _('Connect your Gmail account to enable AI-powered email management and smart responses.') }}</p>
+                    <div class="mb-3">
+                        <span class="badge bg-warning">{{ _('Not Connected') }}</span>
+                    </div>
+                    <a href="{{ url_for('main.gmail_inbox') }}" class="btn btn-primary">
+                        <i data-feather="mail" class="me-2"></i>{{ _('Setup Gmail') }}
+                    </a>
+                </div>
+            </div>
+        </div>
+
+        <div class="col-lg-6 mb-4">
+            <div class="card shadow">
+                <div class="card-header py-3">
+                    <h6 class="m-0 font-weight-bold text-primary">{{ _('AI Learning System') }}</h6>
+                </div>
+                <div class="card-body">
+                    <p class="mb-3">{{ _('Monitor AI performance and provide feedback to improve response quality.') }}</p>
+                    <div class="mb-3">
+                        <span class="badge bg-success">{{ _('Active') }}</span>
+                    </div>
+                    <a href="{{ url_for('main.ai_learning_dashboard') }}" class="btn btn-success">
+                        <i data-feather="bar-chart-2" class="me-2"></i>{{ _('View Stats') }}
+                    </a>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Recent Activity -->
+    <div class="row">
+        <div class="col-12">
+            <div class="card shadow">
+                <div class="card-header py-3">
+                    <h6 class="m-0 font-weight-bold text-primary">{{ _('Recent AI Activity') }}</h6>
+                </div>
+                <div class="card-body">
+                    <div class="alert alert-info">
+                        <i data-feather="info" class="me-2"></i>
+                        {{ _('AI Assistant features will be available once Gmail integration is configured.') }}
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+feather.replace();
+</script>
+{% endblock %}

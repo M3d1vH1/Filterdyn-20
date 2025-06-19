@@ -1,0 +1,74 @@
+{% extends "base.html" %}
+{% set active_page = "ai_assistant" %}
+
+{% block title %}{{ _('Gmail Setup') }}{% endblock %}
+
+{% block content %}
+<div class="container-fluid">
+    <div class="d-flex justify-content-between flex-wrap flex-md-nowrap align-items-center pt-3 pb-2 mb-3 border-bottom">
+        <h1 class="h2">{{ _('Gmail Integration Setup') }}</h1>
+        <div class="btn-toolbar mb-2 mb-md-0">
+            <div class="btn-group me-2">
+                <a href="{{ url_for('main.ai_assistant') }}" class="btn btn-sm btn-outline-secondary">
+                    <i data-feather="arrow-left"></i> {{ _('Back to Dashboard') }}
+                </a>
+            </div>
+        </div>
+    </div>
+
+    <div class="row justify-content-center">
+        <div class="col-lg-8">
+            <div class="card shadow">
+                <div class="card-header py-3">
+                    <h6 class="m-0 font-weight-bold text-primary">{{ _('Connect Your Gmail Account') }}</h6>
+                </div>
+                <div class="card-body">
+                    <div class="alert alert-info">
+                        <i data-feather="info" class="me-2"></i>
+                        {{ _('To enable Gmail integration, you need to provide Google API credentials.') }}
+                    </div>
+
+                    <div class="row mb-4">
+                        <div class="col-md-6">
+                            <h5>{{ _('Step 1: Google API Setup') }}</h5>
+                            <ol class="list-group list-group-numbered">
+                                <li class="list-group-item">{{ _('Go to Google Cloud Console') }}</li>
+                                <li class="list-group-item">{{ _('Create a new project or select existing') }}</li>
+                                <li class="list-group-item">{{ _('Enable Gmail API') }}</li>
+                                <li class="list-group-item">{{ _('Create OAuth 2.0 credentials') }}</li>
+                                <li class="list-group-item">{{ _('Download the credentials JSON file') }}</li>
+                            </ol>
+                        </div>
+                        <div class="col-md-6">
+                            <h5>{{ _('Step 2: Required Scopes') }}</h5>
+                            <ul class="list-group">
+                                <li class="list-group-item"><code>gmail.readonly</code></li>
+                                <li class="list-group-item"><code>gmail.send</code></li>
+                                <li class="list-group-item"><code>gmail.modify</code></li>
+                                <li class="list-group-item"><code>userinfo.email</code></li>
+                            </ul>
+                        </div>
+                    </div>
+
+                    <div class="alert alert-warning">
+                        <i data-feather="alert-triangle" class="me-2"></i>
+                        <strong>{{ _('Configuration Required') }}</strong><br>
+                        {{ _('Gmail integration requires Google API credentials to be configured by the administrator.') }}
+                    </div>
+
+                    <div class="text-center">
+                        <button class="btn btn-primary btn-lg" disabled>
+                            <i data-feather="mail" class="me-2"></i>{{ _('Connect Gmail') }}
+                        </button>
+                        <p class="text-muted mt-2">{{ _('Available after API configuration') }}</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+feather.replace();
+</script>
+{% endblock %}

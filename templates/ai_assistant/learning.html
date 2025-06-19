@@ -1,0 +1,132 @@
+{% extends "base.html" %}
+{% set active_page = "ai_assistant" %}
+
+{% block title %}{{ _('AI Learning Dashboard') }}{% endblock %}
+
+{% block content %}
+<div class="container-fluid">
+    <div class="d-flex justify-content-between flex-wrap flex-md-nowrap align-items-center pt-3 pb-2 mb-3 border-bottom">
+        <h1 class="h2">{{ _('AI Learning Dashboard') }}</h1>
+        <div class="btn-toolbar mb-2 mb-md-0">
+            <div class="btn-group me-2">
+                <a href="{{ url_for('main.ai_assistant') }}" class="btn btn-sm btn-outline-secondary">
+                    <i data-feather="arrow-left"></i> {{ _('Back to Dashboard') }}
+                </a>
+            </div>
+        </div>
+    </div>
+
+    <!-- Learning Statistics -->
+    <div class="row mb-4">
+        <div class="col-xl-3 col-md-6 mb-4">
+            <div class="card border-left-primary shadow h-100 py-2">
+                <div class="card-body">
+                    <div class="row no-gutters align-items-center">
+                        <div class="col mr-2">
+                            <div class="text-xs font-weight-bold text-primary text-uppercase mb-1">
+                                {{ _('Total Interactions') }}
+                            </div>
+                            <div class="h5 mb-0 font-weight-bold text-gray-800">{{ stats.total_interactions }}</div>
+                        </div>
+                        <div class="col-auto">
+                            <i data-feather="message-circle" class="text-gray-300"></i>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="col-xl-3 col-md-6 mb-4">
+            <div class="card border-left-success shadow h-100 py-2">
+                <div class="card-body">
+                    <div class="row no-gutters align-items-center">
+                        <div class="col mr-2">
+                            <div class="text-xs font-weight-bold text-success text-uppercase mb-1">
+                                {{ _('Successful Responses') }}
+                            </div>
+                            <div class="h5 mb-0 font-weight-bold text-gray-800">{{ stats.successful_responses }}</div>
+                        </div>
+                        <div class="col-auto">
+                            <i data-feather="check-circle" class="text-gray-300"></i>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="col-xl-3 col-md-6 mb-4">
+            <div class="card border-left-warning shadow h-100 py-2">
+                <div class="card-body">
+                    <div class="row no-gutters align-items-center">
+                        <div class="col mr-2">
+                            <div class="text-xs font-weight-bold text-warning text-uppercase mb-1">
+                                {{ _('User Corrections') }}
+                            </div>
+                            <div class="h5 mb-0 font-weight-bold text-gray-800">{{ stats.user_corrections }}</div>
+                        </div>
+                        <div class="col-auto">
+                            <i data-feather="edit-3" class="text-gray-300"></i>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="col-xl-3 col-md-6 mb-4">
+            <div class="card border-left-info shadow h-100 py-2">
+                <div class="card-body">
+                    <div class="row no-gutters align-items-center">
+                        <div class="col mr-2">
+                            <div class="text-xs font-weight-bold text-info text-uppercase mb-1">
+                                {{ _('Learning Accuracy') }}
+                            </div>
+                            <div class="h5 mb-0 font-weight-bold text-gray-800">{{ "%.1f"|format(stats.learning_accuracy) }}%</div>
+                        </div>
+                        <div class="col-auto">
+                            <i data-feather="target" class="text-gray-300"></i>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="row">
+        <!-- Recent Improvements -->
+        <div class="col-lg-6 mb-4">
+            <div class="card shadow">
+                <div class="card-header py-3">
+                    <h6 class="m-0 font-weight-bold text-primary">{{ _('Recent Improvements') }}</h6>
+                </div>
+                <div class="card-body">
+                    {% for improvement in stats.recent_improvements %}
+                    <div class="d-flex justify-content-between align-items-center mb-2">
+                        <span>{{ improvement.area }}</span>
+                        <span class="badge bg-success">{{ improvement.improvement }}</span>
+                    </div>
+                    {% endfor %}
+                </div>
+            </div>
+        </div>
+
+        <!-- Learning Progress -->
+        <div class="col-lg-6 mb-4">
+            <div class="card shadow">
+                <div class="card-header py-3">
+                    <h6 class="m-0 font-weight-bold text-primary">{{ _('Learning Progress') }}</h6>
+                </div>
+                <div class="card-body">
+                    <div class="alert alert-info">
+                        <i data-feather="info" class="me-2"></i>
+                        {{ _('AI learning features will be fully available once Gmail integration is active and processing emails.') }}
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+feather.replace();
+</script>
+{% endblock %}
