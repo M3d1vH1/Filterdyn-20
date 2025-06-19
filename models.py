@@ -2,6 +2,7 @@ from datetime import datetime, timezone
 from flask_sqlalchemy import SQLAlchemy
 from flask_login import UserMixin
 from app import db
+from timezone_utils import is_overdue, now_utc, ensure_utc, make_aware
 
 class Tenant(db.Model):
     __tablename__ = 'tenants'
@@ -293,12 +294,7 @@ class Task(db.Model):
     @property
     def is_overdue(self):
         if self.due_date and self.status not in ['completed', 'cancelled']:
-            # Ensure both dates are timezone-aware for comparison
-            now = datetime.now(timezone.utc)
-            due_date = self.due_date
-            if due_date.tzinfo is None:
-                due_date = due_date.replace(tzinfo=timezone.utc)
-            return due_date < now
+            return is_overdue(self.due_date)
         return False
 
 class PDFTemplate(db.Model):

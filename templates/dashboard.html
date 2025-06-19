@@ -219,7 +219,7 @@
                                     </span>
                                 </td>
                                 <td>€{{ "%.2f"|format(order.total_amount or 0) }}</td>
-                                <td>{{ order.created_at.strftime('%d/%m/%Y') }}</td>
+                                <td>{{ order.created_at|safe_date }}</td>
                             </tr>
                             {% endfor %}
                         </tbody>
