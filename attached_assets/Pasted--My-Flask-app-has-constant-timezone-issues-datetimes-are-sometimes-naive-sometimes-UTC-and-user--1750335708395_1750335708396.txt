@@ -1,0 +1,57 @@
+> My Flask app has constant timezone issues: datetimes are sometimes naive, sometimes UTC, and user input/display is inconsistent.
+>
+> Please do the following:
+>
+> 1. Audit the codebase for all datetime usage (models, forms, routes, utils, templates).
+> 2. Enforce a single rule: All datetimes in the database must be timezone-aware and in UTC.
+> 3. Add utility functions to convert between user-local time and UTC (to_utc, to_local), using Python's zoneinfo (or pytz if needed).
+> 4. Update all form processing so that naive datetimes from user input are converted to UTC before saving.
+> 5. Update all display logic so that datetimes are converted from UTC to the user's local time before rendering (using Babel or the utility).
+> 6. Store the user's timezone in their profile or session, and use it for all conversions (default to 'Europe/Athens' if not set).
+> 7. Update all templates to use the correct localized datetime.
+> 8. Add tests to ensure all datetimes are stored as UTC and displayed in the correct local time.
+>
+> Make sure the fix is comprehensive and future-proof.
+>
+> After the changes, I want to be able to:
+> - Save any datetime from a form and know it's stored as UTC in the DB.
+> - Display any datetime to the user in their local time, regardless of where they are.
+> - Never see a naive/aware datetime error again.
+>
+> Please provide a summary of what you changed and why.
+How to use:
+Copy and paste this prompt into Replit's AI or any code assistant.
+It will guide the AI to make all the necessary changes for permanent, robust timezone handling in your app.
+Let me know if you want a ready-to-paste code snippet for the utility functions or a checklist for manual review!
+on the tests we have problems of division by zero? that is what replit says
+
+Yes, there is a real risk of division by zero in your test reporting code.
+Where the Problem Is
+In test_comprehensive_audit.py (and similar logic in other audit scripts), you have lines like:
+Apply to test_compreh...
+)
+and
+Apply to test_compreh...
+100
+If total_tests is zero (for example, if no tests run due to a setup error or all are skipped), this will cause a ZeroDivisionError.
+How to Fix It
+Always check if total_tests > 0 before dividing.
+If not, set the success rate to 0 (or "N/A").
+Example Fix
+Replace:
+Apply to test_compreh...
+)
+with:
+Apply to test_compreh...
+)
+And for dictionary assignments:
+Apply to test_compreh...
+100
+becomes:
+Apply to test_compreh...
+0
+Summary
+Why it happens: If no tests run, you divide by zero.
+How to fix: Always check total_tests > 0 before dividing.
+Where to fix: All places where you calculate or print the success rate.
+Let me know if you want me to apply this fix to all relevant files automatically!
