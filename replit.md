@@ -140,6 +140,7 @@ User Request -> Tenant Verification -> Data Filtering by tenant_id -> Response D
 Changelog:
 - June 18, 2025. Initial setup
 - June 18, 2025. Redesigned AI interface from technical "agents dashboard" to user-friendly "AI Assistant" focused on practical email support and business communications
+- June 19, 2025. Set up git workflow structure for collaboration between Cursor IDE and Replit Agent, including branching strategy and conflict prevention guidelines
 
 ## User Preferences
 
