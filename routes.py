@@ -768,6 +768,19 @@ def kanban_board():
         db.session.add(default_board)
         db.session.commit()
 
+        # Add creator as board member with full permissions
+        creator_member = TaskBoardMember(
+            board_id=default_board.id,
+            user_id=current_user.id,
+            role='owner',
+            can_create_cards=True,
+            can_move_cards=True,
+            can_edit_cards=True,
+            can_delete_cards=True,
+            can_manage_board=True
+        )
+        db.session.add(creator_member)
+
         # Add default columns
         columns = [
             ('To Do', 'pending', '#6c757d'),
@@ -789,6 +802,7 @@ def kanban_board():
 
         db.session.commit()
         board_id = default_board.id
+        boards = [default_board]  # Update boards list to include new board
 
     board = TaskBoard.query.get_or_404(board_id)
 
@@ -796,8 +810,23 @@ def kanban_board():
     if current_user.role not in ['admin', 'manager']:
         member = TaskBoardMember.query.filter_by(board_id=board_id, user_id=current_user.id).first()
         if not member:
-            flash(_('You do not have access to this board'), 'error')
-            return redirect(url_for('main.tasks'))
+            # If user is the creator of the board, automatically add them as member
+            if board.created_by == current_user.id:
+                member = TaskBoardMember(
+                    board_id=board_id,
+                    user_id=current_user.id,
+                    role='owner',
+                    can_create_cards=True,
+                    can_move_cards=True,
+                    can_edit_cards=True,
+                    can_delete_cards=True,
+                    can_manage_board=True
+                )
+                db.session.add(member)
+                db.session.commit()
+            else:
+                flash(_('You do not have access to this board'), 'error')
+                return redirect(url_for('main.tasks'))
 
     # Get columns and cards
     columns = board.columns
