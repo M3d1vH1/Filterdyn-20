@@ -7,27 +7,27 @@ This workflow prevents merge conflicts when working with both Cursor IDE and Rep
 
 ### Main Branches
 - `main` - Production-ready code
-- `cursor-work` - Your development branch for Cursor IDE
-- `agent-work` - Replit Agent development branch
+- `mvp` - Your main development branch for Cursor IDE work
+- `replit-agent` - Replit Agent development branch
 
 ### Feature Branches
-- `cursor-features/[feature-name]` - Specific features in Cursor
-- `agent-features/[feature-name]` - Specific features by Agent
+- `cursor-features/[feature-name]` - Specific features in Cursor (branch from `mvp`)
+- `agent-features/[feature-name]` - Specific features by Agent (branch from `replit-agent`)
 
-## Setup Commands
+## Your Current Setup
 
 ```bash
-# Initialize git (if not already done)
-git init
+# Current branches (already created):
+# - main: Production-ready code
+# - mvp: Your Cursor development branch ✓
+# - MVP: Alternative development branch
+# - replit-agent: Agent development branch ✓
 
-# Create and switch to cursor work branch
-git checkout -b cursor-work
+# To work in Cursor, use:
+git checkout mvp
 
-# Create agent work branch
-git checkout -b agent-work
-
-# Return to main
-git checkout main
+# Agent will work on:
+git checkout replit-agent
 ```
 
 ## Daily Workflow
@@ -38,20 +38,20 @@ git checkout main
 git checkout main
 git pull origin main
 
-# Create or switch to your cursor branch
-git checkout cursor-work
+# Switch to your MVP development branch
+git checkout mvp
 git merge main
 
-# Or create a new feature branch
+# Or create a new feature branch for specific work
 git checkout -b cursor-features/new-feature
 ```
 
 ### Before Asking Agent to Work:
 ```bash
-# Commit your current work
+# Commit your current work on mvp branch
 git add .
 git commit -m "WIP: Describe what you're working on"
-git push origin cursor-work
+git push origin mvp
 
 # Tell the agent which files you've been editing
 ```
@@ -65,15 +65,15 @@ git push origin cursor-work
 ### Merging Back:
 ```bash
 # Test your changes first
-git checkout cursor-work
+git checkout mvp
 # Test your features
 
-# Merge cursor work to main
+# Merge MVP work to main
 git checkout main
-git merge cursor-work
+git merge mvp
 git push origin main
 
-# Agent will merge their work separately
+# Agent will merge replit-agent work separately
 ```
 
 ## Communication Protocol
