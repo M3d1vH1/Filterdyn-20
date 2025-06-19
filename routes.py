@@ -15,7 +15,7 @@ main_bp = Blueprint('main', __name__)
 @login_required
 @admin_required
 def ai_assistant():
-    """AI Assistant main interface"""
+    """AI Email main interface"""
     # Get customers for email generation
     customers = Customer.query.filter_by(tenant_id=current_user.tenant_id).order_by(Customer.name).all()
     return render_template('ai_assistant/assistant.html', customers=customers)
