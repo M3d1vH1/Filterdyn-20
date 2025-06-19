@@ -319,3 +319,237 @@ class PDFTemplate(db.Model):
     
     created_at = db.Column(db.DateTime, default=lambda: datetime.now(timezone.utc))
     updated_at = db.Column(db.DateTime, default=lambda: datetime.now(timezone.utc), onupdate=lambda: datetime.now(timezone.utc))
+
+class TaskBoard(db.Model):
+    __tablename__ = 'task_boards'
+    
+    id = db.Column(db.Integer, primary_key=True)
+    tenant_id = db.Column(db.Integer, db.ForeignKey('tenants.id'), nullable=False)
+    created_by = db.Column(db.Integer, db.ForeignKey('users.id'), nullable=False)
+    
+    # Board info
+    name = db.Column(db.String(100), nullable=False)
+    description = db.Column(db.Text)
+    board_type = db.Column(db.String(50), default='personal')  # personal, team, project, company
+    is_default = db.Column(db.Boolean, default=False)
+    is_public = db.Column(db.Boolean, default=False)
+    
+    # Settings
+    color_scheme = db.Column(db.String(20), default='default')
+    auto_archive_days = db.Column(db.Integer, default=30)
+    
+    # Timestamps
+    created_at = db.Column(db.DateTime, default=lambda: datetime.now(timezone.utc))
+    updated_at = db.Column(db.DateTime, default=lambda: datetime.now(timezone.utc), onupdate=lambda: datetime.now(timezone.utc))
+    
+    # Relationships
+    creator = db.relationship('User', backref='created_boards')
+    columns = db.relationship('TaskColumn', backref='board', lazy=True, cascade='all, delete-orphan', order_by='TaskColumn.position')
+    members = db.relationship('TaskBoardMember', backref='board', lazy=True, cascade='all, delete-orphan')
+
+class TaskBoardMember(db.Model):
+    __tablename__ = 'task_board_members'
+    
+    id = db.Column(db.Integer, primary_key=True)
+    board_id = db.Column(db.Integer, db.ForeignKey('task_boards.id'), nullable=False)
+    user_id = db.Column(db.Integer, db.ForeignKey('users.id'), nullable=False)
+    role = db.Column(db.String(20), default='member')  # owner, admin, member, viewer
+    
+    # Permissions
+    can_create_cards = db.Column(db.Boolean, default=True)
+    can_move_cards = db.Column(db.Boolean, default=True)
+    can_edit_cards = db.Column(db.Boolean, default=True)
+    can_delete_cards = db.Column(db.Boolean, default=False)
+    can_manage_board = db.Column(db.Boolean, default=False)
+    
+    joined_at = db.Column(db.DateTime, default=lambda: datetime.now(timezone.utc))
+    
+    # Relationships
+    user = db.relationship('User', backref='board_memberships')
+    
+    __table_args__ = (db.UniqueConstraint('board_id', 'user_id', name='_board_user_uc'),)
+
+class TaskColumn(db.Model):
+    __tablename__ = 'task_columns'
+    
+    id = db.Column(db.Integer, primary_key=True)
+    board_id = db.Column(db.Integer, db.ForeignKey('task_boards.id'), nullable=False)
+    
+    # Column info
+    name = db.Column(db.String(50), nullable=False)
+    description = db.Column(db.Text)
+    position = db.Column(db.Integer, nullable=False)
+    color = db.Column(db.String(7), default='#6c757d')
+    
+    # Settings
+    wip_limit = db.Column(db.Integer)  # Work in Progress limit
+    is_archive = db.Column(db.Boolean, default=False)
+    auto_assign_status = db.Column(db.String(20))  # pending, in_progress, completed, etc.
+    
+    # Timestamps
+    created_at = db.Column(db.DateTime, default=lambda: datetime.now(timezone.utc))
+    updated_at = db.Column(db.DateTime, default=lambda: datetime.now(timezone.utc), onupdate=lambda: datetime.now(timezone.utc))
+    
+    # Relationships
+    cards = db.relationship('TaskCard', backref='column', lazy=True, cascade='all, delete-orphan', order_by='TaskCard.position')
+
+class TaskCard(db.Model):
+    __tablename__ = 'task_cards'
+    
+    id = db.Column(db.Integer, primary_key=True)
+    board_id = db.Column(db.Integer, db.ForeignKey('task_boards.id'), nullable=False)
+    column_id = db.Column(db.Integer, db.ForeignKey('task_columns.id'), nullable=False)
+    created_by = db.Column(db.Integer, db.ForeignKey('users.id'), nullable=False)
+    assigned_to = db.Column(db.Integer, db.ForeignKey('users.id'))
+    
+    # Card info
+    title = db.Column(db.String(200), nullable=False)
+    description = db.Column(db.Text)
+    position = db.Column(db.Integer, nullable=False)
+    
+    # Task details
+    priority = db.Column(db.String(20), default='medium')  # low, medium, high, urgent
+    category = db.Column(db.String(50))  # follow_up, service_reminder, general, bug, feature, etc.
+    story_points = db.Column(db.Integer)  # For agile estimation
+    time_estimate = db.Column(db.Integer)  # Estimated hours
+    
+    # References
+    customer_id = db.Column(db.Integer, db.ForeignKey('customers.id'))
+    quote_id = db.Column(db.Integer, db.ForeignKey('quotes.id'))
+    order_id = db.Column(db.Integer, db.ForeignKey('orders.id'))
+    parent_task_id = db.Column(db.Integer, db.ForeignKey('task_cards.id'))
+    
+    # Status and dates
+    status = db.Column(db.String(20), default='pending')  # pending, acknowledged, in_progress, review, completed, cancelled
+    due_date = db.Column(db.DateTime)
+    started_at = db.Column(db.DateTime)
+    completed_at = db.Column(db.DateTime)
+    
+    # RBAC specific fields
+    acknowledged_at = db.Column(db.DateTime)
+    acknowledged_by = db.Column(db.Integer, db.ForeignKey('users.id'))
+    
+    # Labels and tags
+    labels = db.Column(db.JSON)  # Array of label objects
+    tags = db.Column(db.JSON)  # Array of tag strings
+    
+    # Timestamps
+    created_at = db.Column(db.DateTime, default=lambda: datetime.now(timezone.utc))
+    updated_at = db.Column(db.DateTime, default=lambda: datetime.now(timezone.utc), onupdate=lambda: datetime.now(timezone.utc))
+    
+    # Relationships
+    creator = db.relationship('User', foreign_keys=[created_by], backref='created_cards')
+    assignee = db.relationship('User', foreign_keys=[assigned_to], backref='assigned_cards')
+    acknowledger = db.relationship('User', foreign_keys=[acknowledged_by], backref='acknowledged_cards')
+    customer = db.relationship('Customer', backref='task_cards')
+    quote = db.relationship('Quote', backref='task_cards')
+    order = db.relationship('Order', backref='task_cards')
+    parent_task = db.relationship('TaskCard', remote_side=[id], backref='subtasks')
+    comments = db.relationship('TaskComment', backref='card', lazy=True, cascade='all, delete-orphan', order_by='TaskComment.created_at.desc()')
+    attachments = db.relationship('TaskAttachment', backref='card', lazy=True, cascade='all, delete-orphan')
+    
+    @property
+    def is_overdue(self):
+        if self.due_date and self.status not in ['completed', 'cancelled']:
+            return self.due_date < datetime.now(timezone.utc)
+        return False
+    
+    @property
+    def time_spent(self):
+        if self.started_at and self.completed_at:
+            return (self.completed_at - self.started_at).total_seconds() / 3600
+        elif self.started_at:
+            return (datetime.now(timezone.utc) - self.started_at).total_seconds() / 3600
+        return 0
+    
+    @property
+    def progress(self):
+        """Calculate task progress based on status"""
+        progress_map = {
+            'pending': 0,
+            'acknowledged': 25,
+            'in_progress': 50,
+            'review': 75,
+            'completed': 100,
+            'cancelled': 0
+        }
+        return progress_map.get(self.status, 0)
+
+class TaskComment(db.Model):
+    __tablename__ = 'task_comments'
+    
+    id = db.Column(db.Integer, primary_key=True)
+    card_id = db.Column(db.Integer, db.ForeignKey('task_cards.id'), nullable=False)
+    user_id = db.Column(db.Integer, db.ForeignKey('users.id'), nullable=False)
+    
+    # Comment content
+    content = db.Column(db.Text, nullable=False)
+    is_system_comment = db.Column(db.Boolean, default=False)  # For automated comments
+    comment_type = db.Column(db.String(20), default='user')  # user, system, mention
+    
+    # Timestamps
+    created_at = db.Column(db.DateTime, default=lambda: datetime.now(timezone.utc))
+    updated_at = db.Column(db.DateTime, default=lambda: datetime.now(timezone.utc), onupdate=lambda: datetime.now(timezone.utc))
+    
+    # Relationships
+    user = db.relationship('User', backref='task_comments')
+
+class TaskAttachment(db.Model):
+    __tablename__ = 'task_attachments'
+    
+    id = db.Column(db.Integer, primary_key=True)
+    card_id = db.Column(db.Integer, db.ForeignKey('task_cards.id'), nullable=False)
+    uploaded_by = db.Column(db.Integer, db.ForeignKey('users.id'), nullable=False)
+    
+    # File info
+    filename = db.Column(db.String(255), nullable=False)
+    original_filename = db.Column(db.String(255), nullable=False)
+    file_path = db.Column(db.String(500), nullable=False)
+    file_size = db.Column(db.Integer)
+    mime_type = db.Column(db.String(100))
+    
+    # Timestamps
+    uploaded_at = db.Column(db.DateTime, default=lambda: datetime.now(timezone.utc))
+    
+    # Relationships
+    user = db.relationship('User', backref='task_attachments')
+
+class TaskLabel(db.Model):
+    __tablename__ = 'task_labels'
+    
+    id = db.Column(db.Integer, primary_key=True)
+    tenant_id = db.Column(db.Integer, db.ForeignKey('tenants.id'), nullable=False)
+    created_by = db.Column(db.Integer, db.ForeignKey('users.id'), nullable=False)
+    
+    # Label info
+    name = db.Column(db.String(50), nullable=False)
+    color = db.Column(db.String(7), default='#6c757d')
+    description = db.Column(db.Text)
+    
+    # Timestamps
+    created_at = db.Column(db.DateTime, default=lambda: datetime.now(timezone.utc))
+    
+    # Relationships
+    creator = db.relationship('User', backref='created_labels')
+
+class TaskTemplate(db.Model):
+    __tablename__ = 'task_templates'
+    
+    id = db.Column(db.Integer, primary_key=True)
+    tenant_id = db.Column(db.Integer, db.ForeignKey('tenants.id'), nullable=False)
+    created_by = db.Column(db.Integer, db.ForeignKey('users.id'), nullable=False)
+    
+    # Template info
+    name = db.Column(db.String(100), nullable=False)
+    title_template = db.Column(db.String(200), nullable=False)
+    description_template = db.Column(db.Text)
+    estimated_time = db.Column(db.Integer)  # in hours
+    category = db.Column(db.String(50))
+    priority = db.Column(db.String(20), default='medium')
+    
+    # Timestamps
+    created_at = db.Column(db.DateTime, default=lambda: datetime.now(timezone.utc))
+    updated_at = db.Column(db.DateTime, default=lambda: datetime.now(timezone.utc), onupdate=lambda: datetime.now(timezone.utc))
+    
+    # Relationships
+    creator = db.relationship('User', backref='created_templates')

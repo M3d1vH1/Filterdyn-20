@@ -99,3 +99,76 @@ class TaskForm(FlaskForm):
     assigned_to = SelectField(_l('Assigned To'), coerce=int, validators=[DataRequired()])
     customer_id = SelectField(_l('Customer (Optional)'), coerce=int, validators=[Optional()])
     due_date = DateTimeField(_l('Due Date'), validators=[Optional()], format='%Y-%m-%d %H:%M')
+
+class TaskCardForm(FlaskForm):
+    title = StringField(_l('Title'), validators=[DataRequired(), Length(max=200)])
+    description = TextAreaField(_l('Description'), validators=[Optional()])
+    priority = SelectField(_l('Priority'), choices=[
+        ('low', _l('Low')),
+        ('medium', _l('Medium')),
+        ('high', _l('High')),
+        ('urgent', _l('Urgent'))
+    ], validators=[DataRequired()], default='medium')
+    category = SelectField(_l('Category'), choices=[
+        ('follow_up', _l('Follow Up')),
+        ('service_reminder', _l('Service Reminder')),
+        ('general', _l('General')),
+        ('bug', _l('Bug Fix')),
+        ('feature', _l('Feature Request')),
+        ('maintenance', _l('Maintenance')),
+        ('emergency', _l('Emergency'))
+    ], validators=[Optional()])
+    assigned_to = SelectField(_l('Assigned To'), coerce=int, validators=[DataRequired()])
+    customer_id = SelectField(_l('Customer (Optional)'), coerce=int, validators=[Optional()])
+    due_date = DateTimeField(_l('Due Date'), validators=[Optional()], format='%Y-%m-%d %H:%M')
+    time_estimate = IntegerField(_l('Estimated Hours'), validators=[Optional(), NumberRange(min=0)])
+    story_points = IntegerField(_l('Story Points'), validators=[Optional(), NumberRange(min=0, max=21)])
+    labels = StringField(_l('Labels (comma separated)'), validators=[Optional()])
+    tags = StringField(_l('Tags (comma separated)'), validators=[Optional()])
+
+class TaskBoardForm(FlaskForm):
+    name = StringField(_l('Board Name'), validators=[DataRequired(), Length(max=100)])
+    description = TextAreaField(_l('Description'), validators=[Optional()])
+    board_type = SelectField(_l('Board Type'), choices=[
+        ('personal', _l('Personal')),
+        ('team', _l('Team')),
+        ('project', _l('Project')),
+        ('company', _l('Company'))
+    ], validators=[DataRequired()], default='personal')
+    is_public = BooleanField(_l('Public Board'), default=False)
+    color_scheme = SelectField(_l('Color Scheme'), choices=[
+        ('default', _l('Default')),
+        ('dark', _l('Dark')),
+        ('light', _l('Light')),
+        ('colorful', _l('Colorful'))
+    ], validators=[DataRequired()], default='default')
+    auto_archive_days = IntegerField(_l('Auto Archive (Days)'), validators=[Optional(), NumberRange(min=1)], default=30)
+
+class TaskCommentForm(FlaskForm):
+    content = TextAreaField(_l('Comment'), validators=[DataRequired()])
+
+class TaskTemplateForm(FlaskForm):
+    name = StringField(_l('Template Name'), validators=[DataRequired(), Length(max=100)])
+    title_template = StringField(_l('Title Template'), validators=[DataRequired(), Length(max=200)])
+    description_template = TextAreaField(_l('Description Template'), validators=[Optional()])
+    estimated_time = IntegerField(_l('Estimated Hours'), validators=[Optional(), NumberRange(min=0)])
+    category = SelectField(_l('Category'), choices=[
+        ('follow_up', _l('Follow Up')),
+        ('service_reminder', _l('Service Reminder')),
+        ('general', _l('General')),
+        ('bug', _l('Bug Fix')),
+        ('feature', _l('Feature Request')),
+        ('maintenance', _l('Maintenance')),
+        ('emergency', _l('Emergency'))
+    ], validators=[Optional()])
+    priority = SelectField(_l('Priority'), choices=[
+        ('low', _l('Low')),
+        ('medium', _l('Medium')),
+        ('high', _l('High')),
+        ('urgent', _l('Urgent'))
+    ], validators=[DataRequired()], default='medium')
+
+class TaskLabelForm(FlaskForm):
+    name = StringField(_l('Label Name'), validators=[DataRequired(), Length(max=50)])
+    color = StringField(_l('Color'), validators=[DataRequired()], default='#6c757d')
+    description = TextAreaField(_l('Description'), validators=[Optional()])
