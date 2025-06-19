@@ -303,10 +303,155 @@ function refreshFeatherIcons() {
     setTimeout(initializeFeatherIcons, 100);
 }
 
+// === Voice Task Creation Feature ===
+let recognition, isRecording = false;
+let lastVoiceResult = null;
+
+function openVoiceTaskModal() {
+    document.getElementById('voiceTranscription').value = '';
+    document.getElementById('voiceTaskError').classList.add('d-none');
+    document.getElementById('processVoiceBtn').disabled = true;
+    document.getElementById('startVoiceBtn').classList.remove('d-none');
+    document.getElementById('stopVoiceBtn').classList.add('d-none');
+    new bootstrap.Modal(document.getElementById('voiceTaskModal')).show();
+}
+
+function startVoiceRecognition() {
+    if (!('webkitSpeechRecognition' in window) && !('SpeechRecognition' in window)) {
+        showVoiceTaskError('Your browser does not support speech recognition.');
+        return;
+    }
+    const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
+    recognition = new SpeechRecognition();
+    recognition.lang = document.documentElement.lang || 'en-US';
+    recognition.interimResults = false;
+    recognition.maxAlternatives = 1;
+    isRecording = true;
+    document.getElementById('startVoiceBtn').classList.add('d-none');
+    document.getElementById('stopVoiceBtn').classList.remove('d-none');
+    document.getElementById('voiceTranscription').value = '';
+    document.getElementById('processVoiceBtn').disabled = true;
+    recognition.onresult = function(event) {
+        const transcript = event.results[0][0].transcript;
+        document.getElementById('voiceTranscription').value = transcript;
+        document.getElementById('processVoiceBtn').disabled = false;
+    };
+    recognition.onerror = function(event) {
+        showVoiceTaskError('Speech recognition error: ' + event.error);
+        stopVoiceRecognition();
+    };
+    recognition.onend = function() {
+        isRecording = false;
+        document.getElementById('startVoiceBtn').classList.remove('d-none');
+        document.getElementById('stopVoiceBtn').classList.add('d-none');
+    };
+    recognition.start();
+}
+
+function stopVoiceRecognition() {
+    if (recognition && isRecording) {
+        recognition.stop();
+    }
+    isRecording = false;
+    document.getElementById('startVoiceBtn').classList.remove('d-none');
+    document.getElementById('stopVoiceBtn').classList.add('d-none');
+}
+
+function showVoiceTaskError(msg) {
+    const errDiv = document.getElementById('voiceTaskError');
+    errDiv.textContent = msg;
+    errDiv.classList.remove('d-none');
+}
+
+function processVoiceTask() {
+    const text = document.getElementById('voiceTranscription').value.trim();
+    if (!text) {
+        showVoiceTaskError('No transcription available.');
+        return;
+    }
+    document.getElementById('processVoiceBtn').disabled = true;
+    fetch('/ai/process_voice', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ text: text, language: document.documentElement.lang.startsWith('el') ? 'el' : 'en' })
+    })
+    .then(res => res.json())
+    .then(data => {
+        if (data.error || data.type !== 'TASK') {
+            showVoiceTaskError(data.error || 'Could not extract a task from your command.');
+            document.getElementById('processVoiceBtn').disabled = false;
+            return;
+        }
+        lastVoiceResult = data;
+        fillReviewTaskModal(data.data);
+        bootstrap.Modal.getInstance(document.getElementById('voiceTaskModal')).hide();
+        new bootstrap.Modal(document.getElementById('reviewTaskModal')).show();
+    })
+    .catch(err => {
+        showVoiceTaskError('Error processing voice: ' + err);
+        document.getElementById('processVoiceBtn').disabled = false;
+    });
+}
+
+function fillReviewTaskModal(taskData) {
+    document.getElementById('taskTitle').value = taskData.title || '';
+    document.getElementById('taskDescription').value = taskData.description || '';
+    document.getElementById('taskPriority').value = taskData.priority || 'medium';
+    document.getElementById('taskDueDate').value = taskData.due_date || '';
+    document.getElementById('taskCategory').value = taskData.category || 'general';
+    document.getElementById('reviewTaskError').classList.add('d-none');
+}
+
+function confirmVoiceTask() {
+    const form = document.getElementById('reviewTaskForm');
+    const data = {
+        type: 'TASK',
+        data: {
+            title: form.title.value,
+            description: form.description.value,
+            priority: form.priority.value,
+            due_date: form.due_date.value,
+            category: form.category.value
+        }
+    };
+    document.getElementById('confirmTaskBtn').disabled = true;
+    fetch('/ai/create_entity', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(data)
+    })
+    .then(res => res.json())
+    .then(result => {
+        if (result.error) {
+            showReviewTaskError(result.error);
+            document.getElementById('confirmTaskBtn').disabled = false;
+            return;
+        }
+        bootstrap.Modal.getInstance(document.getElementById('reviewTaskModal')).hide();
+        alert('Task created successfully!');
+        location.reload();
+    })
+    .catch(err => {
+        showReviewTaskError('Error creating task: ' + err);
+        document.getElementById('confirmTaskBtn').disabled = false;
+    });
+}
+
+function showReviewTaskError(msg) {
+    const errDiv = document.getElementById('reviewTaskError');
+    errDiv.textContent = msg;
+    errDiv.classList.remove('d-none');
+}
+
 // Export functions for use in templates
 window.FilterdynApp = {
     calculateLineTotal: calculateLineTotal,
     formatCurrency: formatCurrency,
     formatDate: formatDate,
-    refreshFeatherIcons: refreshFeatherIcons
+    refreshFeatherIcons: refreshFeatherIcons,
+    openVoiceTaskModal: openVoiceTaskModal,
+    startVoiceRecognition: startVoiceRecognition,
+    stopVoiceRecognition: stopVoiceRecognition,
+    processVoiceTask: processVoiceTask,
+    confirmVoiceTask: confirmVoiceTask
 };
