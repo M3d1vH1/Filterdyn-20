@@ -79,7 +79,14 @@ class OrderForm(FlaskForm):
     title = StringField(_l('Title'), validators=[DataRequired(), Length(max=200)])
     description = TextAreaField(_l('Description'), validators=[Optional()])
     delivery_address = TextAreaField(_l('Delivery Address'), validators=[Optional()])
-    delivery_date = DateTimeField(_l('Delivery Date'), validators=[Optional()], format='%Y-%m-%d')
+    delivery_date = DateTimeField(_l('Delivery Date'), validators=[Optional()], format='%Y-%m-%dT%H:%M')
+
+    def process_delivery_date(self):
+        """Convert delivery_date from user timezone to UTC before saving."""
+        if self.delivery_date.data:
+            from timezone_utils import to_utc
+            return to_utc(self.delivery_date.data)
+        return None
     delivery_notes = TextAreaField(_l('Delivery Notes'), validators=[Optional()])
 
 class TaskForm(FlaskForm):
@@ -98,4 +105,11 @@ class TaskForm(FlaskForm):
     ], validators=[Optional()])
     assigned_to = SelectField(_l('Assigned To'), coerce=int, validators=[DataRequired()])
     customer_id = SelectField(_l('Customer (Optional)'), coerce=int, validators=[Optional()])
-    due_date = DateTimeField(_l('Due Date'), validators=[Optional()], format='%Y-%m-%d %H:%M')
+    due_date = DateTimeField(_l('Due Date'), validators=[Optional()], format='%Y-%m-%dT%H:%M')
+
+    def process_due_date(self):
+        """Convert due_date from user timezone to UTC before saving."""
+        if self.due_date.data:
+            from timezone_utils import to_utc
+            return to_utc(self.due_date.data)
+        return None

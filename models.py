@@ -46,6 +46,7 @@ class User(UserMixin, db.Model):
     first_name = db.Column(db.String(50))
     last_name = db.Column(db.String(50))
     phone = db.Column(db.String(20))
+    timezone = db.Column(db.String(50), default='Europe/Athens')
     
     # Unique constraint per tenant
     __table_args__ = (db.UniqueConstraint('tenant_id', 'username', name='_tenant_username_uc'),
