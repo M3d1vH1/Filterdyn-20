@@ -10,10 +10,20 @@
                 <i data-feather="check-square" class="me-2"></i>
                 {{ _('Tasks') }}
             </h1>
-            <a href="{{ url_for('main.create_task') }}" class="btn btn-primary">
-                <i data-feather="plus" class="me-2"></i>
-                {{ _('Create Task') }}
-            </a>
+            <div class="d-flex gap-2">
+                <div class="btn-group" role="group">
+                    <a href="{{ url_for('main.tasks') }}" class="btn btn-outline-secondary active">
+                        <i data-feather="list" class="me-1"></i>{{ _('List View') }}
+                    </a>
+                    <a href="{{ url_for('main.tasks_kanban') }}" class="btn btn-outline-secondary">
+                        <i data-feather="columns" class="me-1"></i>{{ _('Kanban Board') }}
+                    </a>
+                </div>
+                <a href="{{ url_for('main.create_task') }}" class="btn btn-primary">
+                    <i data-feather="plus" class="me-2"></i>
+                    {{ _('Create Task') }}
+                </a>
+            </div>
         </div>
     </div>
 </div>

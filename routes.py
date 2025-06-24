@@ -690,9 +690,9 @@ def ai_learning_dashboard():
     
     return render_template('ai_assistant/learning.html', stats=learning_stats)
 
-@main_bp.route('/tasks/<int:task_id>/edit', methods=['GET', 'POST'])
-@login_required
-def edit_task(task_id):
+@main_bp.route('/tasks/<int:id>/edit', methods=['GET', 'POST'])
+@login_required  
+def edit_task(id):
     """Edit task"""
     task = Task.query.filter_by(
         id=task_id,
@@ -761,7 +761,7 @@ def create_task():
 @main_bp.route('/tasks/<int:task_id>/complete', methods=['POST'])
 @login_required
 def complete_task(task_id):
-    task = Task.query.filter_by(id=task_id, tenant_id=current_user.tenant_id).first_or_404()
+    task = Task.query.filter_by(id=id, tenant_id=current_user.tenant_id).first_or_404()
     # Check permissions
     if current_user.role == 'user' and task.assigned_to != current_user.id:
         flash(_('You can only complete tasks assigned to you.'), 'error')
