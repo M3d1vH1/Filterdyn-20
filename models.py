@@ -317,3 +317,78 @@ class PDFTemplate(db.Model):
     
     created_at = db.Column(db.DateTime, default=lambda: datetime.now(timezone.utc))
     updated_at = db.Column(db.DateTime, default=lambda: datetime.now(timezone.utc), onupdate=lambda: datetime.now(timezone.utc))
+
+
+
+class ApplicationSetting(db.Model):
+    __tablename__ = 'application_settings'
+    
+    id = db.Column(db.Integer, primary_key=True)
+    tenant_id = db.Column(db.Integer, db.ForeignKey('tenants.id'), nullable=False)
+    category = db.Column(db.String(50), nullable=False)
+    key = db.Column(db.String(100), nullable=False)
+    value = db.Column(db.Text)
+    value_type = db.Column(db.String(20), nullable=False, default='string')
+    description = db.Column(db.Text)
+    is_sensitive = db.Column(db.Boolean, default=False)
+    created_at = db.Column(db.DateTime(timezone=True), default=lambda: datetime.now(timezone.utc))
+    updated_at = db.Column(db.DateTime(timezone=True), default=lambda: datetime.now(timezone.utc), onupdate=lambda: datetime.now(timezone.utc))
+    
+    tenant = db.relationship('Tenant', backref='settings')
+    
+    __table_args__ = (db.UniqueConstraint('tenant_id', 'category', 'key', name='_tenant_setting_uc'),)
+    
+    def __repr__(self):
+        return f'<ApplicationSetting {self.category}.{self.key}>'
+    
+    def get_typed_value(self):
+        if self.value is None:
+            return None
+        
+        import json
+        
+        if self.value_type == 'boolean':
+            return self.value.lower() in ('true', '1', 'yes', 'on')
+        elif self.value_type == 'integer':
+            return int(self.value)
+        elif self.value_type == 'json':
+            return json.loads(self.value)
+        elif self.value_type == 'list':
+            return json.loads(self.value) if self.value else []
+        else:
+            return self.value
+    
+    def set_typed_value(self, value):
+        import json
+        
+        if value is None:
+            self.value = None
+        elif self.value_type == 'boolean':
+            self.value = str(bool(value)).lower()
+        elif self.value_type == 'integer':
+            self.value = str(int(value))
+        elif self.value_type in ('json', 'list'):
+            self.value = json.dumps(value)
+        else:
+            self.value = str(value)
+
+
+class RolePermission(db.Model):
+    __tablename__ = 'role_permissions'
+    
+    id = db.Column(db.Integer, primary_key=True)
+    tenant_id = db.Column(db.Integer, db.ForeignKey('tenants.id'), nullable=False)
+    role = db.Column(db.String(50), nullable=False)
+    resource = db.Column(db.String(100), nullable=False)
+    permission = db.Column(db.String(50), nullable=False)
+    granted = db.Column(db.Boolean, default=True)
+    created_at = db.Column(db.DateTime(timezone=True), default=lambda: datetime.now(timezone.utc))
+    updated_at = db.Column(db.DateTime(timezone=True), default=lambda: datetime.now(timezone.utc), onupdate=lambda: datetime.now(timezone.utc))
+    
+    tenant = db.relationship('Tenant', backref='role_permissions')
+    
+    __table_args__ = (db.UniqueConstraint('tenant_id', 'role', 'resource', 'permission', name='_tenant_role_permission_uc'),)
+    
+    def __repr__(self):
+        return f'<RolePermission {self.role}.{self.resource}.{self.permission}>'
+

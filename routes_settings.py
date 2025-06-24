@@ -2,14 +2,14 @@
 Settings Management Routes
 """
 
-from flask import Blueprint, render_template, request, flash, redirect, url_for, jsonify
+from flask import Blueprint, render_template, request, flash, redirect, url_for
 from flask_login import login_required, current_user
 from flask_babel import _
 from models import db
 from settings_manager import SettingsManager, RBACManager, initialize_default_settings
 from forms_settings import (
     BusinessSettingsForm, UISettingsForm, EmailSettingsForm, 
-    SecuritySettingsForm, SystemSettingsForm, RolePermissionForm, CustomSettingForm
+    SecuritySettingsForm, SystemSettingsForm, RolePermissionForm
 )
 
 settings_bp = Blueprint('settings', __name__, url_prefix='/settings')
@@ -19,7 +19,7 @@ def require_admin():
     """Decorator to require admin access"""
     if not current_user.is_authenticated or current_user.role not in ['admin', 'superadmin']:
         flash(_('Access denied. Administrator privileges required.'), 'error')
-        return redirect(url_for('dashboard'))
+        return redirect(url_for('main.dashboard'))
     return None
 
 
@@ -185,38 +185,6 @@ def security():
     return render_template('settings/security.html', form=form)
 
 
-@settings_bp.route('/system', methods=['GET', 'POST'])
-@login_required
-def system():
-    """System settings management"""
-    if current_user.role != 'superadmin':
-        flash(_('Access denied. Super administrator privileges required.'), 'error')
-        return redirect(url_for('settings.index'))
-    
-    settings_manager = SettingsManager()
-    form = SystemSettingsForm()
-    
-    if form.validate_on_submit():
-        # Save system settings
-        settings_manager.set_setting('system', 'backup_enabled', form.backup_enabled.data, 'boolean')
-        settings_manager.set_setting('system', 'backup_frequency', form.backup_frequency.data, 'string')
-        settings_manager.set_setting('system', 'debug_mode', form.debug_mode.data, 'boolean')
-        settings_manager.set_setting('system', 'maintenance_mode', form.maintenance_mode.data, 'boolean')
-        
-        flash(_('System settings updated successfully.'), 'success')
-        return redirect(url_for('settings.system'))
-    
-    # Load current settings
-    system_settings = settings_manager.get_category_settings('system')
-    if system_settings:
-        form.backup_enabled.data = system_settings.get('backup_enabled', {}).get('value', True)
-        form.backup_frequency.data = system_settings.get('backup_frequency', {}).get('value', 'daily')
-        form.debug_mode.data = system_settings.get('debug_mode', {}).get('value', False)
-        form.maintenance_mode.data = system_settings.get('maintenance_mode', {}).get('value', False)
-    
-    return render_template('settings/system.html', form=form)
-
-
 @settings_bp.route('/rbac')
 @login_required
 def rbac():
@@ -229,66 +197,6 @@ def rbac():
     permissions = rbac_manager.get_all_permissions()
     
     return render_template('settings/rbac.html', permissions=permissions)
-
-
-@settings_bp.route('/rbac/edit', methods=['GET', 'POST'])
-@login_required
-def rbac_edit():
-    """Edit RBAC permissions"""
-    admin_check = require_admin()
-    if admin_check:
-        return admin_check
-    
-    rbac_manager = RBACManager()
-    form = RolePermissionForm()
-    
-    if form.validate_on_submit():
-        success = rbac_manager.set_permission(
-            form.role.data,
-            form.resource.data,
-            form.permission.data,
-            form.granted.data
-        )
-        
-        if success:
-            flash(_('Permission updated successfully.'), 'success')
-        else:
-            flash(_('Error updating permission.'), 'error')
-        
-        return redirect(url_for('settings.rbac'))
-    
-    return render_template('settings/rbac_edit.html', form=form)
-
-
-@settings_bp.route('/custom', methods=['GET', 'POST'])
-@login_required
-def custom():
-    """Custom settings management"""
-    if current_user.role != 'superadmin':
-        flash(_('Access denied. Super administrator privileges required.'), 'error')
-        return redirect(url_for('settings.index'))
-    
-    settings_manager = SettingsManager()
-    form = CustomSettingForm()
-    
-    if form.validate_on_submit():
-        success = settings_manager.set_setting(
-            form.category.data,
-            form.key.data,
-            form.value.data,
-            form.value_type.data,
-            form.description.data,
-            form.is_sensitive.data
-        )
-        
-        if success:
-            flash(_('Custom setting saved successfully.'), 'success')
-        else:
-            flash(_('Error saving custom setting.'), 'error')
-        
-        return redirect(url_for('settings.custom'))
-    
-    return render_template('settings/custom.html', form=form)
 
 
 @settings_bp.route('/initialize')
@@ -306,17 +214,3 @@ def initialize():
         flash(_('Error initializing settings: %(error)s', error=str(e)), 'error')
     
     return redirect(url_for('settings.index'))
-
-
-@settings_bp.route('/api/permission/<role>/<resource>/<permission>')
-@login_required
-def api_check_permission(role, resource, permission):
-    """API endpoint to check permission"""
-    admin_check = require_admin()
-    if admin_check:
-        return jsonify({'error': 'Access denied'}), 403
-    
-    rbac_manager = RBACManager()
-    has_perm = rbac_manager.has_permission(role, resource, permission)
-    
-    return jsonify({'has_permission': has_perm})

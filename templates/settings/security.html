@@ -1,0 +1,132 @@
+{% extends "base.html" %}
+{% block title %}{{ _('Security Settings') }}{% endblock %}
+
+{% block content %}
+<div class="container-fluid">
+    <div class="row mb-4">
+        <div class="col">
+            <nav aria-label="breadcrumb">
+                <ol class="breadcrumb">
+                    <li class="breadcrumb-item"><a href="{{ url_for('settings.index') }}">{{ _('Settings') }}</a></li>
+                    <li class="breadcrumb-item active">{{ _('Security Settings') }}</li>
+                </ol>
+            </nav>
+            <h2><i data-feather="shield"></i> {{ _('Security Settings') }}</h2>
+            <p class="text-muted">{{ _('Configure session management and password policies') }}</p>
+        </div>
+    </div>
+
+    <div class="row">
+        <div class="col-lg-8">
+            <div class="card">
+                <div class="card-header">
+                    <h5><i data-feather="edit-2"></i> {{ _('Security Configuration') }}</h5>
+                </div>
+                <div class="card-body">
+                    <form method="POST">
+                        {{ form.hidden_tag() }}
+                        
+                        <div class="row">
+                            <div class="col-md-6">
+                                <div class="mb-3">
+                                    {{ form.session_timeout.label(class="form-label") }}
+                                    <div class="input-group">
+                                        {{ form.session_timeout(class="form-control") }}
+                                        <span class="input-group-text">{{ _('minutes') }}</span>
+                                    </div>
+                                    {% for error in form.session_timeout.errors %}
+                                        <div class="text-danger">{{ error }}</div>
+                                    {% endfor %}
+                                </div>
+                            </div>
+                            <div class="col-md-6">
+                                <div class="mb-3">
+                                    {{ form.password_min_length.label(class="form-label") }}
+                                    <div class="input-group">
+                                        {{ form.password_min_length(class="form-control") }}
+                                        <span class="input-group-text">{{ _('characters') }}</span>
+                                    </div>
+                                    {% for error in form.password_min_length.errors %}
+                                        <div class="text-danger">{{ error }}</div>
+                                    {% endfor %}
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="row">
+                            <div class="col-md-6">
+                                <div class="mb-3">
+                                    {{ form.max_login_attempts.label(class="form-label") }}
+                                    <div class="input-group">
+                                        {{ form.max_login_attempts(class="form-control") }}
+                                        <span class="input-group-text">{{ _('attempts') }}</span>
+                                    </div>
+                                    {% for error in form.max_login_attempts.errors %}
+                                        <div class="text-danger">{{ error }}</div>
+                                    {% endfor %}
+                                </div>
+                            </div>
+                            <div class="col-md-6">
+                                <div class="mb-3">
+                                    <label class="form-label">{{ _('Password Requirements') }}</label>
+                                    <div class="form-check">
+                                        {{ form.require_password_change(class="form-check-input") }}
+                                        {{ form.require_password_change.label(class="form-check-label") }}
+                                    </div>
+                                    {% for error in form.require_password_change.errors %}
+                                        <div class="text-danger">{{ error }}</div>
+                                    {% endfor %}
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="d-flex gap-2">
+                            <button type="submit" class="btn btn-primary">
+                                <i data-feather="save"></i> {{ _('Save Settings') }}
+                            </button>
+                            <a href="{{ url_for('settings.index') }}" class="btn btn-secondary">
+                                <i data-feather="arrow-left"></i> {{ _('Back') }}
+                            </a>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+
+        <div class="col-lg-4">
+            <div class="card">
+                <div class="card-header">
+                    <h6><i data-feather="info"></i> {{ _('Security Recommendations') }}</h6>
+                </div>
+                <div class="card-body">
+                    <h6>{{ _('Session Timeout') }}</h6>
+                    <p class="small text-muted">{{ _('Recommended: 30-60 minutes for business applications') }}</p>
+                    
+                    <h6>{{ _('Password Length') }}</h6>
+                    <p class="small text-muted">{{ _('Minimum 8 characters recommended for security') }}</p>
+                    
+                    <h6>{{ _('Login Attempts') }}</h6>
+                    <p class="small text-muted">{{ _('5-10 attempts help prevent brute force attacks') }}</p>
+                    
+                    <h6>{{ _('Password Changes') }}</h6>
+                    <p class="small text-muted">{{ _('Force password change for new user accounts') }}</p>
+                </div>
+            </div>
+
+            <div class="card mt-3">
+                <div class="card-header">
+                    <h6><i data-feather="alert-triangle"></i> {{ _('Current Security Status') }}</h6>
+                </div>
+                <div class="card-body">
+                    <ul class="list-unstyled">
+                        <li><i data-feather="check-circle" class="text-success"></i> CSRF Protection: {{ _('Enabled') }}</li>
+                        <li><i data-feather="check-circle" class="text-success"></i> Password Hashing: {{ _('Enabled') }}</li>
+                        <li><i data-feather="check-circle" class="text-success"></i> Secure Cookies: {{ _('Enabled') }}</li>
+                        <li><i data-feather="check-circle" class="text-success"></i> SQL Injection Protection: {{ _('Enabled') }}</li>
+                    </ul>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

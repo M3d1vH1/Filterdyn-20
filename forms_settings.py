@@ -84,18 +84,3 @@ class RolePermissionForm(FlaskForm):
         ('export', _l('Export'))
     ], validators=[DataRequired()])
     granted = BooleanField(_l('Granted'), default=True)
-
-
-class CustomSettingForm(FlaskForm):
-    category = StringField(_l('Category'), validators=[DataRequired(), Length(max=50)])
-    key = StringField(_l('Key'), validators=[DataRequired(), Length(max=100)])
-    value = TextAreaField(_l('Value'), validators=[Optional()])
-    value_type = SelectField(_l('Value Type'), choices=[
-        ('string', _l('String')),
-        ('integer', _l('Integer')),
-        ('boolean', _l('Boolean')),
-        ('json', _l('JSON')),
-        ('list', _l('List'))
-    ], validators=[DataRequired()])
-    description = TextAreaField(_l('Description'), validators=[Optional()])
-    is_sensitive = BooleanField(_l('Sensitive (Hide Value)'))

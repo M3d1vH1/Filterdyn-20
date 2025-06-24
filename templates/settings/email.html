@@ -1,0 +1,157 @@
+{% extends "base.html" %}
+{% block title %}{{ _('Email Settings') }}{% endblock %}
+
+{% block content %}
+<div class="container-fluid">
+    <div class="row mb-4">
+        <div class="col">
+            <nav aria-label="breadcrumb">
+                <ol class="breadcrumb">
+                    <li class="breadcrumb-item"><a href="{{ url_for('settings.index') }}">{{ _('Settings') }}</a></li>
+                    <li class="breadcrumb-item active">{{ _('Email Settings') }}</li>
+                </ol>
+            </nav>
+            <h2><i data-feather="mail"></i> {{ _('Email Settings') }}</h2>
+            <p class="text-muted">{{ _('Configure SMTP server and email notifications') }}</p>
+        </div>
+    </div>
+
+    <div class="row">
+        <div class="col-lg-8">
+            <div class="card">
+                <div class="card-header">
+                    <h5><i data-feather="edit-2"></i> {{ _('SMTP Configuration') }}</h5>
+                </div>
+                <div class="card-body">
+                    <form method="POST">
+                        {{ form.hidden_tag() }}
+                        
+                        <div class="mb-3">
+                            <div class="form-check">
+                                {{ form.smtp_enabled(class="form-check-input") }}
+                                {{ form.smtp_enabled.label(class="form-check-label") }}
+                            </div>
+                        </div>
+
+                        <div id="smtp-config" style="display: {{ 'block' if form.smtp_enabled.data else 'none' }};">
+                            <div class="row">
+                                <div class="col-md-8">
+                                    <div class="mb-3">
+                                        {{ form.smtp_server.label(class="form-label") }}
+                                        {{ form.smtp_server(class="form-control", placeholder="smtp.gmail.com") }}
+                                        {% for error in form.smtp_server.errors %}
+                                            <div class="text-danger">{{ error }}</div>
+                                        {% endfor %}
+                                    </div>
+                                </div>
+                                <div class="col-md-4">
+                                    <div class="mb-3">
+                                        {{ form.smtp_port.label(class="form-label") }}
+                                        {{ form.smtp_port(class="form-control") }}
+                                        {% for error in form.smtp_port.errors %}
+                                            <div class="text-danger">{{ error }}</div>
+                                        {% endfor %}
+                                    </div>
+                                </div>
+                            </div>
+
+                            <div class="mb-3">
+                                {{ form.smtp_username.label(class="form-label") }}
+                                {{ form.smtp_username(class="form-control", placeholder="your.email@company.com") }}
+                                {% for error in form.smtp_username.errors %}
+                                    <div class="text-danger">{{ error }}</div>
+                                {% endfor %}
+                            </div>
+
+                            <div class="mb-3">
+                                {{ form.smtp_password.label(class="form-label") }}
+                                {{ form.smtp_password(class="form-control", placeholder="Leave empty to keep current password") }}
+                                {% for error in form.smtp_password.errors %}
+                                    <div class="text-danger">{{ error }}</div>
+                                {% endfor %}
+                                <div class="form-text">{{ _('Password is encrypted and securely stored') }}</div>
+                            </div>
+
+                            <div class="mb-3">
+                                {{ form.from_email.label(class="form-label") }}
+                                {{ form.from_email(class="form-control", placeholder="noreply@company.com") }}
+                                {% for error in form.from_email.errors %}
+                                    <div class="text-danger">{{ error }}</div>
+                                {% endfor %}
+                            </div>
+                        </div>
+
+                        <div class="d-flex gap-2">
+                            <button type="submit" class="btn btn-primary">
+                                <i data-feather="save"></i> {{ _('Save Settings') }}
+                            </button>
+                            <button type="button" class="btn btn-outline-secondary" id="test-email" style="display: {{ 'inline-block' if form.smtp_enabled.data else 'none' }};">
+                                <i data-feather="send"></i> {{ _('Test Connection') }}
+                            </button>
+                            <a href="{{ url_for('settings.index') }}" class="btn btn-secondary">
+                                <i data-feather="arrow-left"></i> {{ _('Back') }}
+                            </a>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+
+        <div class="col-lg-4">
+            <div class="card">
+                <div class="card-header">
+                    <h6><i data-feather="info"></i> {{ _('Common SMTP Settings') }}</h6>
+                </div>
+                <div class="card-body">
+                    <h6>Gmail</h6>
+                    <p class="small">
+                        <strong>Server:</strong> smtp.gmail.com<br>
+                        <strong>Port:</strong> 587 (TLS)<br>
+                        <strong>Note:</strong> Use App Password for 2FA accounts
+                    </p>
+                    
+                    <h6>Outlook/Hotmail</h6>
+                    <p class="small">
+                        <strong>Server:</strong> smtp-mail.outlook.com<br>
+                        <strong>Port:</strong> 587 (TLS)
+                    </p>
+                    
+                    <h6>Custom SMTP</h6>
+                    <p class="small">
+                        Contact your hosting provider for SMTP settings
+                    </p>
+                </div>
+            </div>
+
+            <div class="card mt-3">
+                <div class="card-header">
+                    <h6><i data-feather="alert-triangle"></i> {{ _('Security Notice') }}</h6>
+                </div>
+                <div class="card-body">
+                    <p class="small text-muted">
+                        {{ _('Email credentials are encrypted and stored securely. Use application-specific passwords when possible.') }}
+                    </p>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    const smtpEnabled = document.getElementById('smtp_enabled');
+    const smtpConfig = document.getElementById('smtp-config');
+    const testButton = document.getElementById('test-email');
+    
+    smtpEnabled.addEventListener('change', function() {
+        smtpConfig.style.display = this.checked ? 'block' : 'none';
+        testButton.style.display = this.checked ? 'inline-block' : 'none';
+    });
+    
+    testButton.addEventListener('click', function() {
+        // Implement test email functionality
+        alert('{{ _("Test email functionality not implemented yet") }}');
+    });
+});
+</script>
+{% endblock %}

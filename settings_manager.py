@@ -102,36 +102,6 @@ class SettingsManager:
             }
         
         return result
-    
-    def delete_setting(self, category: str, key: str) -> bool:
-        """Delete a setting"""
-        try:
-            setting = ApplicationSetting.query.filter_by(
-                tenant_id=self.tenant_id,
-                category=category,
-                key=key
-            ).first()
-            
-            if setting:
-                db.session.delete(setting)
-                db.session.commit()
-                
-                # Clear from cache
-                cache_key = f"{category}.{key}"
-                self._cache.pop(cache_key, None)
-                
-                return True
-            
-            return False
-            
-        except Exception as e:
-            db.session.rollback()
-            current_app.logger.error(f"Error deleting {category}.{key}: {e}")
-            return False
-    
-    def clear_cache(self):
-        """Clear the settings cache"""
-        self._cache.clear()
 
 
 class RBACManager:
@@ -175,22 +145,6 @@ class RBACManager:
             db.session.rollback()
             current_app.logger.error(f"Error setting permission {role}.{resource}.{permission}: {e}")
             return False
-    
-    def has_permission(self, role: str, resource: str, permission: str) -> bool:
-        """Check if role has permission for resource"""
-        # Superadmin always has all permissions
-        if role == 'superadmin':
-            return True
-        
-        perm = RolePermission.query.filter_by(
-            tenant_id=self.tenant_id,
-            role=role,
-            resource=resource,
-            permission=permission,
-            granted=True
-        ).first()
-        
-        return perm is not None
     
     def get_role_permissions(self, role: str) -> Dict[str, List[str]]:
         """Get all permissions for a role grouped by resource"""
@@ -277,7 +231,7 @@ def initialize_default_settings(tenant_id: int = 1):
     # Business settings
     settings_manager.set_setting('business', 'company_name', 'Filterdyn', 'string', 'Company name displayed throughout the application')
     settings_manager.set_setting('business', 'default_currency', 'EUR', 'string', 'Default currency for quotes and orders')
-    settings_manager.set_setting('business', 'default_tax_rate', 24.0, 'integer', 'Default tax rate percentage')
+    settings_manager.set_setting('business', 'default_tax_rate', 24, 'integer', 'Default tax rate percentage')
     settings_manager.set_setting('business', 'quote_validity_days', 30, 'integer', 'Default quote validity in days')
     settings_manager.set_setting('business', 'order_delivery_days', 15, 'integer', 'Default delivery time in days')
     

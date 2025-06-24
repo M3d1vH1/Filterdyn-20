@@ -84,9 +84,11 @@ def create_app():
     # Register blueprints
     from routes import main_bp
     from auth import auth_bp
+    from routes_settings import settings_bp
     
     app.register_blueprint(main_bp)
     app.register_blueprint(auth_bp)
+    app.register_blueprint(settings_bp)
     
     # Register custom template filters
     from template_filters import register_filters
