@@ -725,7 +725,16 @@ document.addEventListener('DOMContentLoaded', function() {
     }
     
     // Make users data available to the function
-    const users = {{ users|tojson }};
+    const users = [
+        {% for user in users %}
+        {
+            id: {{ user.id }},
+            username: "{{ user.username }}",
+            first_name: "{{ user.first_name or '' }}",
+            full_name: "{{ user.full_name }}"
+        }{% if not loop.last %},{% endif %}
+        {% endfor %}
+    ];
     
     // Compact view toggle
     const toggleCompactBtn = document.getElementById('toggle-compact');
