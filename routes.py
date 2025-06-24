@@ -1084,8 +1084,15 @@ def gmail_inbox():
         return redirect(url_for('main.dashboard'))
     
     # Check if Gmail is connected
-    if session.get('google_connected'):
-        return render_template('ai_assistant/gmail_inbox.html')
+    from models import GmailAccount
+    account = GmailAccount.query.filter_by(
+        user_id=current_user.id,
+        tenant_id=current_user.tenant_id,
+        sync_enabled=True
+    ).first()
+    
+    if account:
+        return redirect(url_for('gmail.inbox'))
     else:
         return render_template('ai_assistant/gmail_setup.html')
 

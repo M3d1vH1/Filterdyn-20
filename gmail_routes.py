@@ -137,26 +137,28 @@ def inbox():
         flash(f'Error loading inbox: {str(e)}', 'error')
         return redirect(url_for('main.ai_assistant'))
 
-@gmail_bp.route('/thread/<int:thread_id>')
+@gmail_bp.route('/thread/<string:thread_id>')
 @login_required
 def view_thread(thread_id):
-    """View email thread"""
+    """View email thread (simplified)"""
     account = GmailService.get_user_account(current_user.id, current_user.tenant_id)
     if not account:
         flash(_('No Gmail account connected'), 'error')
         return redirect(url_for('gmail.inbox'))
     
-    thread = EmailThread.query.filter_by(
-        id=thread_id,
-        gmail_account_id=account.id
-    ).first_or_404()
+    # Get messages in this thread
+    messages = GmailMessage.query.filter_by(
+        user_id=current_user.id,
+        tenant_id=current_user.tenant_id,
+        thread_id=thread_id
+    ).order_by(GmailMessage.sent_at).all()
     
-    messages = EmailMessage.query.filter_by(thread_id=thread.id).order_by(EmailMessage.sent_at).all()
+    if not messages:
+        flash(_('Thread not found'), 'error')
+        return redirect(url_for('gmail.inbox'))
     
-    # Mark as read
-    if not thread.is_read:
-        thread.is_read = True
-        db.session.commit()
+    # Use first message as thread representative
+    thread = messages[0]
     
     return render_template('gmail/thread.html', thread=thread, messages=messages)
 
@@ -169,12 +171,13 @@ def view_message(message_id):
         flash(_('No Gmail account connected'), 'error')
         return redirect(url_for('gmail.inbox'))
     
-    message = EmailMessage.query.join(EmailThread).filter(
-        EmailMessage.id == message_id,
-        EmailThread.gmail_account_id == account.id
+    message = GmailMessage.query.filter_by(
+        id=message_id,
+        user_id=current_user.id,
+        tenant_id=current_user.tenant_id
     ).first_or_404()
     
-    attachments = EmailAttachment.query.filter_by(message_id=message.id).all()
+    attachments = GmailAttachment.query.filter_by(gmail_message_id=message.id).all()
     
     return render_template('gmail/message.html', message=message, attachments=attachments)
 

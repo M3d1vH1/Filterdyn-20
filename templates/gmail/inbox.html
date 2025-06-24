@@ -55,41 +55,37 @@
     <div class="card shadow">
         <div class="card-header">
             <h5 class="mb-0">
-                {{ _('Email Threads') }}
-                <span class="badge bg-secondary">{{ threads.total }}</span>
+                {{ _('Gmail Messages') }}
+                <span class="badge bg-secondary">{{ messages.total }}</span>
             </h5>
         </div>
         <div class="list-group list-group-flush gmail-inbox-list">
-            {% for thread in threads.items %}
-            <a href="{{ url_for('gmail.view_thread', thread_id=thread.id) }}" 
+            {% for message in messages.items %}
+            <a href="{{ url_for('gmail.view_message', message_id=message.id) }}" 
                class="list-group-item list-group-item-action d-flex justify-content-between align-items-center py-3
-                      {% if not thread.is_read %}fw-bold{% endif %}">
+                      {% if not message.is_read %}fw-bold{% endif %}">
                 <div class="d-flex flex-column flex-md-row align-items-start align-items-md-center w-100">
                     <div class="me-3 mb-2 mb-md-0" style="min-width: 200px;">
-                        {% set latest_message = thread.messages[-1] if thread.messages else None %}
-                        <strong>{{ latest_message.sender_name or latest_message.sender_email if latest_message else _('Unknown') }}</strong>
-                        {% if thread.message_count > 1 %}
-                            <span class="badge bg-light text-dark ms-1">{{ thread.message_count }}</span>
-                        {% endif %}
+                        <strong>{{ message.sender or _('Unknown') }}</strong>
                     </div>
                     <div class="flex-grow-1 me-3">
-                        <div class="fw-bold mb-1">{{ thread.subject or _('(No Subject)') }}</div>
-                        {% if latest_message and latest_message.snippet %}
-                            <div class="text-muted small">{{ latest_message.snippet|truncate(100) }}</div>
+                        <div class="fw-bold mb-1">{{ message.subject or _('(No Subject)') }}</div>
+                        {% if message.snippet %}
+                            <div class="text-muted small">{{ message.snippet|truncate(100) }}</div>
                         {% endif %}
                     </div>
                     <div class="d-flex align-items-center">
-                        {% if thread.has_attachments %}
+                        {% if message.has_attachments %}
                             <i data-feather="paperclip" class="me-2 text-muted"></i>
                         {% endif %}
-                        {% if thread.is_starred %}
+                        {% if message.is_starred %}
                             <i data-feather="star" class="me-2 text-warning"></i>
                         {% endif %}
                         <div class="text-end">
                             <div class="small text-muted">
-                                {{ thread.last_message_at|safe_datetime_format if thread.last_message_at else '' }}
+                                {{ message.received_at|safe_datetime_format if message.received_at else '' }}
                             </div>
-                            {% if not thread.is_read %}
+                            {% if not message.is_read %}
                                 <span class="badge bg-primary">{{ _('New') }}</span>
                             {% endif %}
                         </div>
@@ -116,21 +112,21 @@
         </div>
         
         <!-- Pagination -->
-        {% if threads.pages > 1 %}
+        {% if messages.pages > 1 %}
         <div class="card-footer">
             <nav aria-label="Email pagination">
                 <ul class="pagination pagination-sm justify-content-center mb-0">
-                    {% if threads.has_prev %}
+                    {% if messages.has_prev %}
                         <li class="page-item">
-                            <a class="page-link" href="{{ url_for('gmail.inbox', page=threads.prev_num, q=search_query) }}">
+                            <a class="page-link" href="{{ url_for('gmail.inbox', page=messages.prev_num, q=search_query) }}">
                                 <i data-feather="chevron-left"></i>
                             </a>
                         </li>
                     {% endif %}
                     
-                    {% for page_num in threads.iter_pages() %}
+                    {% for page_num in messages.iter_pages() %}
                         {% if page_num %}
-                            {% if page_num != threads.page %}
+                            {% if page_num != messages.page %}
                                 <li class="page-item">
                                     <a class="page-link" href="{{ url_for('gmail.inbox', page=page_num, q=search_query) }}">{{ page_num }}</a>
                                 </li>
@@ -146,9 +142,9 @@
                         {% endif %}
                     {% endfor %}
                     
-                    {% if threads.has_next %}
+                    {% if messages.has_next %}
                         <li class="page-item">
-                            <a class="page-link" href="{{ url_for('gmail.inbox', page=threads.next_num, q=search_query) }}">
+                            <a class="page-link" href="{{ url_for('gmail.inbox', page=messages.next_num, q=search_query) }}">
                                 <i data-feather="chevron-right"></i>
                             </a>
                         </li>

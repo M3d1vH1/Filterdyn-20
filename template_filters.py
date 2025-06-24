@@ -62,4 +62,5 @@ def register_filters(app):
     app.jinja_env.filters['safe_datetime_format'] = safe_datetime_format
     app.jinja_env.filters['datetime_input'] = datetime_input
     app.jinja_env.filters['date_input'] = date_input
+    app.jinja_env.filters['from_json'] = from_json
     app.jinja_env.globals['user_timezone'] = user_timezone
