@@ -55,6 +55,15 @@ def user_timezone():
     """
     return get_user_timezone()
 
+def from_json(value):
+    """Convert JSON string to Python object"""
+    try:
+        if isinstance(value, str):
+            return json.loads(value)
+        return value or []
+    except (json.JSONDecodeError, TypeError):
+        return []
+
 def register_filters(app):
     """Register all custom filters with the Flask app."""
     app.jinja_env.filters['safe_strftime'] = safe_strftime

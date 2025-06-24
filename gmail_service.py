@@ -311,8 +311,6 @@ class GmailService:
                         # Log attachment info for now
                         current_app.logger.info(f"Found attachment: {part['filename']}")
                         
-                        db.session.add(email_attachment)
-                        
                     except Exception as e:
                         current_app.logger.error(f"Error storing attachment: {str(e)}")
                 
