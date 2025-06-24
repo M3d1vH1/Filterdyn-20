@@ -62,14 +62,13 @@
 
 .kanban-task {
     background: white;
-    border-radius: 4px;
+    border-radius: 6px;
     padding: 0.5rem;
     margin-bottom: 0.5rem;
     box-shadow: 0 1px 3px rgba(0,0,0,0.1);
     cursor: move;
     transition: all 0.2s ease;
-    border-left: 3px solid #dee2e6;
-    border: 1px solid #e9ecef;
+    border: 3px solid #dee2e6;
     font-size: 0.85rem;
 }
 
@@ -84,20 +83,20 @@
 }
 
 .kanban-task.priority-urgent { 
-    border-left-color: #dc3545; 
-    border-left-width: 4px;
+    border: 5px solid #dc3545;
+    border-radius: 6px;
 }
 .kanban-task.priority-high { 
-    border-left-color: #fd7e14; 
-    border-left-width: 4px;
+    border: 5px solid #fd7e14;
+    border-radius: 6px;
 }
 .kanban-task.priority-medium { 
-    border-left-color: #0d6efd; 
-    border-left-width: 3px;
+    border: 5px solid #0d6efd;
+    border-radius: 6px;
 }
 .kanban-task.priority-low { 
-    border-left-color: #6c757d; 
-    border-left-width: 2px;
+    border: 5px solid #6c757d;
+    border-radius: 6px;
 }
 
 .task-title {
@@ -148,23 +147,23 @@
 }
 
 .priority-badge.priority-urgent {
-    color: #dc3545 !important;
-    border-color: #dc3545 !important;
+    color: #495057 !important;
+    border-color: #495057 !important;
 }
 
 .priority-badge.priority-high {
-    color: #fd7e14 !important;
-    border-color: #fd7e14 !important;
+    color: #495057 !important;
+    border-color: #495057 !important;
 }
 
 .priority-badge.priority-medium {
-    color: #0d6efd !important;
-    border-color: #0d6efd !important;
+    color: #495057 !important;
+    border-color: #495057 !important;
 }
 
 .priority-badge.priority-low {
-    color: #6c757d !important;
-    border-color: #6c757d !important;
+    color: #495057 !important;
+    border-color: #495057 !important;
 }
 
 .task-due-date {
@@ -198,8 +197,9 @@
 }
 
 .postpone-indicator {
-    background: #ffc107;
-    color: #000;
+    background: #fff3cd;
+    color: #856404;
+    border: 1px solid #ffeaa7;
     padding: 0.1rem 0.25rem;
     border-radius: 0.25rem;
     font-size: 0.55rem;
@@ -726,7 +726,7 @@
             <div class="quick-notes-panel">
                 <div class="notes-header">
                     <h6 class="mb-0">
-                        <i data-feather="sticky-note" class="me-2"></i>{{ _('Quick Notes') }}
+                        <i data-feather="file-text" class="me-2"></i>{{ _('Quick Notes') }}
                     </h6>
                     <button class="btn btn-sm btn-outline-primary" id="add-note-btn">
                         <i data-feather="plus" style="width: 12px; height: 12px;"></i>
