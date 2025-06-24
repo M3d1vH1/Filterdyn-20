@@ -1,0 +1,164 @@
+{% extends "base.html" %}
+{% block title %}{{ _('UI Settings') }}{% endblock %}
+
+{% block content %}
+<div class="container-fluid">
+    <div class="row mb-4">
+        <div class="col">
+            <nav aria-label="breadcrumb">
+                <ol class="breadcrumb">
+                    <li class="breadcrumb-item"><a href="{{ url_for('settings.index') }}">{{ _('Settings') }}</a></li>
+                    <li class="breadcrumb-item active">{{ _('UI Settings') }}</li>
+                </ol>
+            </nav>
+            <h2><i data-feather="monitor"></i> {{ _('User Interface Settings') }}</h2>
+            <p class="text-muted">{{ _('Configure theme, language, and display preferences') }}</p>
+        </div>
+    </div>
+
+    <div class="row">
+        <div class="col-lg-8">
+            <div class="card">
+                <div class="card-header">
+                    <h5><i data-feather="edit-2"></i> {{ _('Configuration') }}</h5>
+                </div>
+                <div class="card-body">
+                    <form method="POST">
+                        {{ form.hidden_tag() }}
+                        
+                        <div class="row">
+                            <div class="col-md-6">
+                                <div class="mb-3">
+                                    {{ form.items_per_page.label(class="form-label") }}
+                                    {{ form.items_per_page(class="form-control") }}
+                                    {% for error in form.items_per_page.errors %}
+                                        <div class="text-danger">{{ error }}</div>
+                                    {% endfor %}
+                                </div>
+                            </div>
+                            <div class="col-md-6">
+                                <div class="mb-3">
+                                    {{ form.default_language.label(class="form-label") }}
+                                    {{ form.default_language(class="form-select") }}
+                                    {% for error in form.default_language.errors %}
+                                        <div class="text-danger">{{ error }}</div>
+                                    {% endfor %}
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="row">
+                            <div class="col-md-6">
+                                <div class="mb-3">
+                                    {{ form.theme_primary_color.label(class="form-label") }}
+                                    <div class="input-group">
+                                        {{ form.theme_primary_color(class="form-control", type="color") }}
+                                        <input type="text" class="form-control" value="{{ form.theme_primary_color.data or '#1ba3a3' }}" readonly>
+                                    </div>
+                                    {% for error in form.theme_primary_color.errors %}
+                                        <div class="text-danger">{{ error }}</div>
+                                    {% endfor %}
+                                </div>
+                            </div>
+                            <div class="col-md-6">
+                                <div class="mb-3">
+                                    {{ form.theme_secondary_color.label(class="form-label") }}
+                                    <div class="input-group">
+                                        {{ form.theme_secondary_color(class="form-control", type="color") }}
+                                        <input type="text" class="form-control" value="{{ form.theme_secondary_color.data or '#ffffff' }}" readonly>
+                                    </div>
+                                    {% for error in form.theme_secondary_color.errors %}
+                                        <div class="text-danger">{{ error }}</div>
+                                    {% endfor %}
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="mb-3">
+                            <div class="form-check">
+                                {{ form.enable_dark_mode(class="form-check-input") }}
+                                {{ form.enable_dark_mode.label(class="form-check-label") }}
+                            </div>
+                            {% for error in form.enable_dark_mode.errors %}
+                                <div class="text-danger">{{ error }}</div>
+                            {% endfor %}
+                        </div>
+
+                        <div class="d-flex gap-2">
+                            <button type="submit" class="btn btn-primary">
+                                <i data-feather="save"></i> {{ _('Save Settings') }}
+                            </button>
+                            <a href="{{ url_for('settings.index') }}" class="btn btn-secondary">
+                                <i data-feather="arrow-left"></i> {{ _('Back') }}
+                            </a>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+
+        <div class="col-lg-4">
+            <div class="card">
+                <div class="card-header">
+                    <h6><i data-feather="eye"></i> {{ _('Preview') }}</h6>
+                </div>
+                <div class="card-body">
+                    <div class="p-3 border rounded" style="background-color: {{ form.theme_secondary_color.data or '#ffffff' }}; border-color: {{ form.theme_primary_color.data or '#1ba3a3' }};">
+                        <h6 style="color: {{ form.theme_primary_color.data or '#1ba3a3' }};">{{ _('Sample Header') }}</h6>
+                        <p class="mb-2">{{ _('This is how your theme colors will appear in the interface.') }}</p>
+                        <button class="btn btn-sm" style="background-color: {{ form.theme_primary_color.data or '#1ba3a3' }}; color: white;">{{ _('Sample Button') }}</button>
+                    </div>
+                </div>
+            </div>
+
+            <div class="card mt-3">
+                <div class="card-header">
+                    <h6><i data-feather="info"></i> {{ _('Help') }}</h6>
+                </div>
+                <div class="card-body">
+                    <h6>{{ _('Items Per Page') }}</h6>
+                    <p class="small text-muted">{{ _('Number of records displayed in table views') }}</p>
+                    
+                    <h6>{{ _('Default Language') }}</h6>
+                    <p class="small text-muted">{{ _('Language shown to new users and in system messages') }}</p>
+                    
+                    <h6>{{ _('Theme Colors') }}</h6>
+                    <p class="small text-muted">{{ _('Primary color for buttons and highlights, secondary for backgrounds') }}</p>
+                    
+                    <h6>{{ _('Dark Mode') }}</h6>
+                    <p class="small text-muted">{{ _('Enable dark theme for better visibility in low light') }}</p>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+// Update color preview when color picker changes
+document.addEventListener('DOMContentLoaded', function() {
+    const primaryColorPicker = document.querySelector('input[name="theme_primary_color"]');
+    const secondaryColorPicker = document.querySelector('input[name="theme_secondary_color"]');
+    
+    function updatePreview() {
+        const primaryColor = primaryColorPicker.value;
+        const secondaryColor = secondaryColorPicker.value;
+        
+        const preview = document.querySelector('.card-body .border');
+        const header = preview.querySelector('h6');
+        const button = preview.querySelector('.btn');
+        
+        preview.style.backgroundColor = secondaryColor;
+        preview.style.borderColor = primaryColor;
+        header.style.color = primaryColor;
+        button.style.backgroundColor = primaryColor;
+        
+        // Update text inputs
+        primaryColorPicker.nextElementSibling.value = primaryColor;
+        secondaryColorPicker.nextElementSibling.value = secondaryColor;
+    }
+    
+    primaryColorPicker.addEventListener('input', updatePreview);
+    secondaryColorPicker.addEventListener('input', updatePreview);
+});
+</script>
+{% endblock %}
