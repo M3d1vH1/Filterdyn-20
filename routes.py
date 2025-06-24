@@ -1062,8 +1062,8 @@ def update_task_status():
 @login_required
 def ai_assistant():
     """AI Assistant Dashboard"""
-    if current_user.role not in ['admin', 'superadmin']:
-        flash(_('Access denied'), 'error')
+    if current_user.role not in ['admin', 'superadmin', 'manager']:
+        flash(_('Access denied. AI Assistant requires admin or manager permissions.'), 'error')
         return redirect(url_for('main.dashboard'))
     
     stats = {
@@ -1079,8 +1079,8 @@ def ai_assistant():
 @login_required
 def gmail_inbox():
     """Gmail Inbox Integration"""
-    if current_user.role not in ['admin', 'superadmin']:
-        flash(_('Access denied'), 'error')
+    if current_user.role not in ['admin', 'superadmin', 'manager']:
+        flash(_('Access denied. Gmail integration requires admin or manager permissions.'), 'error')
         return redirect(url_for('main.dashboard'))
     
     return render_template('ai_assistant/gmail_setup.html')
