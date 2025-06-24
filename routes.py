@@ -618,15 +618,8 @@ def tasks_kanban(date=None):
     # Get users for assignment
     users = User.query.filter_by(tenant_id=current_user.tenant_id, is_active=True).all()
     
-    # Create mock daily board for template compatibility
-    class MockDailyBoard:
-        def __init__(self):
-            self.total_tasks = sum(len(tasks) for tasks in kanban_data.values())
-            self.completed_tasks = len(kanban_data['completed'])
-            self.carried_forward = 0
-            self.completion_rate = round((self.completed_tasks / max(self.total_tasks, 1)) * 100, 1)
-    
-    daily_board = MockDailyBoard()
+    # Get or create daily board and update metrics
+    daily_board = _update_daily_board_metrics(current_user.tenant_id, target_date)
     
     # Calculate navigation dates
     prev_date = target_date - timedelta(days=1)
@@ -700,6 +693,30 @@ def kanban_quick_add():
     db.session.commit()
     
     return jsonify({'success': True, 'task_id': task.id})
+
+def _update_daily_board_metrics(tenant_id, target_date):
+    """Update daily board metrics based on current tasks"""
+    from datetime import datetime
+    
+    # Get or create board for the date
+    daily_board = DailyBoard.get_or_create_for_date(tenant_id, target_date)
+    
+    # Count tasks for this date
+    tasks = Task.query.filter_by(tenant_id=tenant_id).filter(
+        # Use created_at date as fallback if board_date doesn't exist
+        db.func.date(Task.created_at) == target_date
+    ).all()
+    
+    # Calculate metrics
+    total_tasks = len(tasks)
+    completed_tasks = len([t for t in tasks if t.status == 'completed'])
+    
+    # Update board
+    daily_board.total_tasks = total_tasks
+    daily_board.completed_tasks = completed_tasks
+    
+    db.session.add(daily_board)
+    return daily_board
 
 
 @main_bp.route('/tasks/update_status', methods=['POST'])
