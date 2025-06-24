@@ -291,16 +291,39 @@ function formatDate(date) {
 // Initialize Feather icons when content is loaded
 function initializeFeatherIcons() {
     if (typeof feather !== 'undefined') {
-        feather.replace();
+        try {
+            feather.replace();
+        } catch (error) {
+            console.warn('Feather icons initialization failed:', error);
+        }
     }
 }
 
 // Call after DOM content loaded
 document.addEventListener('DOMContentLoaded', initializeFeatherIcons);
 
-// Also call after AJAX content updates
+// Also call after AJAX content updates (debounced)
+let featherTimeout;
 function refreshFeatherIcons() {
-    setTimeout(initializeFeatherIcons, 100);
+    clearTimeout(featherTimeout);
+    featherTimeout = setTimeout(initializeFeatherIcons, 100);
+}
+
+// AI Assistant Widget Functions
+function toggleAIChat() {
+    const chatWindow = document.getElementById('ai-chat-window');
+    const toggle = document.getElementById('ai-chat-toggle');
+    const notification = document.getElementById('ai-notification');
+    
+    if (chatWindow && chatWindow.classList.contains('show')) {
+        chatWindow.classList.remove('show');
+        toggle.classList.remove('active');
+        if (notification) notification.style.display = 'none';
+    } else if (chatWindow) {
+        chatWindow.classList.add('show');
+        toggle.classList.add('active');
+        if (notification) notification.style.display = 'none';
+    }
 }
 
 // Export functions for use in templates
@@ -308,5 +331,6 @@ window.FilterdynApp = {
     calculateLineTotal: calculateLineTotal,
     formatCurrency: formatCurrency,
     formatDate: formatDate,
-    refreshFeatherIcons: refreshFeatherIcons
+    refreshFeatherIcons: refreshFeatherIcons,
+    toggleAIChat: toggleAIChat
 };

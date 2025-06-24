@@ -557,8 +557,8 @@ document.addEventListener('DOMContentLoaded', function() {
         `;
         
         document.body.appendChild(alert);
-        if (typeof feather !== 'undefined') {
-            feather.replace();
+        if (typeof feather !== 'undefined' && window.FilterdynApp) {
+            window.FilterdynApp.refreshFeatherIcons();
         }
         
         setTimeout(() => {

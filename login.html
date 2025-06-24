@@ -109,35 +109,12 @@
     
     <!-- Initialize Feather icons -->
     <script>
-        feather.replace();
-        
-        // AI Assistant Widget Functions
-        function toggleAIChat() {
-            const chatWindow = document.getElementById('ai-chat-window');
-            const toggle = document.getElementById('ai-chat-toggle');
-            const notification = document.getElementById('ai-notification');
-            
-            if (chatWindow && chatWindow.classList.contains('show')) {
-                chatWindow.classList.remove('show');
-                toggle.classList.remove('active');
-                if (notification) notification.style.display = 'none';
-            } else if (chatWindow) {
-                chatWindow.classList.add('show');
-                toggle.classList.add('active');
-                if (notification) notification.style.display = 'none';
-                
-                // Re-initialize feather icons in the chat window
+        // Initialize once on page load
+        document.addEventListener('DOMContentLoaded', function() {
+            if (typeof feather !== 'undefined') {
                 feather.replace();
             }
-        }
-
-        // Auto-show notification after page load
-        setTimeout(() => {
-            const notification = document.getElementById('ai-notification');
-            if (notification) {
-                notification.style.display = 'flex';
-            }
-        }, 3000);
+        });
     </script>
 </body>
 </html>

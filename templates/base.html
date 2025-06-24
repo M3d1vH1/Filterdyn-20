@@ -217,7 +217,7 @@
                 </div>
             </div>
         </div>
-        <button id="ai-chat-toggle" class="ai-chat-toggle" onclick="toggleAIChat()">
+        <button id="ai-chat-toggle" class="ai-chat-toggle" onclick="window.FilterdynApp.toggleAIChat()">
             <i data-feather="cpu"></i>
             <span class="ai-notification-badge" id="ai-notification">1</span>
         </button>
@@ -233,37 +233,17 @@
     <!-- Additional JS -->
     {% block js %}{% endblock %}
     
-    <!-- Initialize Feather icons -->
+    <!-- Initialize page-specific features -->
     <script>
-        feather.replace();
-        
-        // AI Assistant Widget Functions
-        function toggleAIChat() {
-            const chatWindow = document.getElementById('ai-chat-window');
-            const toggle = document.getElementById('ai-chat-toggle');
-            const notification = document.getElementById('ai-notification');
-            
-            if (chatWindow && chatWindow.classList.contains('show')) {
-                chatWindow.classList.remove('show');
-                toggle.classList.remove('active');
-                if (notification) notification.style.display = 'none';
-            } else if (chatWindow) {
-                chatWindow.classList.add('show');
-                toggle.classList.add('active');
-                if (notification) notification.style.display = 'none';
-                
-                // Re-initialize feather icons in the chat window
-                feather.replace();
-            }
-        }
-
-        // Auto-show notification after page load
-        setTimeout(() => {
-            const notification = document.getElementById('ai-notification');
-            if (notification) {
-                notification.style.display = 'flex';
-            }
-        }, 3000);
+        document.addEventListener('DOMContentLoaded', function() {
+            // Auto-show AI notification after page load
+            setTimeout(() => {
+                const notification = document.getElementById('ai-notification');
+                if (notification) {
+                    notification.style.display = 'flex';
+                }
+            }, 3000);
+        });
     </script>
 </body>
 </html>
