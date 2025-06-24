@@ -47,8 +47,30 @@ class AIDictationManager extends DictationManager {
                 this.currentField.dispatchEvent(new Event('input', { bubbles: true }));
                 this.showSuccess('Text inserted successfully');
             } else {
-                // AI task parsing
-                await this.parseWithAI(transcript);
+                // Check if we're on a task creation or form page
+                const isTaskPage = window.location.pathname.includes('/tasks/create') || 
+                                 document.getElementById('title') || 
+                                 document.getElementById('description');
+                
+                if (isTaskPage) {
+                    // AI task parsing for task creation pages
+                    await this.parseWithAI(transcript);
+                } else {
+                    // For other pages, try to find the most likely input field
+                    const possibleFields = document.querySelectorAll('input[type="text"], input[type="search"], textarea');
+                    if (possibleFields.length > 0) {
+                        // Use the first visible input field
+                        for (let field of possibleFields) {
+                            if (field.offsetParent !== null && !field.disabled && !field.readonly) {
+                                field.value = transcript;
+                                field.dispatchEvent(new Event('input', { bubbles: true }));
+                                this.showSuccess('Text inserted into ' + (field.placeholder || 'input field'));
+                                return;
+                            }
+                        }
+                    }
+                    this.showError('No suitable input field found. Please click on a text field first, or use this on a task creation page.');
+                }
             }
         } catch (error) {
             console.error('AI processing error:', error);
@@ -213,10 +235,17 @@ Respond only with valid JSON.`;
         this.isListening = true;
         this.updateButtonState();
         
-        // Show enhanced status
+        // Show enhanced status with context
         const status = document.getElementById('dictation-status');
         if (status) {
-            status.innerHTML = `<i data-feather="mic" style="width: 14px; height: 14px;"></i> Listening... (Gemini AI - ${lang === 'el-GR' ? 'Ελληνικά' : 'English'})`;
+            const isTaskPage = window.location.pathname.includes('/tasks/create') || 
+                             document.getElementById('title') || 
+                             document.getElementById('description');
+            
+            const context = isTaskPage ? 'Smart Task Mode' : 
+                          this.currentField ? 'Field Input' : 'Auto-detect Mode';
+            
+            status.innerHTML = `<i data-feather="mic" style="width: 14px; height: 14px;"></i> Listening... (${context} - ${lang === 'el-GR' ? 'Ελληνικά' : 'English'})`;
             status.style.display = 'block';
         }
 

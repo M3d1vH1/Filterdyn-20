@@ -252,11 +252,29 @@ class DictationManager {
             this.currentField.dispatchEvent(new Event('input', { bubbles: true }));
             this.showSuccess('Text inserted successfully');
         } else {
-            // Try to parse as task data if on task creation page
-            if (window.location.pathname.includes('/tasks/create')) {
+            // Check if we're on a task creation page or can find suitable fields
+            const isTaskPage = window.location.pathname.includes('/tasks/create') || 
+                             document.getElementById('title') || 
+                             document.getElementById('description');
+            
+            if (isTaskPage) {
                 this.parseTaskDictation(transcript);
             } else {
-                this.showError('No text field selected. Click on a text field first.');
+                // Try to find a suitable input field automatically
+                const possibleFields = document.querySelectorAll('input[type="text"], input[type="search"], textarea');
+                if (possibleFields.length > 0) {
+                    // Use the first visible input field
+                    for (let field of possibleFields) {
+                        if (field.offsetParent !== null && !field.disabled && !field.readonly) {
+                            field.value = transcript;
+                            field.dispatchEvent(new Event('input', { bubbles: true }));
+                            this.showSuccess('Text inserted into ' + (field.placeholder || 'input field'));
+                            this.stopListening();
+                            return;
+                        }
+                    }
+                }
+                this.showError('No suitable input field found. Please click on a text field first, or use this on a task creation page.');
             }
         }
         
