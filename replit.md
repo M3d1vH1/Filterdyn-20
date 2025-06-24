@@ -137,7 +137,7 @@ User Request -> Tenant Verification -> Data Filtering by tenant_id -> Response D
 
 ## Changelog
 
-- June 24, 2025: **GLOBAL DICTATION SYSTEM** - Created floating dictation button on left side with comprehensive voice recognition for all forms, mobile-optimized with browser compatibility checks and error handling
+- June 24, 2025: **AI-ENHANCED DICTATION SYSTEM** - Created floating dictation button with Gemini AI integration supporting natural language processing in English and Greek, intelligent task extraction from conversational speech
 - June 24, 2025: **DATABASE QUICK NOTES** - Migrated quick notes from localStorage to database storage with proper tenant isolation and API endpoints for persistent data
 - June 24, 2025: **DAILY KANBAN BOARDS** - Implemented daily board system with automatic task carryover, enhanced UI with compact view, quick-add modal, task aging indicators, and date navigation
 - June 24, 2025: **AI ASSISTANT & KANBAN BOARD FIXES** - Successfully moved AI Assistant to floating bottom-right button with parallax effect and fixed kanban board interface with clean styling and working drag-and-drop functionality
