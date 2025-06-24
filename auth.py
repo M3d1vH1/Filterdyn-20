@@ -75,7 +75,6 @@ def google_login():
     return redirect(auth_url)
 
 @auth_bp.route('/google/callback')
-@login_required
 def google_callback():
     """Handle Google OAuth callback"""
     code = request.args.get('code')
