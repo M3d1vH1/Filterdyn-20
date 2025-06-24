@@ -139,8 +139,26 @@
     font-weight: 600;
     border-radius: 0.25rem !important;
     background: transparent !important;
+}
+
+.priority-badge.priority-urgent {
+    border: 1px solid #dc3545 !important;
+    color: #dc3545 !important;
+}
+
+.priority-badge.priority-high {
+    border: 1px solid #fd7e14 !important;
+    color: #fd7e14 !important;
+}
+
+.priority-badge.priority-medium {
+    border: 1px solid #0d6efd !important;
+    color: #0d6efd !important;
+}
+
+.priority-badge.priority-low {
     border: 1px solid #6c757d !important;
-    color: #495057 !important;
+    color: #6c757d !important;
 }
 
 .task-due-date {
@@ -174,9 +192,9 @@
 }
 
 .postpone-indicator {
-    background: #fff3cd;
+    background: transparent;
     color: #856404;
-    border: 1px solid #ffeaa7;
+    border: 1px solid #ffc107;
     padding: 0.1rem 0.25rem;
     border-radius: 0.25rem;
     font-size: 0.55rem;
@@ -216,8 +234,9 @@
 }
 
 .age-badge {
-    background: #6c757d;
-    color: white;
+    background: transparent;
+    color: #6c757d;
+    border: 1px solid #6c757d;
     padding: 0.05rem 0.25rem;
     border-radius: 0.6rem;
     font-size: 0.55rem;
