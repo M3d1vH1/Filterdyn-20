@@ -324,16 +324,11 @@ document.addEventListener('DOMContentLoaded', function() {
     });
     
     function updateTaskStatus(taskId, newStatus, taskElement, dropZone) {
-        const csrfToken = document.querySelector('meta[name=csrf-token]');
-        const headers = { 'Content-Type': 'application/json' };
-        
-        if (csrfToken) {
-            headers['X-CSRFToken'] = csrfToken.getAttribute('content');
-        }
-        
         fetch('/tasks/update_status', {
             method: 'POST',
-            headers: headers,
+            headers: {
+                'Content-Type': 'application/json'
+            },
             body: JSON.stringify({
                 task_id: taskId,
                 status: newStatus

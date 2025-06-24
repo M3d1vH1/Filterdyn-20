@@ -98,9 +98,12 @@ def create_app():
     @app.context_processor
     def inject_globals():
         from flask_login import current_user
+        from datetime import datetime
+        
         return {
             'current_user': current_user,
-            'current_locale': get_locale()
+            'current_locale': get_locale(),
+            'current_year': datetime.now().year
         }
     
     # Create tables
