@@ -126,12 +126,17 @@ def google_callback():
         session['google_email'] = user_info.get('email')
         session['google_connected'] = True
         
-        flash(f'Successfully connected Gmail account: {user_info.get("email")}', 'success')
-        return redirect(url_for('main.gmail_inbox'))
+        # Check if user is logged in, if not redirect to login with success message
+        from flask_login import current_user
+        if current_user.is_authenticated:
+            flash(f'Successfully connected Gmail account: {user_info.get("email")}', 'success')
+            return redirect(url_for('main.gmail_inbox'))
+        else:
+            flash(f'Gmail connected: {user_info.get("email")}. Please log in to continue.', 'success')
+            return redirect(url_for('auth.login'))
         
     except requests.exceptions.RequestException as e:
-        flash(f'Failed to connect Gmail: {str(e)}', 'error')
-        return redirect(url_for('main.ai_assistant'))
+        return f'Failed to connect Gmail: {str(e)}', 500
 
 @auth_bp.route('/google/disconnect')
 @login_required

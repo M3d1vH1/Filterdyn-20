@@ -15,8 +15,11 @@ class Config:
     
     # Flask-Login
     REMEMBER_COOKIE_DURATION = timedelta(days=30)
-    REMEMBER_COOKIE_SECURE = True
+    REMEMBER_COOKIE_SECURE = False  # Set to False for development
     REMEMBER_COOKIE_HTTPONLY = True
+    SESSION_COOKIE_SECURE = False  # Set to False for development
+    SESSION_COOKIE_HTTPONLY = True
+    PERMANENT_SESSION_LIFETIME = timedelta(hours=24)
     
     # Babel configuration
     LANGUAGES = {

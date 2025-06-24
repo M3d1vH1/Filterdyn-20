@@ -22,19 +22,9 @@ migrate = Migrate()
 def create_app():
     app = Flask(__name__)
     
-    # Configuration
-    app.secret_key = os.environ.get("SESSION_SECRET")
-    app.config["SQLALCHEMY_DATABASE_URI"] = os.environ.get("DATABASE_URL")
-    app.config["SQLALCHEMY_ENGINE_OPTIONS"] = {
-        "pool_recycle": 300,
-        "pool_pre_ping": True,
-    }
-    app.config["LANGUAGES"] = {
-        'en': 'English',
-        'el': 'Ελληνικά'
-    }
-    app.config["BABEL_DEFAULT_LOCALE"] = 'en'
-    app.config["BABEL_DEFAULT_TIMEZONE"] = 'Europe/Athens'
+    # Load configuration from config file
+    from config import Config
+    app.config.from_object(Config)
     
     # Proxy fix for production
     app.wsgi_app = ProxyFix(app.wsgi_app, x_proto=1, x_host=1)
