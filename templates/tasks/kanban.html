@@ -143,7 +143,28 @@
     padding: 0.15rem 0.4rem !important;
     font-weight: 600;
     border-radius: 0.25rem !important;
-    color: white !important;
+    background: transparent !important;
+    border: 1px solid currentColor !important;
+}
+
+.priority-badge.priority-urgent {
+    color: #dc3545 !important;
+    border-color: #dc3545 !important;
+}
+
+.priority-badge.priority-high {
+    color: #fd7e14 !important;
+    border-color: #fd7e14 !important;
+}
+
+.priority-badge.priority-medium {
+    color: #0d6efd !important;
+    border-color: #0d6efd !important;
+}
+
+.priority-badge.priority-low {
+    color: #6c757d !important;
+    border-color: #6c757d !important;
 }
 
 .task-due-date {
@@ -332,6 +353,83 @@
         max-width: 380px;
     }
 }
+
+/* Quick Notes Panel */
+.quick-notes-panel {
+    background: #f8f9fa;
+    border: 1px solid #dee2e6;
+    border-radius: 8px;
+    padding: 1rem;
+    height: 70vh;
+    overflow-y: auto;
+    position: sticky;
+    top: 1rem;
+}
+
+.notes-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 1rem;
+    padding-bottom: 0.5rem;
+    border-bottom: 1px solid #dee2e6;
+}
+
+.notes-content {
+    min-height: 200px;
+}
+
+.note-item {
+    background: white;
+    border: 1px solid #e9ecef;
+    border-radius: 4px;
+    padding: 0.75rem;
+    margin-bottom: 0.75rem;
+    position: relative;
+    box-shadow: 0 1px 3px rgba(0,0,0,0.1);
+}
+
+.note-item:hover {
+    box-shadow: 0 2px 6px rgba(0,0,0,0.15);
+}
+
+.note-text {
+    font-size: 0.85rem;
+    line-height: 1.4;
+    margin-bottom: 0.5rem;
+    white-space: pre-wrap;
+}
+
+.note-meta {
+    font-size: 0.7rem;
+    color: #6c757d;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+}
+
+.note-actions {
+    opacity: 0;
+    transition: opacity 0.2s;
+}
+
+.note-item:hover .note-actions {
+    opacity: 1;
+}
+
+.note-input {
+    border-top: 1px solid #dee2e6;
+    padding-top: 1rem;
+    margin-top: 1rem;
+}
+
+@media (max-width: 991px) {
+    .quick-notes-panel {
+        margin-top: 2rem;
+        height: auto;
+        position: relative;
+    }
+}
 </style>
 {% endblock %}
 
@@ -504,20 +602,22 @@
         </div>
     </div>
 
-    <div class="kanban-board">
-        {% set status_titles = {
-            'pending': _('To Do'),
-            'in_progress': _('In Progress'), 
-            'completed': _('Completed')
-        } %}
-        
-        {% set status_colors = {
-            'pending': '#6c757d',
-            'in_progress': '#007bff',
-            'completed': '#28a745'
-        } %}
+    <div class="row">
+        <div class="col-lg-9">
+            <div class="kanban-board">
+                {% set status_titles = {
+                    'pending': _('To Do'),
+                    'in_progress': _('In Progress'), 
+                    'completed': _('Completed')
+                } %}
+                
+                {% set status_colors = {
+                    'pending': '#6c757d',
+                    'in_progress': '#007bff',
+                    'completed': '#28a745'
+                } %}
 
-        {% for status in statuses %}
+                {% for status in statuses %}
         <div class="kanban-column">
             <div class="kanban-header">
                 <h5 class="kanban-column-title" style="color: {{ status_colors[status] }};">
@@ -564,7 +664,7 @@
                             {{ task.assignee.first_name or task.assignee.username }}
                         </div>
                         <div class="task-priority">
-                            <span class="priority-badge badge bg-{{ 'danger' if task.priority == 'urgent' else 'warning' if task.priority == 'high' else 'primary' if task.priority == 'medium' else 'secondary' }}">
+                            <span class="priority-badge priority-{{ task.priority }}">
                                 {{ task.priority[0].upper() }}
                             </span>
                         </div>
@@ -617,7 +717,41 @@
                 {% endif %}
             </div>
         </div>
-        {% endfor %}
+                {% endfor %}
+            </div>
+        </div>
+        
+        <!-- Quick Notes Panel -->
+        <div class="col-lg-3">
+            <div class="quick-notes-panel">
+                <div class="notes-header">
+                    <h6 class="mb-0">
+                        <i data-feather="sticky-note" class="me-2"></i>{{ _('Quick Notes') }}
+                    </h6>
+                    <button class="btn btn-sm btn-outline-primary" id="add-note-btn">
+                        <i data-feather="plus" style="width: 12px; height: 12px;"></i>
+                    </button>
+                </div>
+                
+                <div class="notes-content" id="notes-content">
+                    <div class="empty-notes text-center text-muted py-4">
+                        <i data-feather="edit-3" style="width: 24px; height: 24px; opacity: 0.5;"></i>
+                        <p class="mt-2 mb-0 small">{{ _('Click + to add notes') }}</p>
+                    </div>
+                </div>
+                
+                <div class="note-input" id="note-input" style="display: none;">
+                    <textarea class="form-control form-control-sm" 
+                              placeholder="{{ _('Enter your note...') }}" 
+                              rows="3" 
+                              id="note-text"></textarea>
+                    <div class="mt-2">
+                        <button class="btn btn-sm btn-primary" id="save-note-btn">{{ _('Save') }}</button>
+                        <button class="btn btn-sm btn-secondary" id="cancel-note-btn">{{ _('Cancel') }}</button>
+                    </div>
+                </div>
+            </div>
+        </div>
     </div>
 </div>
 {% endblock %}
@@ -837,7 +971,7 @@ document.addEventListener('DOMContentLoaded', function() {
                     ${userName}
                 </div>
                 <div class="task-priority">
-                    <span class="priority-badge badge bg-${taskData.priority === 'urgent' ? 'danger' : taskData.priority === 'high' ? 'warning' : taskData.priority === 'medium' ? 'primary' : 'secondary'}">
+                    <span class="priority-badge priority-${taskData.priority}">
                         ${taskData.priority[0].toUpperCase()}
                     </span>
                 </div>
@@ -1008,6 +1142,149 @@ document.addEventListener('DOMContentLoaded', function() {
             }
         }
     }
+    
+    // Quick Notes functionality
+    const addNoteBtn = document.getElementById('add-note-btn');
+    const noteInput = document.getElementById('note-input');
+    const noteText = document.getElementById('note-text');
+    const saveNoteBtn = document.getElementById('save-note-btn');
+    const cancelNoteBtn = document.getElementById('cancel-note-btn');
+    const notesContent = document.getElementById('notes-content');
+    
+    // Load existing notes
+    loadNotes();
+    
+    addNoteBtn.addEventListener('click', function() {
+        showNoteInput();
+    });
+    
+    cancelNoteBtn.addEventListener('click', function() {
+        hideNoteInput();
+    });
+    
+    saveNoteBtn.addEventListener('click', function() {
+        const text = noteText.value.trim();
+        if (text) {
+            saveNote(text);
+            noteText.value = '';
+            hideNoteInput();
+        }
+    });
+    
+    // Save on Enter (Ctrl+Enter for new line)
+    noteText.addEventListener('keydown', function(e) {
+        if (e.key === 'Enter' && !e.ctrlKey) {
+            e.preventDefault();
+            const text = this.value.trim();
+            if (text) {
+                saveNote(text);
+                this.value = '';
+                hideNoteInput();
+            }
+        }
+    });
+    
+    function showNoteInput() {
+        noteInput.style.display = 'block';
+        noteText.focus();
+    }
+    
+    function hideNoteInput() {
+        noteInput.style.display = 'none';
+        noteText.value = '';
+    }
+    
+    function saveNote(text) {
+        const notes = getStoredNotes();
+        const note = {
+            id: Date.now(),
+            text: text,
+            timestamp: new Date().toISOString(),
+            date: '{{ current_date.strftime('%Y-%m-%d') if current_date else '' }}'
+        };
+        
+        notes.unshift(note);
+        localStorage.setItem('kanban-notes', JSON.stringify(notes));
+        renderNotes();
+    }
+    
+    function getStoredNotes() {
+        try {
+            return JSON.parse(localStorage.getItem('kanban-notes') || '[]');
+        } catch {
+            return [];
+        }
+    }
+    
+    function deleteNote(noteId) {
+        const notes = getStoredNotes();
+        const filteredNotes = notes.filter(note => note.id !== noteId);
+        localStorage.setItem('kanban-notes', JSON.stringify(filteredNotes));
+        renderNotes();
+    }
+    
+    function loadNotes() {
+        renderNotes();
+    }
+    
+    function renderNotes() {
+        const notes = getStoredNotes();
+        
+        if (notes.length === 0) {
+            notesContent.innerHTML = `
+                <div class="empty-notes text-center text-muted py-4">
+                    <i data-feather="edit-3" style="width: 24px; height: 24px; opacity: 0.5;"></i>
+                    <p class="mt-2 mb-0 small">{{ _('Click + to add notes') }}</p>
+                </div>
+            `;
+        } else {
+            const notesHtml = notes.map(note => `
+                <div class="note-item">
+                    <div class="note-text">${escapeHtml(note.text)}</div>
+                    <div class="note-meta">
+                        <small>${formatNoteDate(note.timestamp)}</small>
+                        <div class="note-actions">
+                            <button class="btn btn-xs btn-outline-danger" onclick="deleteNote(${note.id})" title="{{ _('Delete Note') }}">
+                                <i data-feather="trash-2" style="width: 10px; height: 10px;"></i>
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            `).join('');
+            
+            notesContent.innerHTML = notesHtml;
+        }
+        
+        // Refresh feather icons
+        if (typeof feather !== 'undefined' && window.FilterdynApp) {
+            window.FilterdynApp.refreshFeatherIcons();
+        }
+    }
+    
+    function formatNoteDate(timestamp) {
+        const date = new Date(timestamp);
+        const now = new Date();
+        const diffMs = now - date;
+        const diffMins = Math.floor(diffMs / 60000);
+        const diffHours = Math.floor(diffMs / 3600000);
+        const diffDays = Math.floor(diffMs / 86400000);
+        
+        if (diffMins < 1) return '{{ _('Just now') }}';
+        if (diffMins < 60) return `${diffMins}m ago`;
+        if (diffHours < 24) return `${diffHours}h ago`;
+        if (diffDays < 7) return `${diffDays}d ago`;
+        
+        return date.toLocaleDateString();
+    }
+    
+    function escapeHtml(text) {
+        const div = document.createElement('div');
+        div.textContent = text;
+        return div.innerHTML;
+    }
+    
+    // Make deleteNote available globally
+    window.deleteNote = deleteNote;
 });
 </script>
 {% endblock %}
