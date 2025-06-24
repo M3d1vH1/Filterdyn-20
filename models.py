@@ -299,6 +299,45 @@ class Task(db.Model):
             return check_overdue(self.due_date)
         return False
 
+class DailyBoard(db.Model):
+    __tablename__ = 'daily_boards'
+    
+    id = db.Column(db.Integer, primary_key=True)
+    tenant_id = db.Column(db.Integer, db.ForeignKey('tenants.id'), nullable=False)
+    board_date = db.Column(db.Date, nullable=False)
+    
+    # Daily metrics
+    total_tasks = db.Column(db.Integer, default=0)
+    completed_tasks = db.Column(db.Integer, default=0)
+    carried_forward = db.Column(db.Integer, default=0)
+    new_tasks = db.Column(db.Integer, default=0)
+    
+    # Board settings
+    is_archived = db.Column(db.Boolean, default=False)
+    daily_goal = db.Column(db.Integer)
+    notes = db.Column(db.Text)
+    
+    created_at = db.Column(db.DateTime, default=lambda: datetime.now(timezone.utc))
+    
+    __table_args__ = (db.UniqueConstraint('tenant_id', 'board_date', name='unique_tenant_board_date'),)
+    
+    @property
+    def completion_rate(self):
+        """Calculate completion percentage"""
+        if self.total_tasks == 0:
+            return 0
+        return round((self.completed_tasks / self.total_tasks) * 100, 1)
+    
+    @classmethod
+    def get_or_create_for_date(cls, tenant_id, target_date):
+        """Get existing board or create new one for date"""
+        board = cls.query.filter_by(tenant_id=tenant_id, board_date=target_date).first()
+        if not board:
+            board = cls(tenant_id=tenant_id, board_date=target_date)
+            db.session.add(board)
+            db.session.commit()
+        return board
+
 class PDFTemplate(db.Model):
     __tablename__ = 'pdf_templates'
     

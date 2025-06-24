@@ -135,10 +135,93 @@
     border-radius: 6px;
 }
 
+/* Task styling improvements */
+.task-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: flex-start;
+    margin-bottom: 0.5rem;
+}
+
+.task-indicators {
+    display: flex;
+    gap: 0.25rem;
+    flex-shrink: 0;
+}
+
+.age-badge {
+    background: #6c757d;
+    color: white;
+    padding: 0.1rem 0.3rem;
+    border-radius: 0.75rem;
+    font-size: 0.6rem;
+    font-weight: 600;
+}
+
+.carried-badge {
+    background: #17a2b8;
+    color: white;
+    padding: 0.1rem 0.3rem;
+    border-radius: 0.75rem;
+    font-size: 0.6rem;
+}
+
+.kanban-task.age-aging {
+    border-left-color: #ffc107 !important;
+    box-shadow: 0 2px 4px rgba(255, 193, 7, 0.2);
+}
+
+.kanban-task.age-stale {
+    border-left-color: #dc3545 !important;
+    box-shadow: 0 2px 4px rgba(220, 53, 69, 0.2);
+}
+
 .priority-badge {
     font-size: 0.6rem;
-    padding: 0.2rem 0.4rem;
+    padding: 0.15rem 0.3rem;
     border-radius: 0.25rem;
+    font-weight: 600;
+}
+
+.customer-badge {
+    color: #6c757d;
+    opacity: 0.7;
+}
+
+.btn-xs {
+    padding: 0.15rem 0.3rem;
+    font-size: 0.7rem;
+}
+
+/* Compact view styles */
+.kanban-board.compact-view .kanban-task {
+    padding: 0.5rem;
+    margin-bottom: 0.5rem;
+}
+
+.kanban-board.compact-view .task-description {
+    display: none;
+}
+
+.kanban-board.compact-view .task-title {
+    font-size: 0.8rem;
+    margin-bottom: 0.25rem;
+}
+
+.kanban-board.compact-view .kanban-column {
+    min-width: 250px;
+}
+
+/* Quick add button floating */
+#quick-add-btn.floating {
+    position: fixed;
+    bottom: 20px;
+    right: 20px;
+    border-radius: 50%;
+    width: 60px;
+    height: 60px;
+    z-index: 1000;
+    box-shadow: 0 4px 12px rgba(0,0,0,0.3);
 }
 
 .empty-column {
@@ -160,22 +243,81 @@
 
 {% block content %}
 <div class="container-fluid">
+    <!-- Daily Board Header -->
     <div class="row mb-4">
         <div class="col">
-            <h2><i data-feather="columns"></i> {{ _('Kanban Board') }}</h2>
-            <p class="text-muted">{{ _('Drag and drop tasks to update their status') }}</p>
-        </div>
-        <div class="col-auto">
-            <div class="btn-group me-2" role="group">
-                <a href="{{ url_for('main.tasks') }}" class="btn btn-outline-secondary">
-                    <i data-feather="list"></i> {{ _('List View') }}
+            <div class="d-flex align-items-center mb-2">
+                <h2 class="me-3"><i data-feather="calendar"></i> {{ _('Daily Kanban') }}</h2>
+                <div class="btn-group me-3" role="group">
+                    <a href="{{ url_for('main.tasks_kanban', date=prev_date.strftime('%Y-%m-%d')) }}" 
+                       class="btn btn-outline-secondary btn-sm">
+                        <i data-feather="chevron-left"></i>
+                    </a>
+                    <button class="btn btn-outline-primary btn-sm" disabled>
+                        {% if is_today %}
+                            {{ _('Today') }} - {{ current_date.strftime('%Y-%m-%d') }}
+                        {% else %}
+                            {{ current_date.strftime('%Y-%m-%d') }}
+                        {% endif %}
+                    </button>
+                    {% if not is_today %}
+                    <a href="{{ url_for('main.tasks_kanban', date=next_date.strftime('%Y-%m-%d')) }}" 
+                       class="btn btn-outline-secondary btn-sm">
+                        <i data-feather="chevron-right"></i>
+                    </a>
+                    {% endif %}
+                </div>
+                {% if not is_today %}
+                <a href="{{ url_for('main.tasks_kanban') }}" class="btn btn-outline-info btn-sm me-3">
+                    <i data-feather="home"></i> {{ _('Today') }}
                 </a>
-                <a href="{{ url_for('main.tasks_kanban') }}" class="btn btn-outline-secondary active">
-                    <i data-feather="columns"></i> {{ _('Kanban Board') }}
-                </a>
+                {% endif %}
             </div>
-            <a href="{{ url_for('main.create_task') }}" class="btn btn-primary">
-                <i data-feather="plus"></i> {{ _('New Task') }}
+            
+            <!-- Daily Stats -->
+            <div class="row mb-3">
+                <div class="col-auto">
+                    <div class="d-flex gap-3">
+                        <span class="badge bg-primary fs-6">
+                            {{ _('Total') }}: {{ daily_board.total_tasks }}
+                        </span>
+                        <span class="badge bg-success fs-6">
+                            {{ _('Completed') }}: {{ daily_board.completed_tasks }}
+                        </span>
+                        {% if daily_board.carried_forward > 0 %}
+                        <span class="badge bg-warning fs-6">
+                            {{ _('Carried Forward') }}: {{ daily_board.carried_forward }}
+                        </span>
+                        {% endif %}
+                        <span class="badge bg-info fs-6">
+                            {{ _('Progress') }}: {{ daily_board.completion_rate }}%
+                        </span>
+                    </div>
+                </div>
+            </div>
+        </div>
+        
+        <div class="col-auto">
+            <!-- View Toggle -->
+            <div class="btn-group me-2" role="group">
+                <a href="{{ url_for('main.tasks') }}" class="btn btn-outline-secondary btn-sm">
+                    <i data-feather="list"></i> {{ _('List') }}
+                </a>
+                <button class="btn btn-secondary btn-sm active">
+                    <i data-feather="columns"></i> {{ _('Kanban') }}
+                </button>
+                <button class="btn btn-outline-secondary btn-sm" id="toggle-compact">
+                    <i data-feather="minimize-2"></i> {{ _('Compact') }}
+                </button>
+            </div>
+            
+            <!-- Quick Add -->
+            <button class="btn btn-primary btn-sm me-2" id="quick-add-btn">
+                <i data-feather="plus"></i> {{ _('Quick Add') }}
+            </button>
+            
+            <a href="{{ url_for('main.create_task') }}" class="btn btn-outline-primary btn-sm">
+                <i data-feather="plus-square"></i> {{ _('Full Form') }}
             </a>
         </div>
     </div>
@@ -208,25 +350,42 @@
             
             <div class="kanban-drop-zone" data-status="{{ status }}">
                 {% for task in kanban_data[status] %}
-                <div class="kanban-task priority-{{ task.priority }}" 
+                <div class="kanban-task priority-{{ task.priority }} age-{{ task.age_indicator }}" 
                      data-task-id="{{ task.id }}" 
+                     data-age="{{ task.days_open }}"
                      draggable="true">
-                    <div class="task-title">{{ task.title }}</div>
+                    
+                    <!-- Task Header -->
+                    <div class="task-header">
+                        <div class="task-title">{{ task.title }}</div>
+                        <div class="task-indicators">
+                            {% if task.days_open > 0 %}
+                            <span class="age-badge" title="{{ _('Days open') }}: {{ task.days_open }}">
+                                {{ task.days_open }}d
+                            </span>
+                            {% endif %}
+                            {% if task.carried_from_date %}
+                            <span class="carried-badge" title="{{ _('Carried from') }} {{ task.carried_from_date }}">
+                                <i data-feather="arrow-right" style="width: 10px; height: 10px;"></i>
+                            </span>
+                            {% endif %}
+                        </div>
+                    </div>
                     
                     {% if task.description %}
                     <div class="task-description">
-                        {{ task.description[:80] }}{% if task.description|length > 80 %}...{% endif %}
+                        {{ task.description[:60] }}{% if task.description|length > 60 %}...{% endif %}
                     </div>
                     {% endif %}
                     
                     <div class="task-meta">
                         <div class="task-assignee">
-                            <i data-feather="user" style="width: 12px; height: 12px;"></i>
+                            <i data-feather="user" style="width: 10px; height: 10px;"></i>
                             {{ task.assignee.first_name or task.assignee.username }}
                         </div>
-                        <div>
+                        <div class="task-priority">
                             <span class="priority-badge badge bg-{{ 'danger' if task.priority == 'urgent' else 'warning' if task.priority == 'high' else 'info' if task.priority == 'medium' else 'secondary' }}">
-                                {{ task.priority.upper() }}
+                                {{ task.priority[0].upper() }}
                             </span>
                         </div>
                     </div>
@@ -240,12 +399,12 @@
                     
                     <div class="task-actions">
                         <a href="{{ url_for('main.edit_task', id=task.id) }}" 
-                           class="btn btn-sm btn-outline-secondary">
-                            <i data-feather="edit-2" style="width: 12px; height: 12px;"></i>
+                           class="btn btn-xs btn-outline-secondary">
+                            <i data-feather="edit-2" style="width: 10px; height: 10px;"></i>
                         </a>
                         {% if task.customer %}
-                        <span class="badge bg-light text-dark" style="font-size: 0.6rem;">
-                            {{ task.customer.name }}
+                        <span class="customer-badge" title="{{ task.customer.name }}">
+                            <i data-feather="building" style="width: 10px; height: 10px;"></i>
                         </span>
                         {% endif %}
                     </div>

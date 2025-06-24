@@ -604,7 +604,63 @@ def tasks_kanban():
     # Get all users for assignment dropdown
     users = User.query.filter_by(tenant_id=current_user.tenant_id).all()
     
-    return render_template('tasks/kanban.html', kanban_data=kanban_data, users=users, statuses=statuses)
+def _ensure_daily_board_exists(tenant_id, target_date):
+    """Ensure daily board exists and carry forward open tasks if needed"""
+    from datetime import datetime, timedelta
+    
+    # Get or create board for target date
+    daily_board = DailyBoard.get_or_create_for_date(tenant_id, target_date)
+    
+    # Check if we need to carry forward tasks from previous day
+    prev_date = target_date - timedelta(days=1)
+    
+    # Only carry forward if this is a new board (no tasks yet)
+    existing_tasks = Task.query.filter_by(
+        tenant_id=tenant_id,
+        board_date=target_date
+    ).count()
+    
+    if existing_tasks == 0 and target_date >= datetime.now().date():
+        # Find open tasks from previous day to carry forward
+        prev_tasks = Task.query.filter_by(
+            tenant_id=tenant_id,
+            board_date=prev_date
+        ).filter(Task.status.in_(['pending', 'in_progress'])).all()
+        
+        carried_count = 0
+        for task in prev_tasks:
+            # Create a new task entry for the new date
+            task.carry_forward_to_date(target_date)
+            carried_count += 1
+        
+        # Update board metrics
+        daily_board.carried_forward = carried_count
+        daily_board.total_tasks = carried_count
+        
+        if carried_count > 0:
+            db.session.commit()
+
+@main_bp.route('/tasks/kanban/quick-add', methods=['POST'])
+@login_required
+def kanban_quick_add():
+    """Quick add task to current kanban board"""
+    data = request.get_json()
+    
+    task = Task(
+        tenant_id=current_user.tenant_id,
+        title=data.get('title', ''),
+        description=data.get('description', ''),
+        priority=data.get('priority', 'medium'),
+        status='pending',
+        created_by=current_user.id,
+        assigned_to=data.get('assigned_to', current_user.id),
+        board_date=datetime.strptime(data.get('date'), '%Y-%m-%d').date() if data.get('date') else datetime.now().date()
+    )
+    
+    db.session.add(task)
+    db.session.commit()
+    
+    return jsonify({'success': True, 'task_id': task.id})
 
 
 @main_bp.route('/tasks/update_status', methods=['POST'])
