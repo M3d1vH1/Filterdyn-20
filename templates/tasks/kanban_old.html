@@ -1,25 +1,24 @@
 {% extends "base.html" %}
 {% block title %}{{ _('Kanban Board') }}{% endblock %}
 
-{% block css %}
+{% block head %}
 <style>
 /* Kanban Board Styles */
 .kanban-board {
     display: flex;
     gap: 1rem;
     overflow-x: auto;
-    padding: 1rem 0;
-    min-height: 70vh;
+    padding-bottom: 1rem;
+    min-height: 600px;
 }
 
 .kanban-column {
-    min-width: 300px;
+    min-width: 280px;
     flex: 1;
     background: #f8f9fa;
     border-radius: 8px;
     padding: 1rem;
     border: 1px solid #dee2e6;
-    box-shadow: 0 1px 3px rgba(0,0,0,0.1);
 }
 
 .kanban-header {
@@ -34,7 +33,7 @@
 .kanban-column-title {
     font-weight: 600;
     margin: 0;
-    font-size: 1rem;
+    font-size: 1.1rem;
 }
 
 .task-count {
@@ -47,11 +46,6 @@
     justify-content: center;
     font-size: 0.75rem;
     font-weight: 600;
-}
-
-.kanban-drop-zone {
-    min-height: 500px;
-    padding: 0.5rem;
 }
 
 .kanban-task {
@@ -72,14 +66,25 @@
 }
 
 .kanban-task.dragging {
-    opacity: 0.5;
-    transform: rotate(2deg);
+    opacity: 0.6;
+    transform: rotate(3deg);
 }
 
-.kanban-task.priority-urgent { border-left-color: #dc3545; }
-.kanban-task.priority-high { border-left-color: #fd7e14; }
-.kanban-task.priority-medium { border-left-color: #ffc107; }
-.kanban-task.priority-low { border-left-color: #28a745; }
+.kanban-task.priority-urgent {
+    border-left-color: #dc3545;
+}
+
+.kanban-task.priority-high {
+    border-left-color: #fd7e14;
+}
+
+.kanban-task.priority-medium {
+    border-left-color: #ffc107;
+}
+
+.kanban-task.priority-low {
+    border-left-color: #28a745;
+}
 
 .task-title {
     font-weight: 600;
@@ -126,7 +131,11 @@
     display: flex;
     justify-content: space-between;
     align-items: center;
-    margin-top: 0.5rem;
+}
+
+.kanban-drop-zone {
+    min-height: 500px;
+    position: relative;
 }
 
 .kanban-drop-zone.drag-over {
@@ -138,23 +147,24 @@
 .priority-badge {
     font-size: 0.6rem;
     padding: 0.2rem 0.4rem;
-    border-radius: 0.25rem;
 }
 
-.empty-column {
-    text-align: center;
-    padding: 3rem 1rem;
-    color: #6c757d;
+/* Empty state */
+.text-center.text-muted {
+    padding: 2rem 1rem;
 }
 
+/* Mobile responsiveness */
 @media (max-width: 768px) {
     .kanban-board {
         flex-direction: column;
     }
+    
     .kanban-column {
         min-width: 100%;
     }
 }
+
 </style>
 {% endblock %}
 
@@ -196,7 +206,7 @@
         } %}
 
         {% for status in statuses %}
-        <div class="kanban-column">
+        <div class="kanban-column" data-status="{{ status }}">
             <div class="kanban-header">
                 <h5 class="kanban-column-title" style="color: {{ status_colors[status] }};">
                     {{ status_titles[status] }}
@@ -214,7 +224,7 @@
                     <div class="task-title">{{ task.title }}</div>
                     
                     {% if task.description %}
-                    <div class="task-description">
+                    <div class="task-description text-muted mb-2" style="font-size: 0.8rem;">
                         {{ task.description[:80] }}{% if task.description|length > 80 %}...{% endif %}
                     </div>
                     {% endif %}
@@ -232,15 +242,16 @@
                     </div>
                     
                     {% if task.due_date %}
-                    <div class="task-due-date{% if task.is_overdue %} overdue{% endif %}">
+                    <div class="task-due-date mt-2 
+                        {% if task.is_overdue %}overdue{% endif %}">
                         <i data-feather="calendar" style="width: 10px; height: 10px;"></i>
                         {{ task.due_date|safe_date }}
                     </div>
                     {% endif %}
                     
-                    <div class="task-actions">
+                    <div class="task-actions mt-2">
                         <a href="{{ url_for('main.edit_task', id=task.id) }}" 
-                           class="btn btn-sm btn-outline-secondary">
+                           class="btn btn-sm btn-outline-secondary me-1">
                             <i data-feather="edit-2" style="width: 12px; height: 12px;"></i>
                         </a>
                         {% if task.customer %}
@@ -253,7 +264,7 @@
                 {% endfor %}
                 
                 {% if kanban_data[status]|length == 0 %}
-                <div class="empty-column">
+                <div class="text-center text-muted py-4">
                     <i data-feather="inbox" style="width: 32px; height: 32px; opacity: 0.5;"></i>
                     <p class="mt-2 mb-0">{{ _('No tasks') }}</p>
                 </div>
@@ -261,6 +272,21 @@
             </div>
         </div>
         {% endfor %}
+    </div>
+</div>
+
+<!-- Task Quick View Modal -->
+<div class="modal fade" id="taskModal" tabindex="-1">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title">{{ _('Task Details') }}</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+            </div>
+            <div class="modal-body" id="taskModalBody">
+                <!-- Task details will be loaded here -->
+            </div>
+        </div>
     </div>
 </div>
 {% endblock %}
@@ -271,61 +297,80 @@ document.addEventListener('DOMContentLoaded', function() {
     const kanbanTasks = document.querySelectorAll('.kanban-task');
     const dropZones = document.querySelectorAll('.kanban-drop-zone');
     
-    let draggedTask = null;
-    
     // Make tasks draggable
     kanbanTasks.forEach(task => {
-        task.addEventListener('dragstart', function(e) {
-            draggedTask = this;
-            this.classList.add('dragging');
-            e.dataTransfer.effectAllowed = 'move';
-        });
-        
-        task.addEventListener('dragend', function(e) {
-            this.classList.remove('dragging');
-            draggedTask = null;
-        });
-        
-        task.addEventListener('dblclick', function(e) {
-            const taskId = this.getAttribute('data-task-id');
-            window.location.href = `/tasks/${taskId}/edit`;
-        });
+        task.addEventListener('dragstart', handleDragStart);
+        task.addEventListener('dragend', handleDragEnd);
+        task.addEventListener('dblclick', handleTaskDoubleClick);
     });
     
     // Make drop zones handle drops
     dropZones.forEach(zone => {
-        zone.addEventListener('dragover', function(e) {
-            e.preventDefault();
-            e.dataTransfer.dropEffect = 'move';
-        });
-        
-        zone.addEventListener('dragenter', function(e) {
-            e.preventDefault();
-            this.classList.add('drag-over');
-        });
-        
-        zone.addEventListener('dragleave', function(e) {
-            if (!this.contains(e.relatedTarget)) {
-                this.classList.remove('drag-over');
-            }
-        });
-        
-        zone.addEventListener('drop', function(e) {
-            e.preventDefault();
-            this.classList.remove('drag-over');
-            
-            if (draggedTask && draggedTask.parentElement !== this) {
-                const newStatus = this.getAttribute('data-status');
-                const taskId = draggedTask.getAttribute('data-task-id');
-                
-                updateTaskStatus(taskId, newStatus, draggedTask, this);
-            }
-        });
+        zone.addEventListener('dragover', handleDragOver);
+        zone.addEventListener('drop', handleDrop);
+        zone.addEventListener('dragenter', handleDragEnter);
+        zone.addEventListener('dragleave', handleDragLeave);
     });
+    
+    let draggedTask = null;
+    
+    function handleDragStart(e) {
+        draggedTask = this;
+        this.classList.add('dragging');
+        e.dataTransfer.effectAllowed = 'move';
+        e.dataTransfer.setData('text/html', this.outerHTML);
+    }
+    
+    function handleDragEnd(e) {
+        this.classList.remove('dragging');
+        draggedTask = null;
+    }
+    
+    function handleDragOver(e) {
+        if (e.preventDefault) {
+            e.preventDefault();
+        }
+        e.dataTransfer.dropEffect = 'move';
+        return false;
+    }
+    
+    function handleDragEnter(e) {
+        this.classList.add('drag-over');
+    }
+    
+    function handleDragLeave(e) {
+        this.classList.remove('drag-over');
+    }
+    
+    function handleDrop(e) {
+        if (e.stopPropagation) {
+            e.stopPropagation();
+        }
+        
+        this.classList.remove('drag-over');
+        
+        if (draggedTask && draggedTask !== this) {
+            const newStatus = this.getAttribute('data-status');
+            const taskId = draggedTask.getAttribute('data-task-id');
+            
+            // Update task status via AJAX
+            updateTaskStatus(taskId, newStatus, draggedTask, this);
+        }
+        
+        return false;
+    }
+    
+    function handleTaskDoubleClick(e) {
+        const taskId = this.getAttribute('data-task-id');
+        // Open task edit page
+        window.location.href = `/tasks/${taskId}/edit`;
+    }
     
     function updateTaskStatus(taskId, newStatus, taskElement, dropZone) {
         const csrfToken = document.querySelector('meta[name=csrf-token]');
-        const headers = { 'Content-Type': 'application/json' };
+        const headers = {
+            'Content-Type': 'application/json'
+        };
         
         if (csrfToken) {
             headers['X-CSRFToken'] = csrfToken.getAttribute('content');
@@ -342,11 +387,21 @@ document.addEventListener('DOMContentLoaded', function() {
         .then(response => response.json())
         .then(data => {
             if (data.success) {
+                // Move task to new column
                 dropZone.appendChild(taskElement);
+                
+                // Update task counts
                 updateTaskCounts();
-                showNotification('Task updated successfully', 'success');
+                
+                // Show success message
+                showNotification('Task status updated successfully', 'success');
+                
+                // If completed, add completion styling
+                if (newStatus === 'completed') {
+                    taskElement.style.opacity = '0.8';
+                }
             } else {
-                showNotification(data.message || 'Failed to update task', 'error');
+                showNotification(data.message || 'Failed to update task status', 'error');
             }
         })
         .catch(error => {
@@ -358,19 +413,18 @@ document.addEventListener('DOMContentLoaded', function() {
     function updateTaskCounts() {
         dropZones.forEach(zone => {
             const status = zone.getAttribute('data-status');
-            const count = zone.querySelectorAll('.kanban-task').length;
+            const taskCount = zone.querySelectorAll('.kanban-task').length;
             const countElement = zone.parentElement.querySelector('.task-count');
-            if (countElement) {
-                countElement.textContent = count;
-            }
+            countElement.textContent = taskCount;
         });
     }
     
     function showNotification(message, type) {
-        const alert = document.createElement('div');
-        alert.className = `alert alert-${type === 'success' ? 'success' : 'danger'} position-fixed`;
-        alert.style.cssText = 'top: 20px; right: 20px; z-index: 9999; min-width: 300px;';
-        alert.innerHTML = `
+        // Create a simple toast notification
+        const toast = document.createElement('div');
+        toast.className = `alert alert-${type === 'success' ? 'success' : 'danger'} position-fixed`;
+        toast.style.cssText = 'top: 20px; right: 20px; z-index: 9999; min-width: 300px;';
+        toast.innerHTML = `
             <div class="d-flex align-items-center">
                 <i data-feather="${type === 'success' ? 'check-circle' : 'alert-circle'}" class="me-2"></i>
                 ${message}
@@ -378,14 +432,19 @@ document.addEventListener('DOMContentLoaded', function() {
             </div>
         `;
         
-        document.body.appendChild(alert);
-        feather.replace();
+        document.body.appendChild(toast);
         
+        // Auto remove after 3 seconds
         setTimeout(() => {
-            if (alert.parentElement) {
-                alert.remove();
+            if (toast.parentElement) {
+                toast.remove();
             }
         }, 3000);
+        
+        // Re-initialize feather icons for the notification
+        if (typeof feather !== 'undefined') {
+            feather.replace();
+        }
     }
 });
 </script>
