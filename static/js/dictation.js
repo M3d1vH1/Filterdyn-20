@@ -268,7 +268,7 @@ class DictationManager {
         let parsed = false;
 
         // Extract title
-        const titleMatch = text.match(/title[:\s]+(.+?)(?:\s+description|\s+priority|\s*$)/i);
+        const titleMatch = text.match(/title[:\s]+(.+?)(?:\s+description|\s+priority|\s+assign|\s*$)/i);
         if (titleMatch) {
             const titleField = document.getElementById('title');
             if (titleField) {
@@ -279,7 +279,7 @@ class DictationManager {
         }
 
         // Extract description
-        const descMatch = text.match(/description[:\s]+(.+?)(?:\s+priority|\s*$)/i);
+        const descMatch = text.match(/description[:\s]+(.+?)(?:\s+priority|\s+assign|\s*$)/i);
         if (descMatch) {
             const descField = document.getElementById('description');
             if (descField) {
@@ -300,10 +300,38 @@ class DictationManager {
             }
         }
 
+        // Extract assignee (try multiple patterns)
+        const assigneeMatch = text.match(/assign(?:\s+to)?[:\s]+(.+?)(?:\s+title|\s+description|\s+priority|\s*$)/i) ||
+                             text.match(/assigned?\s+to[:\s]+(.+?)(?:\s+title|\s+description|\s+priority|\s*$)/i);
+        if (assigneeMatch) {
+            const assigneeField = document.getElementById('assigned_to');
+            if (assigneeField) {
+                // If it's a select field, try to find matching option
+                const assigneeName = assigneeMatch[1].trim();
+                const options = assigneeField.querySelectorAll('option');
+                let found = false;
+                
+                for (let option of options) {
+                    if (option.text.toLowerCase().includes(assigneeName.toLowerCase())) {
+                        assigneeField.value = option.value;
+                        assigneeField.dispatchEvent(new Event('change', { bubbles: true }));
+                        found = true;
+                        break;
+                    }
+                }
+                
+                if (found) {
+                    parsed = true;
+                } else {
+                    this.showError(`Could not find user "${assigneeName}" in assignee list`);
+                }
+            }
+        }
+
         if (parsed) {
             this.showSuccess('Task details filled from voice input!');
         } else {
-            this.showError('Could not parse task information. Try: "Title: [task name], Description: [details], Priority: [low/medium/high/urgent]"');
+            this.showError('Could not parse task information. Try: "Title: [task name], Description: [details], Priority: [low/medium/high/urgent], Assign to: [username]"');
         }
     }
 

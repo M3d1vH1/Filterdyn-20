@@ -73,12 +73,13 @@
         
         <div class="info-box">
             <h3>How Browser Dictation Works:</h3>
-            <ul>
-                <li><strong>No AI Required:</strong> Uses your browser's built-in speech recognition</li>
-                <li><strong>Chrome/Edge:</strong> Best support (Google's speech engine)</li>
-                <li><strong>Requirements:</strong> HTTPS, microphone permission, internet connection</li>
-                <li><strong>Privacy:</strong> Audio processed by browser's speech engine</li>
-            </ul>
+            <ol>
+                <li><strong>Speech to Text:</strong> Browser converts your voice to plain text using Google's speech engine</li>
+                <li><strong>Pattern Matching:</strong> JavaScript searches the text for specific keywords like "Title:", "Description:", etc.</li>
+                <li><strong>Data Extraction:</strong> Extracts content after each keyword until it finds the next keyword or end of sentence</li>
+                <li><strong>Form Population:</strong> Automatically fills the appropriate form fields</li>
+            </ol>
+            <p><strong>Requirements:</strong> HTTPS, microphone permission, Chrome/Edge browser, internet connection</p>
         </div>
 
         <div id="status" class="status"></div>
@@ -93,10 +94,37 @@
         <div id="supportInfo" class="info-box"></div>
 
         <h3>Test 3: Task Parsing</h3>
-        <p>Say: "Title: Fix the water filter, Description: Replace the old filter with a new one, Priority: high"</p>
+        <div class="info-box">
+            <h4>How Speech Parsing Works:</h4>
+            <p><strong>Step 1:</strong> You speak → Browser converts to text</p>
+            <p><strong>Step 2:</strong> JavaScript finds keywords and extracts data</p>
+            
+            <h5>Try these examples:</h5>
+            <div style="background: #f8f9fa; padding: 10px; border-radius: 5px; margin: 10px 0;">
+                <strong>Example 1:</strong><br>
+                "Title: Fix the water filter, Description: Replace the old filter with a new one, Priority: high, Assign to: John"
+            </div>
+            <div style="background: #f8f9fa; padding: 10px; border-radius: 5px; margin: 10px 0;">
+                <strong>Example 2:</strong><br>
+                "Assign to: Sarah, Title: Update customer database, Priority: medium"
+            </div>
+            <div style="background: #f8f9fa; padding: 10px; border-radius: 5px; margin: 10px 0;">
+                <strong>Example 3:</strong><br>
+                "Priority: urgent, Description: Server is down and needs immediate attention, Title: Emergency server repair"
+            </div>
+            
+            <h5>Keywords that work:</h5>
+            <ul>
+                <li><strong>Title:</strong> or <strong>Task:</strong> → Task name</li>
+                <li><strong>Description:</strong> → Task details</li>
+                <li><strong>Priority:</strong> → low, medium, high, or urgent</li>
+                <li><strong>Assign to:</strong> or <strong>Assigned to:</strong> → Person's name</li>
+            </ul>
+        </div>
         <input type="text" id="titleField" class="test-input" placeholder="Title will appear here">
         <input type="text" id="descField" class="test-input" placeholder="Description will appear here">
         <input type="text" id="priorityField" class="test-input" placeholder="Priority will appear here">
+        <input type="text" id="assigneeField" class="test-input" placeholder="Assignee will appear here">
         <button id="parseBtn" class="dictation-btn">
             <i data-feather="mic"></i> Dictate Task
         </button>
@@ -212,24 +240,51 @@
 
         function parseTaskInput(transcript) {
             const text = transcript.toLowerCase();
+            showStatus('Raw transcript: "' + transcript + '"', 'info');
             
             // Extract title
-            const titleMatch = text.match(/title[:\s]+(.+?)(?:\s+description|\s+priority|\s*$)/i);
+            const titleMatch = text.match(/title[:\s]+(.+?)(?:\s+description|\s+priority|\s+assign|\s*$)/i);
             if (titleMatch) {
                 document.getElementById('titleField').value = capitalizeFirst(titleMatch[1].trim());
+                showStatus('✓ Found title: "' + titleMatch[1].trim() + '"', 'success');
             }
             
             // Extract description
-            const descMatch = text.match(/description[:\s]+(.+?)(?:\s+priority|\s*$)/i);
+            const descMatch = text.match(/description[:\s]+(.+?)(?:\s+priority|\s+assign|\s*$)/i);
             if (descMatch) {
                 document.getElementById('descField').value = capitalizeFirst(descMatch[1].trim());
+                showStatus('✓ Found description: "' + descMatch[1].trim() + '"', 'success');
             }
             
             // Extract priority
             const priorityMatch = text.match(/priority[:\s]+(low|medium|high|urgent)/i);
             if (priorityMatch) {
                 document.getElementById('priorityField').value = priorityMatch[1].toLowerCase();
+                showStatus('✓ Found priority: "' + priorityMatch[1] + '"', 'success');
             }
+            
+            // Extract assignee (try multiple patterns)
+            const assigneeMatch = text.match(/assign(?:\s+to)?[:\s]+(.+?)(?:\s+title|\s+description|\s+priority|\s*$)/i) ||
+                                 text.match(/assigned?\s+to[:\s]+(.+?)(?:\s+title|\s+description|\s+priority|\s*$)/i);
+            if (assigneeMatch) {
+                document.getElementById('assigneeField').value = capitalizeFirst(assigneeMatch[1].trim());
+                showStatus('✓ Found assignee: "' + assigneeMatch[1].trim() + '"', 'success');
+            }
+            
+            // Show parsing results
+            setTimeout(() => {
+                const found = [];
+                if (titleMatch) found.push('title');
+                if (descMatch) found.push('description');
+                if (priorityMatch) found.push('priority');
+                if (assigneeMatch) found.push('assignee');
+                
+                if (found.length > 0) {
+                    showStatus('Parsing complete! Found: ' + found.join(', '), 'success');
+                } else {
+                    showStatus('No structured data found. Try using keywords: Title, Description, Priority, Assign to', 'error');
+                }
+            }, 2000);
         }
 
         function capitalizeFirst(str) {
