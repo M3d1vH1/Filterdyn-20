@@ -3,7 +3,7 @@ from flask_login import login_required, current_user
 from flask_babel import _, get_locale
 from datetime import datetime, timezone, timedelta
 from decimal import Decimal
-from models import User, Customer, Product, ProductCategory, Quote, QuoteItem, Order, OrderItem, Task, DailyBoard
+from models import User, Customer, Product, ProductCategory, Quote, QuoteItem, Order, OrderItem, Task, DailyBoard, QuickNote
 from app import db
 from forms import CustomerForm, ProductForm, ProductCategoryForm, QuoteForm, OrderForm, TaskForm
 from utils import admin_required, manager_required, generate_pdf_quote
@@ -671,6 +671,72 @@ def _ensure_daily_board_exists(tenant_id, target_date):
         
         if carried_count > 0:
             db.session.commit()
+
+@main_bp.route('/api/quick-notes', methods=['GET'])
+@login_required
+def get_quick_notes():
+    """Get all quick notes for the current user"""
+    notes = QuickNote.query.filter_by(
+        tenant_id=current_user.tenant_id,
+        user_id=current_user.id
+    ).order_by(QuickNote.created_at.desc()).all()
+    
+    return jsonify({
+        'success': True,
+        'notes': [{
+            'id': note.id,
+            'text': note.text,
+            'created_at': note.created_at.isoformat(),
+            'updated_at': note.updated_at.isoformat()
+        } for note in notes]
+    })
+
+@main_bp.route('/api/quick-notes', methods=['POST'])
+@login_required
+def create_quick_note():
+    """Create a new quick note"""
+    data = request.get_json()
+    text = data.get('text', '').strip()
+    
+    if not text:
+        return jsonify({'success': False, 'message': 'Note text is required'}), 400
+    
+    note = QuickNote(
+        tenant_id=current_user.tenant_id,
+        user_id=current_user.id,
+        text=text
+    )
+    
+    db.session.add(note)
+    db.session.commit()
+    
+    return jsonify({
+        'success': True,
+        'note': {
+            'id': note.id,
+            'text': note.text,
+            'created_at': note.created_at.isoformat(),
+            'updated_at': note.updated_at.isoformat()
+        }
+    })
+
+@main_bp.route('/api/quick-notes/<int:note_id>', methods=['DELETE'])
+@login_required
+def delete_quick_note(note_id):
+    """Delete a quick note"""
+    note = QuickNote.query.filter_by(
+        id=note_id,
+        tenant_id=current_user.tenant_id,
+        user_id=current_user.id
+    ).first()
+    
+    if not note:
+        return jsonify({'success': False, 'message': 'Note not found'}), 404
+    
+    db.session.delete(note)
+    db.session.commit()
+    
+    return jsonify({'success': True})
 
 @main_bp.route('/tasks/kanban/quick-add', methods=['POST'])
 @login_required

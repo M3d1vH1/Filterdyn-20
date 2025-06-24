@@ -29,6 +29,7 @@ class Tenant(db.Model):
     orders = db.relationship('Order', backref='tenant', lazy=True)
     tasks = db.relationship('Task', backref='tenant', lazy=True)
 
+
 class User(UserMixin, db.Model):
     __tablename__ = 'users'
     
@@ -236,6 +237,26 @@ class Order(db.Model):
     
     # Unique constraint per tenant
     __table_args__ = (db.UniqueConstraint('tenant_id', 'order_number', name='_tenant_order_number_uc'),)
+
+class QuickNote(db.Model):
+    __tablename__ = 'quick_notes'
+    
+    id = db.Column(db.Integer, primary_key=True)
+    tenant_id = db.Column(db.Integer, db.ForeignKey('tenants.id'), nullable=False)
+    user_id = db.Column(db.Integer, db.ForeignKey('users.id'), nullable=False)
+    
+    # Note content
+    text = db.Column(db.Text, nullable=False)
+    
+    # Timestamps
+    created_at = db.Column(db.DateTime, default=lambda: datetime.now(timezone.utc))
+    updated_at = db.Column(db.DateTime, default=lambda: datetime.now(timezone.utc), onupdate=lambda: datetime.now(timezone.utc))
+    
+    # Relationships
+    user = db.relationship('User', backref='quick_notes')
+
+# Add the relationship to Tenant after QuickNote is defined
+Tenant.quick_notes = db.relationship('QuickNote', backref='tenant', lazy=True)
 
 class OrderItem(db.Model):
     __tablename__ = 'order_items'

@@ -1209,41 +1209,65 @@ document.addEventListener('DOMContentLoaded', function() {
     }
     
     function saveNote(text) {
-        const notes = getStoredNotes();
-        const note = {
-            id: Date.now(),
-            text: text,
-            timestamp: new Date().toISOString(),
-            date: '{{ current_date.strftime('%Y-%m-%d') if current_date else '' }}'
-        };
-        
-        notes.unshift(note);
-        localStorage.setItem('kanban-notes', JSON.stringify(notes));
-        renderNotes();
-    }
-    
-    function getStoredNotes() {
-        try {
-            return JSON.parse(localStorage.getItem('kanban-notes') || '[]');
-        } catch {
-            return [];
-        }
+        fetch('/api/quick-notes', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+            },
+            body: JSON.stringify({ text: text })
+        })
+        .then(response => response.json())
+        .then(data => {
+            if (data.success) {
+                loadNotes();
+                showNotification('Note saved successfully', 'success');
+            } else {
+                showNotification('Failed to save note', 'error');
+            }
+        })
+        .catch(error => {
+            console.error('Error:', error);
+            showNotification('Network error occurred', 'error');
+        });
     }
     
     function deleteNote(noteId) {
-        const notes = getStoredNotes();
-        const filteredNotes = notes.filter(note => note.id !== noteId);
-        localStorage.setItem('kanban-notes', JSON.stringify(filteredNotes));
-        renderNotes();
+        fetch(`/api/quick-notes/${noteId}`, {
+            method: 'DELETE'
+        })
+        .then(response => response.json())
+        .then(data => {
+            if (data.success) {
+                loadNotes();
+                showNotification('Note deleted successfully', 'success');
+            } else {
+                showNotification('Failed to delete note', 'error');
+            }
+        })
+        .catch(error => {
+            console.error('Error:', error);
+            showNotification('Network error occurred', 'error');
+        });
     }
     
     function loadNotes() {
-        renderNotes();
+        fetch('/api/quick-notes')
+        .then(response => response.json())
+        .then(data => {
+            if (data.success) {
+                renderNotes(data.notes);
+            } else {
+                console.error('Failed to load notes');
+                renderNotes([]);
+            }
+        })
+        .catch(error => {
+            console.error('Error loading notes:', error);
+            renderNotes([]);
+        });
     }
     
-    function renderNotes() {
-        const notes = getStoredNotes();
-        
+    function renderNotes(notes = []) {
         if (notes.length === 0) {
             notesContent.innerHTML = `
                 <div class="empty-notes text-center text-muted py-4">
@@ -1256,7 +1280,7 @@ document.addEventListener('DOMContentLoaded', function() {
                 <div class="note-item">
                     <div class="note-text">${escapeHtml(note.text)}</div>
                     <div class="note-meta">
-                        <small>${formatNoteDate(note.timestamp)}</small>
+                        <small>${formatNoteDate(note.created_at)}</small>
                         <div class="note-actions">
                             <button class="btn btn-xs btn-outline-danger" onclick="deleteNote(${note.id})" title="{{ _('Delete Note') }}">
                                 <i data-feather="trash-2" style="width: 10px; height: 10px;"></i>
