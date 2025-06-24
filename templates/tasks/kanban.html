@@ -499,6 +499,10 @@ document.addEventListener('DOMContentLoaded', function() {
                 dropZone.appendChild(taskElement);
                 updateTaskCounts();
                 showNotification('Task updated successfully', 'success');
+                // Refresh to update progress metrics
+                setTimeout(() => {
+                    window.location.reload();
+                }, 1000);
             } else {
                 showNotification(data.message || 'Failed to update task', 'error');
             }

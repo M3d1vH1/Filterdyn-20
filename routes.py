@@ -3,7 +3,7 @@ from flask_login import login_required, current_user
 from flask_babel import _, get_locale
 from datetime import datetime, timezone, timedelta
 from decimal import Decimal
-from models import User, Customer, Product, ProductCategory, Quote, QuoteItem, Order, OrderItem, Task
+from models import User, Customer, Product, ProductCategory, Quote, QuoteItem, Order, OrderItem, Task, DailyBoard
 from app import db
 from forms import CustomerForm, ProductForm, ProductCategoryForm, QuoteForm, OrderForm, TaskForm
 from utils import admin_required, manager_required, generate_pdf_quote
@@ -737,13 +737,18 @@ def update_task_status():
             return jsonify({'success': False, 'message': 'Permission denied'}), 403
     
     # Update status
+    old_status = task.status
     task.status = new_status
     if new_status == 'completed':
         task.completed_at = datetime.now(timezone.utc)
-    else:
+    elif old_status == 'completed' and new_status != 'completed':
         task.completed_at = None
     
     task.updated_at = datetime.now(timezone.utc)
+    
+    # Update daily board metrics
+    target_date = datetime.now().date()
+    _update_daily_board_metrics(current_user.tenant_id, target_date)
     
     try:
         db.session.commit()
