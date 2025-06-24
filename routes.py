@@ -8,6 +8,9 @@ from app import db
 from forms import CustomerForm, ProductForm, ProductCategoryForm, QuoteForm, OrderForm, TaskForm
 from utils import admin_required, manager_required, generate_pdf_quote
 import json
+import os
+from google import genai
+from google.genai import types
 
 main_bp = Blueprint('main', __name__)
 
@@ -16,6 +19,126 @@ main_bp = Blueprint('main', __name__)
 def test_dictation():
     """Test page for dictation functionality"""
     return render_template('test_dictation.html')
+
+@main_bp.route('/test-ai-dictation')
+@login_required
+def test_ai_dictation():
+    """Test page for AI-enhanced dictation functionality"""
+    return render_template('test_ai_dictation.html')
+
+@main_bp.route('/api/check-ai-availability')
+@login_required
+def check_ai_availability():
+    """Check if AI services are available"""
+    gemini_key = os.environ.get('GEMINI_API_KEY')
+    return jsonify({
+        'available': bool(gemini_key),
+        'features': ['natural_language_parsing', 'greek_support', 'smart_task_extraction'] if gemini_key else []
+    })
+
+@main_bp.route('/api/ai-extract-task', methods=['POST'])
+@login_required
+def ai_extract_task():
+    """Extract task data from natural language using Gemini AI"""
+    try:
+        data = request.get_json()
+        prompt = data.get('prompt')
+        transcript = data.get('transcript')
+        language = data.get('language', 'en-US')
+        
+        if not prompt or not transcript:
+            return jsonify({'error': 'Missing prompt or transcript'}), 400
+            
+        gemini_key = os.environ.get('GEMINI_API_KEY')
+        if not gemini_key:
+            return jsonify({'error': 'AI service not available'}), 503
+            
+        # Initialize Gemini client
+        client = genai.Client(api_key=gemini_key)
+        
+        # Create system prompt for task extraction
+        system_prompt = """You are a task extraction assistant. Extract structured task data from natural language input in English or Greek. 
+
+Return a JSON object with these fields (use null for missing data):
+{
+  "title": "brief task title (max 50 chars)",
+  "description": "detailed description", 
+  "priority": "low|medium|high|urgent",
+  "assignee": "person's name if mentioned",
+  "dueDate": "ISO date string if mentioned"
+}
+
+Guidelines:
+- Infer priority from urgency words (urgent, ASAP, επείγον = urgent; important, σπουδαίο = high)
+- Convert Greek terms appropriately (τίτλος=title, περιγραφή=description, προτεραιότητα=priority)
+- For relative dates: tomorrow/αύριο = +1 day, next week/επόμενη εβδομάδα = +7 days
+- If someone says "assign to me" use "current user"
+- Keep titles concise and descriptive
+
+Respond with valid JSON only."""
+
+        # Process with Gemini
+        response = client.models.generate_content(
+            model="gemini-2.5-flash",
+            contents=[
+                types.Content(role="user", parts=[
+                    types.Part(text=f"{system_prompt}\n\nInput: \"{transcript}\"")
+                ])
+            ],
+            config=types.GenerateContentConfig(
+                response_mime_type="application/json",
+                temperature=0.3,
+                max_output_tokens=300
+            )
+        )
+        
+        # Parse Gemini response
+        ai_response = response.text.strip() if response.text else "{}"
+        
+        # Clean up response (remove markdown formatting if present)
+        if ai_response.startswith('```json'):
+            ai_response = ai_response[7:]
+        if ai_response.endswith('```'):
+            ai_response = ai_response[:-3]
+            
+        task_data = json.loads(ai_response)
+        
+        # Process relative dates
+        if task_data.get('dueDate'):
+            task_data['dueDate'] = process_relative_date(task_data['dueDate'])
+            
+        return jsonify({
+            'success': True,
+            'taskData': task_data,
+            'originalTranscript': transcript,
+            'detectedLanguage': language
+        })
+        
+    except json.JSONDecodeError as e:
+        return jsonify({'error': f'Invalid AI response format: {str(e)}'}), 500
+    except Exception as e:
+        return jsonify({'error': f'Gemini AI processing failed: {str(e)}'}), 500
+
+def process_relative_date(date_str):
+    """Process relative date strings like 'tomorrow', 'next week'"""
+    now = datetime.now()
+    date_str_lower = date_str.lower()
+    
+    if 'tomorrow' in date_str_lower or 'αύριο' in date_str_lower:
+        return (now + timedelta(days=1)).isoformat()
+    elif 'next week' in date_str_lower or 'επόμενη εβδομάδα' in date_str_lower:
+        return (now + timedelta(weeks=1)).isoformat()
+    elif 'next month' in date_str_lower or 'επόμενο μήνα' in date_str_lower:
+        return (now + timedelta(days=30)).isoformat()
+    elif 'today' in date_str_lower or 'σήμερα' in date_str_lower:
+        return now.isoformat()
+    else:
+        # Try to parse as ISO date or return as is
+        try:
+            parsed_date = datetime.fromisoformat(date_str.replace('Z', '+00:00'))
+            return parsed_date.isoformat()
+        except:
+            return date_str
 
 @main_bp.route('/')
 @login_required
