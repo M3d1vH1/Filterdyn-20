@@ -21,4 +21,9 @@ dependencies = [
     "google-genai>=1.21.1",
     "requests>=2.32.4",
     "sift-stack-py>=0.6.2",
+    "cryptography>=45.0.4",
+    "python-dateutil>=2.9.0.post0",
+    "google-api-python-client>=2.173.0",
+    "google-auth>=2.40.3",
+    "google-auth-oauthlib>=1.2.2",
 ]
