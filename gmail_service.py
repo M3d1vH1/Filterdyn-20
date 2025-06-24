@@ -8,7 +8,7 @@ from googleapiclient.discovery import build
 from google.auth.transport.requests import Request
 from google.oauth2.credentials import Credentials
 from cryptography.fernet import Fernet
-from gmail_models import GmailAccount, EmailThread, EmailMessage, EmailAttachment, EmailLabel
+from models import GmailAccount, GmailMessage, GmailAttachment
 from app import db
 from flask_login import current_user
 import logging
@@ -242,24 +242,7 @@ class GmailService:
             current_app.logger.error(f"Error fetching message {message_id}: {str(e)}")
             return None
 
-    @staticmethod
-    def get_or_create_thread(account: GmailAccount, thread_id, subject):
-        """Get existing thread or create new one"""
-        thread = EmailThread.query.filter_by(
-            gmail_account_id=account.id,
-            thread_id=thread_id
-        ).first()
-        
-        if not thread:
-            thread = EmailThread(
-                gmail_account_id=account.id,
-                thread_id=thread_id,
-                subject=subject
-            )
-            db.session.add(thread)
-            db.session.commit()
-        
-        return thread
+    # Thread management simplified - using existing message grouping
 
     @staticmethod
     def extract_message_body(payload):
@@ -312,7 +295,7 @@ class GmailService:
 
     @staticmethod
     def store_attachments(service, message, payload):
-        """Store message attachments"""
+        """Store message attachments using existing structure"""
         def process_parts(parts):
             for part in parts:
                 if part.get('filename') and part.get('body', {}).get('attachmentId'):
@@ -325,13 +308,13 @@ class GmailService:
                         
                         file_data = base64.urlsafe_b64decode(attachment['data'])
                         
-                        email_attachment = EmailAttachment(
-                            message_id=message.id,
-                            attachment_id=part['body']['attachmentId'],
+                        # Use existing GmailAttachment model
+                        email_attachment = GmailAttachment(
+                            gmail_message_id=message.id,
                             filename=part['filename'],
                             mime_type=part.get('mimeType'),
-                            file_size=len(file_data),
-                            file_data=file_data
+                            file_data=file_data,
+                            file_size=len(file_data)
                         )
                         
                         db.session.add(email_attachment)

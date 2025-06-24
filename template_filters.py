@@ -3,6 +3,7 @@ Custom Jinja2 template filters for robust timezone-aware datetime handling.
 All filters automatically convert UTC datetimes to user's local timezone for display.
 """
 
+import json
 from datetime import datetime
 from timezone_utils import (
     format_datetime, format_date, format_datetime_full, 

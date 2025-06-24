@@ -1,7 +1,7 @@
 from flask import Blueprint, render_template, request, redirect, url_for, flash, jsonify, session, send_file
 from flask_login import login_required, current_user
 from flask_babel import _, get_locale
-from gmail_models import GmailAccount, EmailThread, EmailMessage, EmailAttachment, EmailBusinessAssociation
+from models import GmailAccount, GmailMessage, GmailAttachment, EmailBusinessAssociation, AIEmailInteraction
 from gmail_service import GmailService
 from gmail_ai_service import GmailAIService
 from app import db
@@ -111,21 +111,25 @@ def inbox():
         return redirect(url_for('main.gmail_inbox'))
     
     try:
-        # Get email threads
+        # Get email messages grouped by thread
         page = request.args.get('page', 1, type=int)
         search_query = request.args.get('q', '')
         
-        query = EmailThread.query.filter_by(gmail_account_id=account.id)
+        # Simplified approach - use existing GmailMessage structure
+        query = GmailMessage.query.filter(
+            GmailMessage.user_id == current_user.id,
+            GmailMessage.tenant_id == current_user.tenant_id
+        )
         
         if search_query:
-            query = query.filter(EmailThread.subject.ilike(f'%{search_query}%'))
+            query = query.filter(GmailMessage.subject.ilike(f'%{search_query}%'))
         
-        threads = query.order_by(EmailThread.last_message_at.desc()).paginate(
+        messages = query.order_by(GmailMessage.received_at.desc()).paginate(
             page=page, per_page=20, error_out=False
         )
         
         return render_template('gmail/inbox.html', 
-                             threads=threads, 
+                             messages=messages, 
                              account=account,
                              search_query=search_query)
     

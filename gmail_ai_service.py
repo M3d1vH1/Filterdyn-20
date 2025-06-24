@@ -1,7 +1,7 @@
 import os
 import json
 import google.generativeai as genai
-from gmail_models import AIEmailInteraction, EmailMessage
+from models import AIEmailInteraction, GmailMessage
 from app import db
 from flask_login import current_user
 from flask_babel import get_locale

@@ -715,3 +715,61 @@ class AISuggestionFeedback(db.Model):
     tenant = db.relationship('Tenant', backref='ai_feedback')
     user = db.relationship('User', backref='ai_feedback')
 
+
+# Enhanced Gmail models for business integration
+class EmailBusinessAssociation(db.Model):
+    __tablename__ = 'email_business_associations'
+    
+    id = db.Column(db.Integer, primary_key=True)
+    
+    # Link to business entities
+    customer_id = db.Column(db.Integer, db.ForeignKey('customers.id'))
+    order_id = db.Column(db.Integer, db.ForeignKey('orders.id'))
+    quote_id = db.Column(db.Integer, db.ForeignKey('quotes.id'))
+    task_id = db.Column(db.Integer, db.ForeignKey('tasks.id'))
+    
+    # Gmail message reference (simplified)
+    gmail_message_subject = db.Column(db.String(512))
+    gmail_message_sender = db.Column(db.String(255))
+    gmail_message_date = db.Column(db.DateTime)
+    
+    association_type = db.Column(db.String(32))  # customer, order, quote, task
+    confidence_score = db.Column(db.Float)  # AI confidence in association
+    manual_override = db.Column(db.Boolean, default=False)  # User manually set
+    
+    created_at = db.Column(db.DateTime, default=lambda: datetime.now(timezone.utc))
+    created_by = db.Column(db.Integer, db.ForeignKey('users.id'))
+    
+    # Relationships
+    customer = db.relationship('Customer', backref='email_links')
+    order = db.relationship('Order', backref='email_links')
+    quote = db.relationship('Quote', backref='email_links')
+    task = db.relationship('Task', backref='email_links')
+    creator = db.relationship('User', backref='email_associations_created')
+
+class AIEmailInteraction(db.Model):
+    __tablename__ = 'ai_email_interactions'
+    
+    id = db.Column(db.Integer, primary_key=True)
+    tenant_id = db.Column(db.Integer, db.ForeignKey('tenants.id'), nullable=False)
+    user_id = db.Column(db.Integer, db.ForeignKey('users.id'), nullable=False)
+    
+    # Email context (simplified to avoid FK issues)
+    email_subject = db.Column(db.String(512))
+    email_sender = db.Column(db.String(255))
+    
+    interaction_type = db.Column(db.String(50), nullable=False)  # analysis, suggestion, template
+    input_data = db.Column(db.JSON)
+    ai_response = db.Column(db.Text)
+    user_feedback = db.Column(db.String(32))  # accepted, edited, rejected
+    effectiveness_score = db.Column(db.Float)
+    
+    processing_time_ms = db.Column(db.Integer)
+    tokens_used = db.Column(db.Integer)
+    
+    created_at = db.Column(db.DateTime, default=lambda: datetime.now(timezone.utc))
+    
+    # Relationships
+    user = db.relationship('User', backref='ai_email_interactions')
+    tenant = db.relationship('Tenant', backref='ai_email_interactions')
+
