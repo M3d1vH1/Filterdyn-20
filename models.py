@@ -715,6 +715,3 @@ class AISuggestionFeedback(db.Model):
     tenant = db.relationship('Tenant', backref='ai_feedback')
     user = db.relationship('User', backref='ai_feedback')
 
-
-
-
