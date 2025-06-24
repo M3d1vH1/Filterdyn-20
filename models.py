@@ -309,7 +309,14 @@ class Task(db.Model):
     def days_open(self):
         """Calculate days task has been open"""
         if self.created_at:
-            return (datetime.now(timezone.utc) - self.created_at).days
+            # Handle both naive and aware datetimes
+            created_utc = self.created_at
+            if created_utc.tzinfo is None:
+                # If naive, assume UTC
+                created_utc = created_utc.replace(tzinfo=timezone.utc)
+            
+            now_utc = datetime.now(timezone.utc)
+            return (now_utc - created_utc).days
         return 0
     
     @property

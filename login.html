@@ -1,0 +1,143 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+    <title>Login - Filterdyn Operations Suite</title>
+    
+    <!-- Bootstrap CSS -->
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    
+    <!-- Feather Icons -->
+    <script src="https://unpkg.com/feather-icons"></script>
+    
+    <!-- Custom CSS -->
+    <link href="/static/css/filterdyn.css" rel="stylesheet">
+    
+    <!-- Additional CSS -->
+    
+</head>
+<body>
+    
+    
+    <!-- Flash messages -->
+    
+    
+    
+    
+    <!-- Main content -->
+    <main class="">
+        
+<div class="login-container">
+    <div class="login-card">
+        <div class="login-header">
+            <img src="/static/img/logo.svg" alt="Filterdyn" height="50" class="mb-3">
+            <h1>Welcome</h1>
+            <p>Sign in to your account</p>
+        </div>
+        
+        <div class="login-body">
+            <form method="POST" class="needs-validation" novalidate>
+                <input id="csrf_token" name="csrf_token" type="hidden" value="IjAyZTUwOTI2M2ExYjE2ODMwNzRmZjQ1NmI2YzVkYTczYzE4MjI2NDMi.aFqziA.3l9DJklzukzp4e7LJq1v3dwoj6w">
+                
+                <div class="mb-3">
+                    <div class="form-floating">
+                        <input class="form-control" id="username" name="username" placeholder="Username" required type="text" value="">
+                        <label class="form-label" for="username">Username</label>
+                        <div class="invalid-feedback">
+                            Please provide a valid username.
+                        </div>
+                    </div>
+                    
+                </div>
+                
+                <div class="mb-3">
+                    <div class="form-floating">
+                        <input class="form-control" id="password" name="password" placeholder="Password" required type="password" value="">
+                        <label class="form-label" for="password">Password</label>
+                        <div class="invalid-feedback">
+                            Please provide a password.
+                        </div>
+                    </div>
+                    
+                </div>
+                
+                <div class="mb-3">
+                    <div class="form-check">
+                        <input class="form-check-input" id="remember_me" name="remember_me" type="checkbox" value="y">
+                        <label class="form-check-label" for="remember_me">Remember Me</label>
+                    </div>
+                </div>
+                
+                <div class="d-grid">
+                    <button type="submit" class="btn btn-primary btn-lg">
+                        <i data-feather="log-in" class="me-2"></i>
+                        Login
+                    </button>
+                </div>
+            </form>
+            
+            <!-- Language switcher -->
+            <div class="text-center mt-4">
+                <small class="text-muted">Language:</small>
+                <a href="/auth/change-language/en" 
+                   class="language-toggle ms-2 active">EN</a>
+                <a href="/auth/change-language/el" 
+                   class="language-toggle ">ΕΛ</a>
+            </div>
+        </div>
+    </div>
+</div>
+
+    </main>
+    
+    <!-- Footer -->
+    
+
+    <!-- AI Assistant Floating Button -->
+    
+    
+    <!-- Bootstrap JS -->
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+    
+    <!-- Main JS -->
+    <script src="/static/js/main.js"></script>
+    
+    <!-- Additional JS -->
+    
+    
+    <!-- Initialize Feather icons -->
+    <script>
+        feather.replace();
+        
+        // AI Assistant Widget Functions
+        function toggleAIChat() {
+            const chatWindow = document.getElementById('ai-chat-window');
+            const toggle = document.getElementById('ai-chat-toggle');
+            const notification = document.getElementById('ai-notification');
+            
+            if (chatWindow && chatWindow.classList.contains('show')) {
+                chatWindow.classList.remove('show');
+                toggle.classList.remove('active');
+                if (notification) notification.style.display = 'none';
+            } else if (chatWindow) {
+                chatWindow.classList.add('show');
+                toggle.classList.add('active');
+                if (notification) notification.style.display = 'none';
+                
+                // Re-initialize feather icons in the chat window
+                feather.replace();
+            }
+        }
+
+        // Auto-show notification after page load
+        setTimeout(() => {
+            const notification = document.getElementById('ai-notification');
+            if (notification) {
+                notification.style.display = 'flex';
+            }
+        }, 3000);
+    </script>
+</body>
+</html>
