@@ -1,0 +1,185 @@
+{% extends "base.html" %}
+{% set active_page = "ai_assistant" %}
+
+{% block title %}{{ _('Gmail Inbox') }}{% endblock %}
+
+{% block content %}
+<div class="container-fluid">
+    <div class="d-flex justify-content-between flex-wrap flex-md-nowrap align-items-center pt-3 pb-2 mb-3 border-bottom">
+        <h1 class="h2">{{ _('Gmail Integration') }}</h1>
+        <div class="btn-toolbar mb-2 mb-md-0">
+            <div class="btn-group me-2">
+                <a href="{{ url_for('main.ai_assistant') }}" class="btn btn-sm btn-outline-secondary">
+                    <i data-feather="arrow-left"></i> {{ _('Back to Dashboard') }}
+                </a>
+                <a href="{{ url_for('auth.google_disconnect') }}" class="btn btn-sm btn-outline-danger">
+                    <i data-feather="x-circle"></i> {{ _('Disconnect') }}
+                </a>
+            </div>
+        </div>
+    </div>
+
+    {% if session.get('google_connected') %}
+    <!-- Connected Gmail Interface -->
+    <div class="row mb-4">
+        <div class="col-lg-12">
+            <div class="card shadow">
+                <div class="card-header bg-success text-white">
+                    <h5 class="mb-0">
+                        <i data-feather="check-circle" class="me-2"></i>
+                        {{ _('Gmail Connected') }} - {{ session.get('google_email') }}
+                    </h5>
+                </div>
+                <div class="card-body">
+                    <div class="row">
+                        <div class="col-md-4">
+                            <div class="card border-primary">
+                                <div class="card-header bg-primary text-white">
+                                    <h6 class="mb-0">{{ _('Email Management') }}</h6>
+                                </div>
+                                <div class="card-body">
+                                    <button class="btn btn-outline-primary btn-sm mb-2 w-100" onclick="loadEmails()">
+                                        <i data-feather="refresh-cw"></i> {{ _('Refresh Inbox') }}
+                                    </button>
+                                    <button class="btn btn-outline-info btn-sm mb-2 w-100" onclick="composeEmail()">
+                                        <i data-feather="edit"></i> {{ _('Compose Email') }}
+                                    </button>
+                                    <button class="btn btn-outline-warning btn-sm w-100" onclick="generateReply()">
+                                        <i data-feather="zap"></i> {{ _('AI Smart Reply') }}
+                                    </button>
+                                </div>
+                            </div>
+                        </div>
+                        
+                        <div class="col-md-8">
+                            <div class="card">
+                                <div class="card-header">
+                                    <h6 class="mb-0">{{ _('Recent Emails') }}</h6>
+                                </div>
+                                <div class="card-body">
+                                    <div id="email-list">
+                                        <div class="text-center text-muted py-4">
+                                            <i data-feather="mail" size="48" class="mb-3"></i>
+                                            <p>{{ _('Click "Refresh Inbox" to load your emails') }}</p>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- AI Features Section -->
+    <div class="row">
+        <div class="col-lg-6">
+            <div class="card shadow">
+                <div class="card-header">
+                    <h5 class="mb-0">{{ _('AI Email Assistant') }}</h5>
+                </div>
+                <div class="card-body">
+                    <p>{{ _('AI-powered features for email management:') }}</p>
+                    <ul class="list-unstyled">
+                        <li><i data-feather="check" class="text-success me-2"></i>{{ _('Smart email categorization') }}</li>
+                        <li><i data-feather="check" class="text-success me-2"></i>{{ _('Automatic response suggestions') }}</li>
+                        <li><i data-feather="check" class="text-success me-2"></i>{{ _('Priority email detection') }}</li>
+                        <li><i data-feather="check" class="text-success me-2"></i>{{ _('Task extraction from emails') }}</li>
+                    </ul>
+                </div>
+            </div>
+        </div>
+        
+        <div class="col-lg-6">
+            <div class="card shadow">
+                <div class="card-header">
+                    <h5 class="mb-0">{{ _('Email Statistics') }}</h5>
+                </div>
+                <div class="card-body">
+                    <div class="row text-center">
+                        <div class="col-4">
+                            <div class="border-end">
+                                <h4 class="text-primary">--</h4>
+                                <small class="text-muted">{{ _('Total Emails') }}</small>
+                            </div>
+                        </div>
+                        <div class="col-4">
+                            <div class="border-end">
+                                <h4 class="text-success">--</h4>
+                                <small class="text-muted">{{ _('AI Processed') }}</small>
+                            </div>
+                        </div>
+                        <div class="col-4">
+                            <h4 class="text-warning">--</h4>
+                            <small class="text-muted">{{ _('Pending') }}</small>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    {% else %}
+    <!-- Not Connected State -->
+    <div class="row justify-content-center">
+        <div class="col-lg-8">
+            <div class="card shadow">
+                <div class="card-body text-center py-5">
+                    <i data-feather="alert-circle" size="64" class="text-warning mb-3"></i>
+                    <h4>{{ _('Gmail Not Connected') }}</h4>
+                    <p class="text-muted">{{ _('Please connect your Gmail account to use this feature.') }}</p>
+                    <a href="{{ url_for('main.gmail_inbox') }}" class="btn btn-primary">
+                        {{ _('Go to Gmail Setup') }}
+                    </a>
+                </div>
+            </div>
+        </div>
+    </div>
+    {% endif %}
+</div>
+
+<script>
+function loadEmails() {
+    const emailList = document.getElementById('email-list');
+    emailList.innerHTML = '<div class="text-center"><div class="spinner-border text-primary" role="status"></div><p class="mt-2">{{ _("Loading emails...") }}</p></div>';
+    
+    // Simulate email loading (replace with actual Gmail API call)
+    setTimeout(() => {
+        emailList.innerHTML = `
+            <div class="list-group">
+                <div class="list-group-item">
+                    <div class="d-flex w-100 justify-content-between">
+                        <h6 class="mb-1">{{ _('Sample Email Subject') }}</h6>
+                        <small>{{ _('2 hours ago') }}</small>
+                    </div>
+                    <p class="mb-1">{{ _('This is a sample email preview...') }}</p>
+                    <small>{{ _('From: example@company.com') }}</small>
+                </div>
+                <div class="list-group-item">
+                    <div class="d-flex w-100 justify-content-between">
+                        <h6 class="mb-1">{{ _('Another Email') }}</h6>
+                        <small>{{ _('1 day ago') }}</small>
+                    </div>
+                    <p class="mb-1">{{ _('Another sample email content...') }}</p>
+                    <small>{{ _('From: client@example.org') }}</small>
+                </div>
+            </div>
+        `;
+    }, 2000);
+}
+
+function composeEmail() {
+    alert('{{ _("Compose email feature will be implemented here") }}');
+}
+
+function generateReply() {
+    alert('{{ _("AI smart reply feature will be implemented here") }}');
+}
+
+// Initialize feather icons
+document.addEventListener('DOMContentLoaded', function() {
+    feather.replace();
+});
+</script>
+{% endblock %}

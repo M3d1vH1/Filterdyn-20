@@ -1083,7 +1083,11 @@ def gmail_inbox():
         flash(_('Access denied. Gmail integration requires admin or manager permissions.'), 'error')
         return redirect(url_for('main.dashboard'))
     
-    return render_template('ai_assistant/gmail_setup.html')
+    # Check if Gmail is connected
+    if session.get('google_connected'):
+        return render_template('ai_assistant/gmail_inbox.html')
+    else:
+        return render_template('ai_assistant/gmail_setup.html')
 
 @main_bp.route('/ai-assistant/learning')
 @login_required
