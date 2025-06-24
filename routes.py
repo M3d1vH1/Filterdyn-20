@@ -685,8 +685,7 @@ def kanban_quick_add():
         priority=data.get('priority', 'medium'),
         status='pending',
         created_by=current_user.id,
-        assigned_to=data.get('assigned_to', current_user.id),
-        board_date=datetime.strptime(data.get('date'), '%Y-%m-%d').date() if data.get('date') else datetime.now().date()
+        assigned_to=data.get('assigned_to', current_user.id)
     )
     
     db.session.add(task)

@@ -13,13 +13,16 @@
 }
 
 .kanban-column {
-    min-width: 300px;
+    min-width: 280px;
+    max-width: 320px;
     flex: 1;
     background: #f8f9fa;
     border-radius: 8px;
-    padding: 1rem;
+    padding: 0.75rem;
     border: 1px solid #dee2e6;
     box-shadow: 0 1px 3px rgba(0,0,0,0.1);
+    display: flex;
+    flex-direction: column;
 }
 
 .kanban-header {
@@ -50,20 +53,24 @@
 }
 
 .kanban-drop-zone {
-    min-height: 500px;
-    padding: 0.5rem;
+    min-height: 400px;
+    max-height: 70vh;
+    padding: 0.25rem;
+    overflow-y: auto;
+    flex: 1;
 }
 
 .kanban-task {
     background: white;
-    border-radius: 6px;
-    padding: 0.75rem;
-    margin-bottom: 0.75rem;
-    box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+    border-radius: 4px;
+    padding: 0.5rem;
+    margin-bottom: 0.5rem;
+    box-shadow: 0 1px 3px rgba(0,0,0,0.1);
     cursor: move;
-    transition: all 0.3s ease;
-    border-left: 4px solid #dee2e6;
+    transition: all 0.2s ease;
+    border-left: 3px solid #dee2e6;
     border: 1px solid #e9ecef;
+    font-size: 0.85rem;
 }
 
 .kanban-task:hover {
@@ -83,25 +90,28 @@
 
 .task-title {
     font-weight: 600;
-    margin-bottom: 0.5rem;
-    font-size: 0.9rem;
+    margin-bottom: 0.25rem;
+    font-size: 0.8rem;
     color: #212529;
+    line-height: 1.2;
 }
 
 .task-description {
-    font-size: 0.8rem;
+    font-size: 0.7rem;
     color: #6c757d;
-    margin-bottom: 0.5rem;
-    line-height: 1.3;
+    margin-bottom: 0.25rem;
+    line-height: 1.2;
+    max-height: 2.4rem;
+    overflow: hidden;
 }
 
 .task-meta {
     display: flex;
     justify-content: space-between;
     align-items: center;
-    font-size: 0.75rem;
+    font-size: 0.65rem;
     color: #6c757d;
-    margin-bottom: 0.5rem;
+    margin-bottom: 0.25rem;
 }
 
 .task-assignee {
@@ -126,7 +136,7 @@
     display: flex;
     justify-content: space-between;
     align-items: center;
-    margin-top: 0.5rem;
+    margin-top: 0.25rem;
 }
 
 .kanban-drop-zone.drag-over {
@@ -152,18 +162,20 @@
 .age-badge {
     background: #6c757d;
     color: white;
-    padding: 0.1rem 0.3rem;
-    border-radius: 0.75rem;
-    font-size: 0.6rem;
+    padding: 0.05rem 0.25rem;
+    border-radius: 0.6rem;
+    font-size: 0.55rem;
     font-weight: 600;
+    min-width: 1.2rem;
+    text-align: center;
 }
 
 .carried-badge {
     background: #17a2b8;
     color: white;
-    padding: 0.1rem 0.3rem;
-    border-radius: 0.75rem;
-    font-size: 0.6rem;
+    padding: 0.05rem 0.25rem;
+    border-radius: 0.6rem;
+    font-size: 0.55rem;
 }
 
 .kanban-task.age-aging {
@@ -204,12 +216,22 @@
 }
 
 .kanban-board.compact-view .task-title {
-    font-size: 0.8rem;
-    margin-bottom: 0.25rem;
+    font-size: 0.75rem;
+    margin-bottom: 0.15rem;
+}
+
+.kanban-board.compact-view .kanban-task {
+    padding: 0.35rem;
+    margin-bottom: 0.35rem;
+}
+
+.kanban-board.compact-view .task-meta {
+    font-size: 0.6rem;
+    margin-bottom: 0.15rem;
 }
 
 .kanban-board.compact-view .kanban-column {
-    min-width: 250px;
+    min-width: 220px;
 }
 
 /* Quick add button floating */
@@ -230,12 +252,26 @@
     color: #6c757d;
 }
 
+/* Responsive design for mobile and tablets */
 @media (max-width: 768px) {
     .kanban-board {
         flex-direction: column;
+        gap: 0.5rem;
     }
     .kanban-column {
         min-width: 100%;
+        max-width: none;
+        margin-bottom: 1rem;
+    }
+    .kanban-drop-zone {
+        max-height: 50vh;
+    }
+}
+
+@media (min-width: 1400px) {
+    .kanban-column {
+        min-width: 320px;
+        max-width: 380px;
     }
 }
 </style>
@@ -633,7 +669,7 @@ document.addEventListener('DOMContentLoaded', function() {
             description: document.getElementById('quick-description').value,
             priority: document.getElementById('quick-priority').value,
             assigned_to: document.getElementById('quick-assigned').value,
-            date: '{{ current_date.strftime('%Y-%m-%d') }}'
+            date: '{{ current_date.strftime('%Y-%m-%d') if current_date else '' }}'
         };
         
         fetch('/tasks/kanban/quick-add', {
