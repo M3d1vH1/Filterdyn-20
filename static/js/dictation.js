@@ -38,8 +38,12 @@ class DictationManager {
 
     createFloatingButton() {
         // Only create if not already exists
-        if (document.getElementById('floating-dictation-btn')) return;
+        if (document.getElementById('floating-dictation-btn')) {
+            console.log('Floating dictation button already exists');
+            return;
+        }
 
+        console.log('Creating floating dictation button...');
         this.floatingButton = document.createElement('div');
         this.floatingButton.id = 'floating-dictation-btn';
         this.floatingButton.className = 'floating-dictation-btn';
@@ -389,9 +393,15 @@ class DictationManager {
 
 // Initialize dictation manager when DOM is ready
 document.addEventListener('DOMContentLoaded', function() {
+    console.log('Dictation system loading...');
+    
     // Only initialize if not already done
     if (!window.dictationManager) {
+        console.log('Creating new DictationManager...');
         window.dictationManager = new DictationManager();
+        console.log('DictationManager created successfully');
+    } else {
+        console.log('DictationManager already exists');
     }
 });
 

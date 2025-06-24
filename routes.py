@@ -11,6 +11,12 @@ import json
 
 main_bp = Blueprint('main', __name__)
 
+@main_bp.route('/test-dictation')
+@login_required
+def test_dictation():
+    """Test page for dictation functionality"""
+    return render_template('test_dictation.html')
+
 @main_bp.route('/')
 @login_required
 def dashboard():
