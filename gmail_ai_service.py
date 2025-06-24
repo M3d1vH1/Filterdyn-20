@@ -1,7 +1,7 @@
 import os
 import json
 import google.generativeai as genai
-from models import AIEmailInteraction, GmailMessage
+from models import AIEmailInteraction
 from app import db
 from flask_login import current_user
 from flask_babel import get_locale
@@ -279,7 +279,8 @@ class GmailAIService:
             interaction = AIEmailInteraction(
                 tenant_id=tenant_id,
                 user_id=user_id,
-                message_id=message_id,
+                email_subject=input_data.get('email_text', '')[:100] if input_data else '',
+                email_sender='',
                 interaction_type=interaction_type,
                 input_data=input_data,
                 ai_response=ai_response,

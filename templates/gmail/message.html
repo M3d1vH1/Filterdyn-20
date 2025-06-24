@@ -1,0 +1,494 @@
+{% extends "base.html" %}
+{% set active_page = "gmail" %}
+
+{% block title %}{{ message.subject or _('(No Subject)') }}{% endblock %}
+
+{% block content %}
+<div class="container-fluid">
+    <div class="d-flex justify-content-between flex-wrap flex-md-nowrap align-items-center pt-3 pb-2 mb-3 border-bottom">
+        <h1 class="h4">
+            <i data-feather="mail" class="me-2"></i>{{ message.subject or _('(No Subject)') }}
+        </h1>
+        <div class="btn-toolbar mb-2 mb-md-0">
+            <div class="btn-group me-2">
+                <a href="{{ url_for('gmail.compose') }}?reply_to={{ message.id }}" 
+                   class="btn btn-primary">
+                    <i data-feather="corner-up-left"></i> {{ _('Reply') }}
+                </a>
+                <button onclick="analyzeMessage()" class="btn btn-outline-info">
+                    <i data-feather="zap"></i> {{ _('AI Analysis') }}
+                </button>
+                <a href="{{ url_for('gmail.inbox') }}" class="btn btn-outline-secondary">
+                    <i data-feather="arrow-left"></i> {{ _('Back to Inbox') }}
+                </a>
+            </div>
+        </div>
+    </div>
+
+    <div class="row">
+        <div class="col-lg-8">
+            <div class="card shadow-sm">
+                <div class="card-header d-flex justify-content-between align-items-start">
+                    <div>
+                        <h6 class="mb-1">
+                            <strong>{{ message.sender or _('Unknown Sender') }}</strong>
+                        </h6>
+                        <div class="small text-muted">
+                            <strong>{{ _('To') }}:</strong> {{ message.recipients or _('Unknown') }}
+                            {% if message.cc %}
+                                <br><strong>{{ _('CC') }}:</strong> {{ message.cc }}
+                            {% endif %}
+                            {% if message.bcc %}
+                                <br><strong>{{ _('BCC') }}:</strong> {{ message.bcc }}
+                            {% endif %}
+                        </div>
+                    </div>
+                    <div class="text-end">
+                        <div class="small text-muted">
+                            {{ message.received_at|safe_datetime_format if message.received_at else _('Unknown date') }}
+                        </div>
+                        <div class="mt-1">
+                            {% if message.is_starred %}
+                                <i data-feather="star" class="text-warning me-1"></i>
+                            {% endif %}
+                            {% if message.is_important %}
+                                <i data-feather="alert-circle" class="text-danger me-1"></i>
+                            {% endif %}
+                            {% if message.has_attachments %}
+                                <i data-feather="paperclip" class="text-muted"></i>
+                            {% endif %}
+                        </div>
+                    </div>
+                </div>
+                
+                <div class="card-body">
+                    <div class="email-content mb-3">
+                        {% if message.body_html %}
+                            <div class="email-body-html">{{ message.body_html|safe }}</div>
+                        {% elif message.body_plain %}
+                            <pre class="email-body-plain">{{ message.body_plain }}</pre>
+                        {% elif message.snippet %}
+                            <div class="text-muted fst-italic">{{ message.snippet }}</div>
+                        {% else %}
+                            <div class="text-muted fst-italic">{{ _('No content available') }}</div>
+                        {% endif %}
+                    </div>
+
+                    <!-- Attachments -->
+                    {% if attachments %}
+                    <div class="attachments mb-3">
+                        <h6>{{ _('Attachments') }}:</h6>
+                        <div class="row">
+                            {% for attachment in attachments %}
+                            <div class="col-md-6 col-lg-4 mb-2">
+                                <div class="card border">
+                                    <div class="card-body p-2">
+                                        <div class="d-flex align-items-center">
+                                            <i data-feather="file" class="me-2"></i>
+                                            <div class="flex-grow-1">
+                                                <a href="{{ url_for('gmail.download_attachment', attachment_id=attachment.id) }}" 
+                                                   class="text-decoration-none">
+                                                    <small class="fw-bold">{{ attachment.filename }}</small>
+                                                </a>
+                                                <div class="text-muted small">
+                                                    {{ (attachment.file_size / 1024)|round(1) }} KB
+                                                </div>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                            {% endfor %}
+                        </div>
+                    </div>
+                    {% endif %}
+
+                    <!-- AI Analysis Section -->
+                    <div class="ai-actions mt-4">
+                        <h6 class="text-info mb-3">
+                            <i data-feather="zap"></i> {{ _('AI Analysis & Actions') }}
+                        </h6>
+                        <div class="btn-group mb-3" role="group">
+                            <button onclick="analyzeMessage()" 
+                                    class="btn btn-outline-info"
+                                    id="analyze-btn">
+                                <i data-feather="zap"></i> {{ _('Analyze Email') }}
+                            </button>
+                            <button onclick="suggestReply()" 
+                                    class="btn btn-outline-success"
+                                    id="suggest-btn">
+                                <i data-feather="edit-3"></i> {{ _('Suggest Reply') }}
+                            </button>
+                            <button onclick="extractEntities()" 
+                                    class="btn btn-outline-warning"
+                                    id="entities-btn">
+                                <i data-feather="search"></i> {{ _('Extract Entities') }}
+                            </button>
+                        </div>
+
+                        <!-- AI Results -->
+                        <div id="ai-results" class="ai-results" style="display: none;"></div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Sidebar -->
+        <div class="col-lg-4">
+            <!-- Message Info -->
+            <div class="card mb-3">
+                <div class="card-header">
+                    <h6 class="mb-0">{{ _('Message Information') }}</h6>
+                </div>
+                <div class="card-body">
+                    <div class="row mb-2">
+                        <div class="col-sm-4"><strong>{{ _('Thread ID') }}:</strong></div>
+                        <div class="col-sm-8"><small>{{ message.thread_id }}</small></div>
+                    </div>
+                    <div class="row mb-2">
+                        <div class="col-sm-4"><strong>{{ _('Message ID') }}:</strong></div>
+                        <div class="col-sm-8"><small>{{ message.message_id }}</small></div>
+                    </div>
+                    <div class="row mb-2">
+                        <div class="col-sm-4"><strong>{{ _('Status') }}:</strong></div>
+                        <div class="col-sm-8">
+                            {% if message.is_read %}
+                                <span class="badge bg-secondary">{{ _('Read') }}</span>
+                            {% else %}
+                                <span class="badge bg-primary">{{ _('Unread') }}</span>
+                            {% endif %}
+                        </div>
+                    </div>
+                    {% if message.labels %}
+                    <div class="row">
+                        <div class="col-sm-4"><strong>{{ _('Labels') }}:</strong></div>
+                        <div class="col-sm-8">
+                            {% for label in message.labels %}
+                                <span class="badge bg-light text-dark me-1">{{ label }}</span>
+                            {% endfor %}
+                        </div>
+                    </div>
+                    {% endif %}
+                </div>
+            </div>
+
+            <!-- Quick Actions -->
+            <div class="card mb-3">
+                <div class="card-header">
+                    <h6 class="mb-0">{{ _('Quick Actions') }}</h6>
+                </div>
+                <div class="card-body">
+                    <div class="d-grid gap-2">
+                        <button onclick="markAsRead()" class="btn btn-outline-primary btn-sm">
+                            <i data-feather="eye"></i> {{ _('Mark as Read') }}
+                        </button>
+                        <button onclick="markAsStarred()" class="btn btn-outline-warning btn-sm">
+                            <i data-feather="star"></i> {{ _('Add Star') }}
+                        </button>
+                        <button onclick="archiveMessage()" class="btn btn-outline-secondary btn-sm">
+                            <i data-feather="archive"></i> {{ _('Archive') }}
+                        </button>
+                        <button onclick="deleteMessage()" class="btn btn-outline-danger btn-sm">
+                            <i data-feather="trash-2"></i> {{ _('Delete') }}
+                        </button>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Business Links -->
+            <div class="card">
+                <div class="card-header">
+                    <h6 class="mb-0">{{ _('Business Associations') }}</h6>
+                </div>
+                <div class="card-body">
+                    <div id="business-links">
+                        <p class="text-muted mb-2">{{ _('No associations found') }}</p>
+                        <button onclick="suggestBusinessLinks()" class="btn btn-sm btn-outline-primary">
+                            <i data-feather="link"></i> {{ _('Suggest Links') }}
+                        </button>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+const messageData = {
+    id: {{ message.id }},
+    subject: '{{ message.subject|e }}',
+    sender: '{{ message.sender|e }}',
+    content: `{{ (message.body_plain or message.body_html or message.snippet)|e }}`
+};
+
+function analyzeMessage() {
+    const btn = document.getElementById('analyze-btn');
+    const resultsDiv = document.getElementById('ai-results');
+    const originalText = btn.innerHTML;
+    
+    btn.innerHTML = '<i data-feather="loader" class="spin"></i> {{ _("Analyzing...") }}';
+    btn.disabled = true;
+    
+    fetch('{{ url_for("gmail.api_analyze") }}', {
+        method: 'POST',
+        headers: {
+            'Content-Type': 'application/json',
+            'X-CSRFToken': '{{ csrf_token() }}'
+        },
+        body: JSON.stringify({ 
+            email_text: messageData.content,
+            email_subject: messageData.subject 
+        })
+    })
+    .then(response => response.json())
+    .then(data => {
+        if (data.error) {
+            throw new Error(data.error);
+        }
+        
+        let html = '<div class="ai-analysis-results border rounded p-3 bg-light mb-3">';
+        html += '<h6 class="text-info mb-3"><i data-feather="zap"></i> {{ _("AI Analysis Results") }}</h6>';
+        
+        if (data.summary) {
+            html += `<div class="mb-2"><strong>{{ _("Summary") }}:</strong> ${data.summary}</div>`;
+        }
+        if (data.sentiment) {
+            const sentimentColor = data.sentiment === 'positive' ? 'success' : data.sentiment === 'negative' ? 'danger' : 'secondary';
+            html += `<div class="mb-2"><strong>{{ _("Sentiment") }}:</strong> <span class="badge bg-${sentimentColor}">${data.sentiment}</span></div>`;
+        }
+        if (data.intent) {
+            html += `<div class="mb-2"><strong>{{ _("Intent") }}:</strong> ${data.intent}</div>`;
+        }
+        if (data.priority) {
+            const priorityColor = data.priority === 'urgent' ? 'danger' : data.priority === 'high' ? 'warning' : 'secondary';
+            html += `<div class="mb-2"><strong>{{ _("Priority") }}:</strong> <span class="badge bg-${priorityColor}">${data.priority}</span></div>`;
+        }
+        if (data.key_info && data.key_info.length > 0) {
+            html += `<div class="mb-2"><strong>{{ _("Key Information") }}:</strong><ul class="mb-0">`;
+            data.key_info.forEach(info => html += `<li>${info}</li>`);
+            html += `</ul></div>`;
+        }
+        
+        html += '</div>';
+        
+        resultsDiv.innerHTML = html;
+        resultsDiv.style.display = 'block';
+        feather.replace();
+    })
+    .catch(error => {
+        resultsDiv.innerHTML = `<div class="alert alert-danger"><i data-feather="alert-circle"></i> {{ _("Analysis failed") }}: ${error.message}</div>`;
+        resultsDiv.style.display = 'block';
+        feather.replace();
+    })
+    .finally(() => {
+        btn.innerHTML = originalText;
+        btn.disabled = false;
+        feather.replace();
+    });
+}
+
+function suggestReply() {
+    const btn = document.getElementById('suggest-btn');
+    const resultsDiv = document.getElementById('ai-results');
+    const originalText = btn.innerHTML;
+    
+    btn.innerHTML = '<i data-feather="loader" class="spin"></i> {{ _("Suggesting...") }}';
+    btn.disabled = true;
+    
+    fetch('{{ url_for("gmail.api_suggest") }}', {
+        method: 'POST',
+        headers: {
+            'Content-Type': 'application/json',
+            'X-CSRFToken': '{{ csrf_token() }}'
+        },
+        body: JSON.stringify({ 
+            email_text: messageData.content,
+            tone: 'professional',
+            language: '{{ get_locale() }}'
+        })
+    })
+    .then(response => response.json())
+    .then(data => {
+        if (data.error) {
+            throw new Error(data.error);
+        }
+        
+        let html = '<div class="ai-suggestion-results border rounded p-3 bg-light mb-3">';
+        html += '<h6 class="text-success mb-3"><i data-feather="edit-3"></i> {{ _("Suggested Reply") }}</h6>';
+        html += `<div class="suggested-reply mb-3 p-2 bg-white border rounded">${data.suggestion.replace(/\n/g, '<br>')}</div>`;
+        html += `<button onclick="useReply('${data.suggestion.replace(/'/g, "\\'")}', ${messageData.id})" class="btn btn-sm btn-success me-2">{{ _("Use This Reply") }}</button>`;
+        html += `<button onclick="copyToClipboard('${data.suggestion.replace(/'/g, "\\'")}') class="btn btn-sm btn-outline-secondary">{{ _("Copy") }}</button>`;
+        html += '</div>';
+        
+        resultsDiv.innerHTML = html;
+        resultsDiv.style.display = 'block';
+        feather.replace();
+    })
+    .catch(error => {
+        resultsDiv.innerHTML = `<div class="alert alert-danger"><i data-feather="alert-circle"></i> {{ _("Suggestion failed") }}: ${error.message}</div>`;
+        resultsDiv.style.display = 'block';
+        feather.replace();
+    })
+    .finally(() => {
+        btn.innerHTML = originalText;
+        btn.disabled = false;
+        feather.replace();
+    });
+}
+
+function extractEntities() {
+    const btn = document.getElementById('entities-btn');
+    const resultsDiv = document.getElementById('ai-results');
+    const originalText = btn.innerHTML;
+    
+    btn.innerHTML = '<i data-feather="loader" class="spin"></i> {{ _("Extracting...") }}';
+    btn.disabled = true;
+    
+    fetch('{{ url_for("gmail.api_entities") }}', {
+        method: 'POST',
+        headers: {
+            'Content-Type': 'application/json',
+            'X-CSRFToken': '{{ csrf_token() }}'
+        },
+        body: JSON.stringify({ email_text: messageData.content })
+    })
+    .then(response => response.json())
+    .then(data => {
+        if (data.error) {
+            throw new Error(data.error);
+        }
+        
+        let html = '<div class="ai-entities-results border rounded p-3 bg-light mb-3">';
+        html += '<h6 class="text-warning mb-3"><i data-feather="search"></i> {{ _("Extracted Entities") }}</h6>';
+        
+        if (data.customers && data.customers.length > 0) {
+            html += '<div class="mb-2"><strong>{{ _("Customers") }}:</strong>';
+            data.customers.forEach(customer => html += ` <span class="badge bg-primary me-1">${customer.name || customer.email}</span>`);
+            html += '</div>';
+        }
+        
+        if (data.orders && data.orders.length > 0) {
+            html += '<div class="mb-2"><strong>{{ _("Orders") }}:</strong>';
+            data.orders.forEach(order => html += ` <span class="badge bg-info me-1">${order}</span>`);
+            html += '</div>';
+        }
+        
+        if (data.amounts && data.amounts.length > 0) {
+            html += '<div class="mb-2"><strong>{{ _("Amounts") }}:</strong>';
+            data.amounts.forEach(amount => html += ` <span class="badge bg-success me-1">${amount.value} ${amount.currency}</span>`);
+            html += '</div>';
+        }
+        
+        if (data.dates && data.dates.length > 0) {
+            html += '<div class="mb-2"><strong>{{ _("Dates") }}:</strong>';
+            data.dates.forEach(date => html += ` <span class="badge bg-secondary me-1">${date.date}</span>`);
+            html += '</div>';
+        }
+        
+        html += '</div>';
+        
+        resultsDiv.innerHTML = html;
+        resultsDiv.style.display = 'block';
+        feather.replace();
+    })
+    .catch(error => {
+        resultsDiv.innerHTML = `<div class="alert alert-danger"><i data-feather="alert-circle"></i> {{ _("Entity extraction failed") }}: ${error.message}</div>`;
+        resultsDiv.style.display = 'block';
+        feather.replace();
+    })
+    .finally(() => {
+        btn.innerHTML = originalText;
+        btn.disabled = false;
+        feather.replace();
+    });
+}
+
+function useReply(suggestion, messageId) {
+    const composeUrl = '{{ url_for("gmail.compose") }}?reply_to=' + messageId + '&suggestion=' + encodeURIComponent(suggestion);
+    window.open(composeUrl, '_blank');
+}
+
+function copyToClipboard(text) {
+    navigator.clipboard.writeText(text).then(() => {
+        alert('{{ _("Copied to clipboard!") }}');
+    });
+}
+
+function markAsRead() {
+    alert('{{ _("Mark as read functionality coming soon!") }}');
+}
+
+function markAsStarred() {
+    alert('{{ _("Star functionality coming soon!") }}');
+}
+
+function archiveMessage() {
+    alert('{{ _("Archive functionality coming soon!") }}');
+}
+
+function deleteMessage() {
+    if (confirm('{{ _("Are you sure you want to delete this message?") }}')) {
+        alert('{{ _("Delete functionality coming soon!") }}');
+    }
+}
+
+function suggestBusinessLinks() {
+    alert('{{ _("Business link suggestions coming soon!") }}');
+}
+
+// Initialize feather icons
+feather.replace();
+</script>
+
+<style>
+.email-content {
+    max-height: 600px;
+    overflow-y: auto;
+}
+
+.email-body-html {
+    font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+    line-height: 1.6;
+    color: #333;
+    background: #fff;
+    padding: 1rem;
+    border-radius: 0.375rem;
+    border: 1px solid #dee2e6;
+}
+
+.email-body-plain {
+    font-family: 'Courier New', monospace;
+    font-size: 0.9rem;
+    background: #f8f9fa;
+    padding: 1rem;
+    border-radius: 0.375rem;
+    border: 1px solid #dee2e6;
+    white-space: pre-wrap;
+    max-height: 400px;
+    overflow-y: auto;
+}
+
+.ai-results {
+    animation: fadeIn 0.3s ease-in;
+}
+
+@keyframes fadeIn {
+    from { opacity: 0; transform: translateY(-10px); }
+    to { opacity: 1; transform: translateY(0); }
+}
+
+.spin {
+    animation: spin 1s linear infinite;
+}
+
+@keyframes spin {
+    from { transform: rotate(0deg); }
+    to { transform: rotate(360deg); }
+}
+
+.suggested-reply {
+    font-family: inherit;
+    white-space: pre-wrap;
+}
+</style>
+{% endblock %}
