@@ -50,18 +50,45 @@
                         </div>
                     </div>
 
+                    <div class="alert alert-info">
+                        <i data-feather="info" class="me-2"></i>
+                        <strong>{{ _('OAuth Redirect URI') }}</strong><br>
+                        {{ _('Use this exact redirect URI in your Google Cloud Console:') }}<br>
+                        <code>{{ request.url_root.rstrip('/') }}/auth/google/callback</code>
+                        <button class="btn btn-sm btn-outline-secondary ms-2" onclick="navigator.clipboard.writeText('{{ request.url_root.rstrip('/') }}/auth/google/callback')">
+                            <i data-feather="copy"></i> {{ _('Copy') }}
+                        </button>
+                    </div>
+
+                    {% if session.get('google_connected') %}
+                    <div class="alert alert-success">
+                        <i data-feather="check-circle" class="me-2"></i>
+                        <strong>{{ _('Connected') }}</strong><br>
+                        {{ _('Gmail account connected:') }} <strong>{{ session.get('google_email') }}</strong>
+                    </div>
+                    
+                    <div class="text-center">
+                        <a href="{{ url_for('main.gmail_inbox') }}" class="btn btn-success btn-lg me-2">
+                            <i data-feather="mail" class="me-2"></i>{{ _('Open Gmail') }}
+                        </a>
+                        <a href="{{ url_for('auth.google_disconnect') }}" class="btn btn-outline-danger">
+                            <i data-feather="x-circle" class="me-2"></i>{{ _('Disconnect') }}
+                        </a>
+                    </div>
+                    {% else %}
                     <div class="alert alert-warning">
                         <i data-feather="alert-triangle" class="me-2"></i>
-                        <strong>{{ _('Configuration Required') }}</strong><br>
-                        {{ _('Gmail integration requires Google API credentials to be configured by the administrator.') }}
+                        <strong>{{ _('Not Connected') }}</strong><br>
+                        {{ _('Click the button below to connect your Gmail account.') }}
                     </div>
 
                     <div class="text-center">
-                        <button class="btn btn-primary btn-lg" disabled>
+                        <a href="{{ url_for('auth.google_login') }}" class="btn btn-primary btn-lg">
                             <i data-feather="mail" class="me-2"></i>{{ _('Connect Gmail') }}
-                        </button>
-                        <p class="text-muted mt-2">{{ _('Available after API configuration') }}</p>
+                        </a>
+                        <p class="text-muted mt-2">{{ _('You will be redirected to Google for authentication') }}</p>
                     </div>
+                    {% endif %}
                 </div>
             </div>
         </div>

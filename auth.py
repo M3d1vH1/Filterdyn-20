@@ -5,6 +5,9 @@ from models import User, Tenant
 from app import db
 from forms import LoginForm, UserForm
 from utils import admin_required, manager_required
+import os
+import requests
+from urllib.parse import urlencode
 
 auth_bp = Blueprint('auth', __name__, url_prefix='/auth')
 
@@ -45,6 +48,102 @@ def logout():
     logout_user()
     flash('You have been logged out successfully', 'info')
     return redirect(url_for('auth.login'))
+
+@auth_bp.route('/google/login')
+@login_required
+def google_login():
+    """Initiate Google OAuth login"""
+    client_id = os.environ.get('GOOGLE_CLIENT_ID')
+    if not client_id:
+        flash('Google OAuth is not configured. Please contact your administrator.', 'error')
+        return redirect(url_for('main.ai_assistant'))
+    
+    # Get the current domain dynamically
+    redirect_uri = request.url_root.rstrip('/') + '/auth/google/callback'
+    
+    # Google OAuth parameters
+    params = {
+        'client_id': client_id,
+        'redirect_uri': redirect_uri,
+        'scope': 'https://www.googleapis.com/auth/gmail.readonly https://www.googleapis.com/auth/gmail.send https://www.googleapis.com/auth/gmail.modify https://www.googleapis.com/auth/userinfo.email',
+        'response_type': 'code',
+        'access_type': 'offline',
+        'prompt': 'consent'
+    }
+    
+    auth_url = 'https://accounts.google.com/o/oauth2/v2/auth?' + urlencode(params)
+    return redirect(auth_url)
+
+@auth_bp.route('/google/callback')
+@login_required
+def google_callback():
+    """Handle Google OAuth callback"""
+    code = request.args.get('code')
+    error = request.args.get('error')
+    
+    if error:
+        flash(f'Google authentication failed: {error}', 'error')
+        return redirect(url_for('main.ai_assistant'))
+    
+    if not code:
+        flash('No authorization code received from Google', 'error')
+        return redirect(url_for('main.ai_assistant'))
+    
+    # Exchange code for tokens
+    client_id = os.environ.get('GOOGLE_CLIENT_ID')
+    client_secret = os.environ.get('GOOGLE_CLIENT_SECRET')
+    
+    if not client_id or not client_secret:
+        flash('Google OAuth credentials not configured', 'error')
+        return redirect(url_for('main.ai_assistant'))
+    
+    redirect_uri = request.url_root.rstrip('/') + '/auth/google/callback'
+    
+    token_data = {
+        'code': code,
+        'client_id': client_id,
+        'client_secret': client_secret,
+        'redirect_uri': redirect_uri,
+        'grant_type': 'authorization_code'
+    }
+    
+    try:
+        # Get access token
+        token_response = requests.post('https://oauth2.googleapis.com/token', data=token_data)
+        token_response.raise_for_status()
+        tokens = token_response.json()
+        
+        # Store tokens in session (in production, store in database)
+        session['google_access_token'] = tokens.get('access_token')
+        session['google_refresh_token'] = tokens.get('refresh_token')
+        
+        # Get user info
+        headers = {'Authorization': f'Bearer {tokens["access_token"]}'}
+        user_response = requests.get('https://www.googleapis.com/oauth2/v2/userinfo', headers=headers)
+        user_response.raise_for_status()
+        user_info = user_response.json()
+        
+        session['google_email'] = user_info.get('email')
+        session['google_connected'] = True
+        
+        flash(f'Successfully connected Gmail account: {user_info.get("email")}', 'success')
+        return redirect(url_for('main.gmail_inbox'))
+        
+    except requests.exceptions.RequestException as e:
+        flash(f'Failed to connect Gmail: {str(e)}', 'error')
+        return redirect(url_for('main.ai_assistant'))
+
+@auth_bp.route('/google/disconnect')
+@login_required
+def google_disconnect():
+    """Disconnect Google account"""
+    session.pop('google_access_token', None)
+    session.pop('google_refresh_token', None)
+    session.pop('google_email', None)
+    session.pop('google_connected', None)
+    
+    flash('Gmail account disconnected successfully', 'info')
+    return redirect(url_for('main.ai_assistant'))
 
 @auth_bp.route('/change-language/<language>')
 def change_language(language):
