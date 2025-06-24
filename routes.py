@@ -545,6 +545,11 @@ def settings():
 @main_bp.route('/tasks')
 @login_required
 def tasks():
+    view = request.args.get('view', 'list')
+    
+    if view == 'kanban':
+        return redirect(url_for('main.tasks_kanban'))
+    
     page = request.args.get('page', 1, type=int)
     status = request.args.get('status', '')
     priority = request.args.get('priority', '')
@@ -571,6 +576,69 @@ def tasks():
     )
     
     return render_template('tasks/index.html', tasks=tasks, status=status, priority=priority)
+
+
+@main_bp.route('/tasks/kanban')
+@login_required
+def tasks_kanban():
+    """Kanban board view for tasks"""
+    query = Task.query.filter_by(tenant_id=current_user.tenant_id)
+    
+    # Filter by user role
+    if current_user.role == 'user':
+        query = query.filter(
+            db.or_(
+                Task.created_by == current_user.id,
+                Task.assigned_to == current_user.id
+            )
+        )
+    
+    # Get tasks grouped by status
+    statuses = ['pending', 'in_progress', 'completed', 'cancelled']
+    kanban_data = {}
+    
+    for status in statuses:
+        tasks = query.filter_by(status=status).order_by(Task.created_at.desc()).all()
+        kanban_data[status] = tasks
+    
+    # Get all users for assignment dropdown
+    users = User.query.filter_by(tenant_id=current_user.tenant_id).all()
+    
+    return render_template('tasks/kanban.html', kanban_data=kanban_data, users=users, statuses=statuses)
+
+
+@main_bp.route('/tasks/update_status', methods=['POST'])
+@login_required
+def update_task_status():
+    """Update task status via AJAX for kanban board"""
+    task_id = request.json.get('task_id')
+    new_status = request.json.get('status')
+    
+    task = Task.query.filter_by(id=task_id, tenant_id=current_user.tenant_id).first()
+    
+    if not task:
+        return jsonify({'success': False, 'message': 'Task not found'}), 404
+    
+    # Check permissions
+    if current_user.role == 'user':
+        if task.created_by != current_user.id and task.assigned_to != current_user.id:
+            return jsonify({'success': False, 'message': 'Permission denied'}), 403
+    
+    # Update status
+    task.status = new_status
+    if new_status == 'completed':
+        task.completed_at = datetime.now(timezone.utc)
+    else:
+        task.completed_at = None
+    
+    task.updated_at = datetime.now(timezone.utc)
+    
+    try:
+        db.session.commit()
+        return jsonify({'success': True, 'message': 'Task status updated successfully'})
+    except Exception as e:
+        db.session.rollback()
+        return jsonify({'success': False, 'message': str(e)}), 500
 
 # AI Assistant Routes
 @main_bp.route('/ai-assistant')
