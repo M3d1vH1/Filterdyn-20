@@ -38,9 +38,14 @@
                         </div>
                         
                         <div class="col-12 mb-3">
-                            <div class="form-floating">
+                            <div class="form-floating position-relative">
                                 {{ form.title(class="form-control", required=true) }}
                                 {{ form.title.label(class="form-label") }}
+                                <button type="button" class="btn btn-outline-secondary voice-btn" id="voice-title-btn" 
+                                        data-target="title" data-bs-toggle="tooltip" title="{{ _('Voice Input') }}">
+                                    <i data-feather="mic" class="voice-icon"></i>
+                                    <i data-feather="mic-off" class="voice-icon-off" style="display: none;"></i>
+                                </button>
                                 <div class="invalid-feedback">
                                     {{ _('Please provide a task title.') }}
                                 </div>
@@ -55,9 +60,14 @@
                         </div>
                         
                         <div class="col-12 mb-3">
-                            <div class="form-floating">
+                            <div class="form-floating position-relative">
                                 {{ form.description(class="form-control", style="height: 120px", data_auto_resize="true") }}
                                 {{ form.description.label(class="form-label") }}
+                                <button type="button" class="btn btn-outline-secondary voice-btn" id="voice-description-btn" 
+                                        data-target="description" data-bs-toggle="tooltip" title="{{ _('Voice Input') }}">
+                                    <i data-feather="mic" class="voice-icon"></i>
+                                    <i data-feather="mic-off" class="voice-icon-off" style="display: none;"></i>
+                                </button>
                             </div>
                             {% if form.description.errors %}
                             <div class="text-danger small mt-1">
@@ -171,6 +181,33 @@
                         </div>
                     </div>
                     
+                    <!-- Voice Input Controls -->
+                    <div class="row mb-4">
+                        <div class="col-12">
+                            <div class="card bg-light border-0">
+                                <div class="card-body text-center py-3">
+                                    <h6 class="mb-3 text-primary">
+                                        <i data-feather="mic" class="me-2"></i>
+                                        {{ _('Quick Voice Input') }}
+                                    </h6>
+                                    <button type="button" class="btn btn-primary btn-lg voice-dictate-btn" id="voice-dictate-all">
+                                        <i data-feather="mic" class="me-2"></i>
+                                        {{ _('Dictate Entire Task') }}
+                                    </button>
+                                    <div class="text-muted small mt-2">
+                                        {{ _('Say: "Title: [task title], Description: [task description], Priority: [low/medium/high/urgent]"') }}
+                                    </div>
+                                    <div id="voice-status" class="mt-2" style="display: none;">
+                                        <span class="badge bg-success">
+                                            <i data-feather="mic" class="me-1" style="width: 12px; height: 12px;"></i>
+                                            {{ _('Listening...') }}
+                                        </span>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
                     <!-- Actions -->
                     <div class="row">
                         <div class="col-12">
@@ -200,10 +237,280 @@
 </div>
 {% endblock %}
 
+{% block css %}
+<style>
+.voice-btn {
+    position: absolute;
+    right: 8px;
+    top: 50%;
+    transform: translateY(-50%);
+    z-index: 5;
+    border: none !important;
+    background: transparent !important;
+    padding: 0.25rem 0.5rem;
+    width: auto;
+    height: auto;
+}
+
+.voice-btn:hover {
+    background: rgba(0,123,255,0.1) !important;
+}
+
+.voice-btn.listening {
+    color: #dc3545 !important;
+    animation: pulse 1.5s infinite;
+}
+
+.voice-dictate-btn.listening {
+    background-color: #dc3545 !important;
+    border-color: #dc3545 !important;
+    animation: pulse 1.5s infinite;
+}
+
+@keyframes pulse {
+    0% { opacity: 1; }
+    50% { opacity: 0.7; }
+    100% { opacity: 1; }
+}
+
+.form-floating textarea + .voice-btn {
+    top: 25px;
+}
+
+#voice-status .badge {
+    animation: pulse 1.5s infinite;
+}
+</style>
+{% endblock %}
+
 {% block js %}
 <script>
-// Set default due date to tomorrow
+let recognition = null;
+let isListening = false;
+
+// Initialize Speech Recognition
+function initializeSpeechRecognition() {
+    if ('webkitSpeechRecognition' in window || 'SpeechRecognition' in window) {
+        const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
+        recognition = new SpeechRecognition();
+        
+        recognition.continuous = false;
+        recognition.interimResults = false;
+        recognition.lang = 'en-US';
+        
+        return true;
+    }
+    return false;
+}
+
+// Start voice input for specific field
+function startVoiceInput(targetField) {
+    if (!recognition) return;
+    
+    if (isListening) {
+        stopVoiceInput();
+        return;
+    }
+    
+    const field = document.getElementById(targetField);
+    const button = document.querySelector(`[data-target="${targetField}"]`);
+    
+    if (!field || !button) return;
+    
+    isListening = true;
+    button.classList.add('listening');
+    button.querySelector('.voice-icon').style.display = 'none';
+    button.querySelector('.voice-icon-off').style.display = 'inline';
+    
+    recognition.onresult = function(event) {
+        const transcript = event.results[0][0].transcript;
+        if (field.value) {
+            field.value += ' ' + transcript;
+        } else {
+            field.value = transcript;
+        }
+        field.dispatchEvent(new Event('input'));
+        stopVoiceInput();
+    };
+    
+    recognition.onerror = function(event) {
+        console.error('Speech recognition error:', event.error);
+        stopVoiceInput();
+        showVoiceError('Voice recognition error. Please try again.');
+    };
+    
+    recognition.onend = function() {
+        stopVoiceInput();
+    };
+    
+    try {
+        recognition.start();
+    } catch (error) {
+        console.error('Error starting recognition:', error);
+        stopVoiceInput();
+        showVoiceError('Could not start voice recognition.');
+    }
+}
+
+// Stop voice input
+function stopVoiceInput() {
+    if (!recognition) return;
+    
+    isListening = false;
+    
+    // Reset all voice buttons
+    document.querySelectorAll('.voice-btn').forEach(btn => {
+        btn.classList.remove('listening');
+        btn.querySelector('.voice-icon').style.display = 'inline';
+        btn.querySelector('.voice-icon-off').style.display = 'none';
+    });
+    
+    document.querySelectorAll('.voice-dictate-btn').forEach(btn => {
+        btn.classList.remove('listening');
+        btn.querySelector('.voice-icon').style.display = 'inline';
+        btn.querySelector('.voice-icon-off').style.display = 'none';
+    });
+    
+    document.getElementById('voice-status').style.display = 'none';
+    
+    try {
+        recognition.stop();
+    } catch (error) {
+        // Ignore errors when stopping
+    }
+}
+
+// Start full task dictation
+function startFullDictation() {
+    if (!recognition) return;
+    
+    if (isListening) {
+        stopVoiceInput();
+        return;
+    }
+    
+    const button = document.getElementById('voice-dictate-all');
+    const status = document.getElementById('voice-status');
+    
+    isListening = true;
+    button.classList.add('listening');
+    button.innerHTML = '<i data-feather="mic-off" class="me-2"></i>Stop Listening';
+    status.style.display = 'block';
+    feather.replace();
+    
+    recognition.onresult = function(event) {
+        const transcript = event.results[0][0].transcript.toLowerCase();
+        parseFullTaskDictation(transcript);
+        stopVoiceInput();
+        button.innerHTML = '<i data-feather="mic" class="me-2"></i>Dictate Entire Task';
+        feather.replace();
+    };
+    
+    recognition.onerror = function(event) {
+        console.error('Speech recognition error:', event.error);
+        stopVoiceInput();
+        button.innerHTML = '<i data-feather="mic" class="me-2"></i>Dictate Entire Task';
+        showVoiceError('Voice recognition error. Please try again.');
+        feather.replace();
+    };
+    
+    recognition.onend = function() {
+        stopVoiceInput();
+        button.innerHTML = '<i data-feather="mic" class="me-2"></i>Dictate Entire Task';
+        feather.replace();
+    };
+    
+    try {
+        recognition.start();
+    } catch (error) {
+        console.error('Error starting recognition:', error);
+        stopVoiceInput();
+        button.innerHTML = '<i data-feather="mic" class="me-2"></i>Dictate Entire Task';
+        showVoiceError('Could not start voice recognition.');
+        feather.replace();
+    }
+}
+
+// Parse full task dictation
+function parseFullTaskDictation(transcript) {
+    console.log('Parsing transcript:', transcript);
+    
+    // Extract title
+    const titleMatch = transcript.match(/title[:\s]+(.+?)(?:\s+description|\s+priority|\s*$)/i);
+    if (titleMatch) {
+        const title = titleMatch[1].trim();
+        document.getElementById('title').value = capitalizeFirst(title);
+    }
+    
+    // Extract description
+    const descMatch = transcript.match(/description[:\s]+(.+?)(?:\s+priority|\s*$)/i);
+    if (descMatch) {
+        const description = descMatch[1].trim();
+        document.getElementById('description').value = capitalizeFirst(description);
+    }
+    
+    // Extract priority
+    const priorityMatch = transcript.match(/priority[:\s]+(low|medium|high|urgent)/i);
+    if (priorityMatch) {
+        const priority = priorityMatch[1].toLowerCase();
+        document.getElementById('priority').value = priority;
+        
+        // Trigger priority color change
+        const event = new Event('change');
+        document.getElementById('priority').dispatchEvent(event);
+    }
+    
+    showVoiceSuccess('Task details filled from voice input!');
+}
+
+// Utility functions
+function capitalizeFirst(str) {
+    return str.charAt(0).toUpperCase() + str.slice(1);
+}
+
+function showVoiceError(message) {
+    const alert = document.createElement('div');
+    alert.className = 'alert alert-danger alert-dismissible fade show position-fixed';
+    alert.style.cssText = 'top: 20px; right: 20px; z-index: 9999; min-width: 300px;';
+    alert.innerHTML = `
+        <i data-feather="alert-circle" class="me-2"></i>
+        ${message}
+        <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+    `;
+    
+    document.body.appendChild(alert);
+    feather.replace();
+    
+    setTimeout(() => {
+        if (alert.parentElement) {
+            alert.remove();
+        }
+    }, 5000);
+}
+
+function showVoiceSuccess(message) {
+    const alert = document.createElement('div');
+    alert.className = 'alert alert-success alert-dismissible fade show position-fixed';
+    alert.style.cssText = 'top: 20px; right: 20px; z-index: 9999; min-width: 300px;';
+    alert.innerHTML = `
+        <i data-feather="check-circle" class="me-2"></i>
+        ${message}
+        <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+    `;
+    
+    document.body.appendChild(alert);
+    feather.replace();
+    
+    setTimeout(() => {
+        if (alert.parentElement) {
+            alert.remove();
+        }
+    }, 3000);
+}
+
+// DOM Ready
 document.addEventListener('DOMContentLoaded', function() {
+    // Set default due date to tomorrow
     var dueDateField = document.getElementById('due_date');
     if (dueDateField && !dueDateField.value) {
         var tomorrow = new Date();
@@ -219,20 +526,56 @@ document.addEventListener('DOMContentLoaded', function() {
         
         dueDateField.value = `${year}-${month}-${day}T${hours}:${minutes}`;
     }
-});
-
-// Priority color indicator
-document.getElementById('priority').addEventListener('change', function() {
-    var priority = this.value;
-    var parentDiv = this.closest('.form-floating');
     
-    // Remove all priority classes
-    parentDiv.classList.remove('priority-low', 'priority-medium', 'priority-high', 'priority-urgent');
+    // Priority color indicator
+    document.getElementById('priority').addEventListener('change', function() {
+        var priority = this.value;
+        var parentDiv = this.closest('.form-floating');
+        
+        // Remove all priority classes
+        parentDiv.classList.remove('priority-low', 'priority-medium', 'priority-high', 'priority-urgent');
+        
+        // Add current priority class
+        if (priority) {
+            parentDiv.classList.add('priority-' + priority);
+        }
+    });
     
-    // Add current priority class
-    if (priority) {
-        parentDiv.classList.add('priority-' + priority);
+    // Initialize speech recognition
+    if (!initializeSpeechRecognition()) {
+        // Hide voice buttons if not supported
+        document.querySelectorAll('.voice-btn, .voice-dictate-btn').forEach(btn => {
+            btn.style.display = 'none';
+        });
+        
+        // Show warning
+        const warning = document.createElement('div');
+        warning.className = 'alert alert-warning';
+        warning.innerHTML = `
+            <i data-feather="alert-triangle" class="me-2"></i>
+            Voice input is not supported in your browser. Please use Chrome, Edge, or Safari for voice features.
+        `;
+        document.querySelector('.card-body').insertBefore(warning, document.querySelector('.card-body').firstChild);
+        feather.replace();
     }
+    
+    // Voice button event listeners
+    document.querySelectorAll('.voice-btn').forEach(btn => {
+        btn.addEventListener('click', function() {
+            const target = this.dataset.target;
+            startVoiceInput(target);
+        });
+    });
+    
+    // Full dictation button
+    document.getElementById('voice-dictate-all').addEventListener('click', startFullDictation);
+    
+    // Stop listening when clicking outside
+    document.addEventListener('click', function(e) {
+        if (!e.target.closest('.voice-btn') && !e.target.closest('.voice-dictate-btn') && isListening) {
+            // Don't auto-stop for full dictation
+        }
+    });
 });
 </script>
 {% endblock %}
