@@ -747,8 +747,12 @@ def update_task_status():
     task.updated_at = datetime.now(timezone.utc)
     
     # Update daily board metrics
-    target_date = datetime.now().date()
-    _update_daily_board_metrics(current_user.tenant_id, target_date)
+    try:
+        target_date = datetime.now().date()
+        _update_daily_board_metrics(current_user.tenant_id, target_date)
+    except Exception as e:
+        print(f"Error updating daily board metrics: {e}")
+        # Continue without failing the task update
     
     try:
         db.session.commit()
