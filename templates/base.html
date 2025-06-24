@@ -210,7 +210,7 @@
                             <i data-feather="mail" class="me-2"></i>{{ _('Gmail Setup') }}
                         </a>
                         <a href="{{ url_for('main.ai_learning_dashboard') }}" class="btn btn-sm btn-outline-info w-100">
-                            <i data-feather="brain" class="me-2"></i>{{ _('Learning') }}
+                            <i data-feather="bar-chart-2" class="me-2"></i>{{ _('Learning') }}
                         </a>
                     </div>
                 </div>
@@ -233,6 +233,36 @@
     {% block js %}{% endblock %}
     
     <!-- Initialize Feather icons -->
-    <script>feather.replace();</script>
+    <script>
+        feather.replace();
+        
+        // AI Assistant Widget Functions
+        function toggleAIChat() {
+            const chatWindow = document.getElementById('ai-chat-window');
+            const toggle = document.getElementById('ai-chat-toggle');
+            const notification = document.getElementById('ai-notification');
+            
+            if (chatWindow && chatWindow.classList.contains('show')) {
+                chatWindow.classList.remove('show');
+                toggle.classList.remove('active');
+                if (notification) notification.style.display = 'none';
+            } else if (chatWindow) {
+                chatWindow.classList.add('show');
+                toggle.classList.add('active');
+                if (notification) notification.style.display = 'none';
+                
+                // Re-initialize feather icons in the chat window
+                feather.replace();
+            }
+        }
+
+        // Auto-show notification after page load
+        setTimeout(() => {
+            const notification = document.getElementById('ai-notification');
+            if (notification) {
+                notification.style.display = 'flex';
+            }
+        }, 3000);
+    </script>
 </body>
 </html>

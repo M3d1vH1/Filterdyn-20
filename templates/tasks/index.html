@@ -179,7 +179,7 @@
                                         </button>
                                         
                                         {% if current_user.role in ['admin', 'manager'] or task.created_by == current_user.id %}
-                                        <a href="{{ url_for('main.edit_task', task_id=task.id) }}" 
+                                        <a href="{{ url_for('main.edit_task', id=task.id) }}" 
                                            class="btn btn-sm btn-outline-primary" 
                                            data-bs-toggle="tooltip" title="{{ _('Edit') }}">
                                             <i data-feather="edit-2"></i>
