@@ -218,10 +218,9 @@
                     
                     {% if task.due_date %}
                     <div class="task-due-date mt-2 
-                        {% if task.due_date < moment().utc() %}overdue
-                        {% elif task.due_date < moment().utc().add(days=2) %}due-soon{% endif %}">
+                        {% if task.is_overdue %}overdue{% endif %}">
                         <i data-feather="calendar" style="width: 10px; height: 10px;"></i>
-                        {{ task.due_date|local_datetime }}
+                        {{ task.due_date|safe_date }}
                     </div>
                     {% endif %}
                     
