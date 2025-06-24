@@ -83,10 +83,19 @@
                     </div>
 
                     <div class="text-center">
-                        <a href="{{ url_for('auth.google_login') }}" class="btn btn-primary btn-lg">
+                        <a href="{{ url_for('auth.google_login') }}" class="btn btn-primary btn-lg" target="_blank">
                             <i data-feather="mail" class="me-2"></i>{{ _('Connect Gmail') }}
                         </a>
-                        <p class="text-muted mt-2">{{ _('You will be redirected to Google for authentication') }}</p>
+                        <p class="text-muted mt-2">{{ _('Opens in new tab for Google authentication') }}</p>
+                        
+                        <div class="mt-3">
+                            <small class="text-muted">
+                                {{ _('Having issues? Try the direct OAuth URL:') }}<br>
+                                <a href="{{ url_for('auth.google_login') }}" target="_blank" class="text-decoration-none">
+                                    {{ request.url_root.rstrip('/') }}/auth/google/login
+                                </a>
+                            </small>
+                        </div>
                     </div>
                     {% endif %}
                 </div>
