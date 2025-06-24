@@ -1,0 +1,195 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Simple AI Task Creation Test</title>
+    <script src="https://unpkg.com/feather-icons"></script>
+    <style>
+        body { font-family: Arial, sans-serif; margin: 20px; }
+        .container { max-width: 600px; margin: 0 auto; }
+        input, textarea, select { width: 100%; padding: 10px; margin: 10px 0; border: 1px solid #ddd; border-radius: 5px; }
+        button { padding: 12px 24px; background: #4285f4; color: white; border: none; border-radius: 5px; cursor: pointer; margin: 10px 5px; }
+        button:hover { background: #3367d6; }
+        .listening { background: #dc3545 !important; }
+        .status { padding: 10px; margin: 10px 0; border-radius: 5px; display: none; }
+        .info { background: #d1ecf1; color: #0c5460; }
+        .success { background: #d4edda; color: #155724; }
+        .error { background: #f8d7da; color: #721c24; }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>AI Task Creation Test</h1>
+        
+        <div id="status" class="status"></div>
+        
+        <h3>Task Fields</h3>
+        <input type="text" id="title" placeholder="Task Title">
+        <textarea id="description" rows="3" placeholder="Task Description"></textarea>
+        <select id="priority">
+            <option value="">Select Priority</option>
+            <option value="low">Low</option>
+            <option value="medium">Medium</option>
+            <option value="high">High</option>
+            <option value="urgent">Urgent</option>
+        </select>
+        <input type="text" id="assignee" placeholder="Assignee">
+        
+        <h3>Voice Input</h3>
+        <button id="dictateBtn">🎤 Start Dictation</button>
+        <button onclick="testAI()">🧠 Test AI Directly</button>
+        
+        <h3>Examples to Try</h3>
+        <p><strong>English:</strong> "I need someone to fix the water filter tomorrow, it's quite urgent"</p>
+        <p><strong>Greek:</strong> "Χρειάζομαι κάποιον να φτιάξει το φίλτρο νερού αύριο, είναι επείγον"</p>
+    </div>
+
+    <script>
+        let recognition = null;
+        let isListening = false;
+
+        function initSpeechRecognition() {
+            if ('webkitSpeechRecognition' in window || 'SpeechRecognition' in window) {
+                const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
+                recognition = new SpeechRecognition();
+                recognition.continuous = false;
+                recognition.interimResults = false;
+                recognition.lang = 'en-US';
+                
+                recognition.onresult = function(event) {
+                    const transcript = event.results[0][0].transcript;
+                    showStatus('Heard: "' + transcript + '"', 'info');
+                    processWithAI(transcript);
+                    stopListening();
+                };
+                
+                recognition.onerror = function(event) {
+                    showStatus('Error: ' + event.error, 'error');
+                    stopListening();
+                };
+                
+                recognition.onend = function() {
+                    stopListening();
+                };
+                
+                return true;
+            }
+            return false;
+        }
+
+        function toggleDictation() {
+            if (!recognition && !initSpeechRecognition()) {
+                showStatus('Speech recognition not supported', 'error');
+                return;
+            }
+            
+            if (isListening) {
+                stopListening();
+            } else {
+                startListening();
+            }
+        }
+
+        function startListening() {
+            isListening = true;
+            document.getElementById('dictateBtn').classList.add('listening');
+            document.getElementById('dictateBtn').textContent = '🔴 Stop Listening';
+            showStatus('Listening...', 'info');
+            
+            try {
+                recognition.start();
+            } catch (error) {
+                showStatus('Error starting recognition: ' + error.message, 'error');
+                stopListening();
+            }
+        }
+
+        function stopListening() {
+            isListening = false;
+            document.getElementById('dictateBtn').classList.remove('listening');
+            document.getElementById('dictateBtn').textContent = '🎤 Start Dictation';
+            
+            try {
+                if (recognition) recognition.stop();
+            } catch (error) {
+                // Ignore
+            }
+        }
+
+        async function processWithAI(transcript) {
+            showStatus('Processing with Gemini AI...', 'info');
+            
+            try {
+                const response = await fetch('/api/ai-extract-task', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify({
+                        transcript: transcript,
+                        language: 'en-US'
+                    })
+                });
+
+                if (!response.ok) {
+                    const errorData = await response.json().catch(() => ({}));
+                    throw new Error(`HTTP ${response.status}: ${errorData.error || response.statusText}`);
+                }
+
+                const result = await response.json();
+                console.log('AI Response:', result);
+                
+                if (result.success && result.taskData) {
+                    fillTaskForm(result.taskData);
+                    showStatus('AI processing completed successfully!', 'success');
+                } else {
+                    showStatus('AI could not extract task data', 'error');
+                }
+                
+            } catch (error) {
+                showStatus('AI processing failed: ' + error.message, 'error');
+                console.error('AI Error:', error);
+            }
+        }
+
+        function fillTaskForm(taskData) {
+            console.log('Filling form with:', taskData);
+            
+            if (taskData.title) {
+                document.getElementById('title').value = taskData.title;
+            }
+            if (taskData.description) {
+                document.getElementById('description').value = taskData.description;
+            }
+            if (taskData.priority) {
+                document.getElementById('priority').value = taskData.priority;
+            }
+            if (taskData.assignee) {
+                document.getElementById('assignee').value = taskData.assignee;
+            }
+        }
+
+        function showStatus(message, type) {
+            const status = document.getElementById('status');
+            status.textContent = message;
+            status.className = 'status ' + type;
+            status.style.display = 'block';
+            
+            setTimeout(() => {
+                status.style.display = 'none';
+            }, 5000);
+        }
+
+        async function testAI() {
+            const testInput = "I need someone to fix the water filter tomorrow, it's quite urgent";
+            showStatus('Testing AI with: "' + testInput + '"', 'info');
+            await processWithAI(testInput);
+        }
+
+        // Initialize
+        document.getElementById('dictateBtn').addEventListener('click', toggleDictation);
+        initSpeechRecognition();
+    </script>
+</body>
+</html>

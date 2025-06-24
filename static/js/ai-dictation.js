@@ -83,14 +83,18 @@ class AIDictationManager extends DictationManager {
     }
 
     async parseWithAI(transcript) {
-        const taskData = await this.extractTaskDataWithAI(transcript);
+        console.log('parseWithAI called with transcript:', transcript);
         
-        if (!taskData) {
-            this.showError('Could not extract task information from speech');
-            return;
-        }
+        try {
+            const taskData = await this.extractTaskDataWithAI(transcript);
+            console.log('AI extracted task data:', taskData);
+            
+            if (!taskData) {
+                this.showError('Could not extract task information from speech');
+                return;
+            }
 
-        let fieldsUpdated = 0;
+            let fieldsUpdated = 0;
 
         // Fill form fields
         if (taskData.title) {
@@ -307,8 +311,10 @@ document.addEventListener('DOMContentLoaded', function() {
     fetch('/api/check-ai-availability')
         .then(response => response.json())
         .then(data => {
-            if (data.available && !window.dictationManager) {
+            console.log('AI availability check result:', data);
+            if (data.available) {
                 console.log('Creating AI-enhanced DictationManager...');
+                // Replace any existing dictation manager with AI version
                 window.dictationManager = new AIDictationManager();
                 console.log('AI DictationManager created successfully');
             } else if (!window.dictationManager) {

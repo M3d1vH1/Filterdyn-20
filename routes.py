@@ -26,6 +26,12 @@ def test_ai_dictation():
     """Test page for AI-enhanced dictation functionality"""
     return render_template('test_ai_dictation.html')
 
+@main_bp.route('/test-simple-ai')
+@login_required
+def test_simple_ai():
+    """Simple test page for AI task creation"""
+    return render_template('test_simple_ai.html')
+
 @main_bp.route('/api/check-ai-availability')
 @login_required
 def check_ai_availability():
@@ -46,8 +52,8 @@ def ai_extract_task():
         transcript = data.get('transcript')
         language = data.get('language', 'en-US')
         
-        if not prompt or not transcript:
-            return jsonify({'error': 'Missing prompt or transcript'}), 400
+        if not transcript:
+            return jsonify({'error': 'Missing transcript'}), 400
             
         gemini_key = os.environ.get('GEMINI_API_KEY')
         if not gemini_key:
