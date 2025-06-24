@@ -184,10 +184,27 @@ body {
 }
 
 /* Priority badges */
-.priority-low { background-color: var(--filterdyn-secondary) !important; }
-.priority-medium { background-color: var(--filterdyn-teal) !important; }
-.priority-high { background-color: var(--filterdyn-warning) !important; }
-.priority-urgent { background-color: var(--filterdyn-danger) !important; }
+.priority-low { 
+    background-color: var(--filterdyn-secondary) !important; 
+}
+.priority-medium { 
+    background-color: var(--filterdyn-teal) !important; 
+}
+.priority-high { 
+    background-color: var(--filterdyn-warning) !important; 
+}
+.priority-urgent { 
+    background-color: var(--filterdyn-danger) !important; 
+}
+
+/* Override priority badges in kanban board to remove backgrounds */
+.kanban-task .priority-low,
+.kanban-task .priority-medium,
+.kanban-task .priority-high,
+.kanban-task .priority-urgent {
+    background-color: transparent !important;
+    background: transparent !important;
+}
 
 /* Status badges */
 .status-draft { background-color: var(--filterdyn-secondary) !important; }
