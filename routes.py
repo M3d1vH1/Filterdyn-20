@@ -32,6 +32,43 @@ def test_simple_ai():
     """Simple test page for AI task creation"""
     return render_template('test_simple_ai.html')
 
+@main_bp.route('/api/test-gemini', methods=['GET'])
+@login_required
+def test_gemini():
+    """Test Gemini API connection"""
+    try:
+        gemini_key = os.environ.get('GEMINI_API_KEY')
+        if not gemini_key:
+            return jsonify({'error': 'GEMINI_API_KEY not found', 'success': False}), 503
+            
+        # Initialize Gemini client
+        client = genai.Client(api_key=gemini_key)
+        
+        # Simple test request
+        response = client.models.generate_content(
+            model="gemini-2.5-flash",
+            contents="Say 'Hello, Gemini is working!' and nothing else."
+        )
+        
+        return jsonify({
+            'success': True,
+            'response': response.text if response.text else 'No response text',
+            'message': 'Gemini API is working correctly'
+        })
+        
+    except Exception as e:
+        return jsonify({
+            'success': False,
+            'error': str(e),
+            'message': 'Gemini API test failed'
+        }), 500
+
+@main_bp.route('/test-gemini')
+@login_required
+def test_gemini_page():
+    """Test page for Gemini API connection"""
+    return render_template('test_gemini.html')
+
 @main_bp.route('/api/check-ai-availability')
 @login_required
 def check_ai_availability():
