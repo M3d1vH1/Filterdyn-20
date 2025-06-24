@@ -487,3 +487,231 @@ class RolePermission(db.Model):
     def __repr__(self):
         return f'<RolePermission {self.role}.{self.resource}.{self.permission}>'
 
+
+# Gmail Integration Models
+class GmailAccount(db.Model):
+    __tablename__ = 'gmail_accounts'
+    
+    id = db.Column(db.Integer, primary_key=True)
+    tenant_id = db.Column(db.Integer, db.ForeignKey('tenants.id'), nullable=False)
+    user_id = db.Column(db.Integer, db.ForeignKey('users.id'), nullable=False)
+    
+    email_address = db.Column(db.String(255), nullable=False)
+    google_user_id = db.Column(db.String(255), nullable=False)
+    access_token = db.Column(db.Text)
+    refresh_token = db.Column(db.Text)
+    token_expires_at = db.Column(db.DateTime)
+    
+    # Account settings
+    is_primary = db.Column(db.Boolean, default=False)
+    sync_enabled = db.Column(db.Boolean, default=True)
+    last_sync_at = db.Column(db.DateTime)
+    sync_history_token = db.Column(db.String(255))
+    
+    # Filters and preferences
+    auto_categorize = db.Column(db.Boolean, default=True)
+    ai_suggestions_enabled = db.Column(db.Boolean, default=True)
+    smart_replies_enabled = db.Column(db.Boolean, default=True)
+    
+    created_at = db.Column(db.DateTime, default=lambda: datetime.now(timezone.utc))
+    updated_at = db.Column(db.DateTime, default=lambda: datetime.now(timezone.utc), onupdate=lambda: datetime.now(timezone.utc))
+    
+    # Relationships
+    user = db.relationship('User', backref='gmail_accounts')
+    tenant = db.relationship('Tenant', backref='gmail_accounts')
+    email_threads = db.relationship('EmailThread', backref='gmail_account', lazy=True, cascade='all, delete-orphan')
+    
+    __table_args__ = (
+        db.UniqueConstraint('tenant_id', 'email_address', name='_tenant_gmail_uc'),
+        db.UniqueConstraint('tenant_id', 'user_id', 'is_primary', name='_tenant_user_primary_gmail_uc')
+    )
+
+
+class EmailThread(db.Model):
+    __tablename__ = 'email_threads'
+    
+    id = db.Column(db.Integer, primary_key=True)
+    tenant_id = db.Column(db.Integer, db.ForeignKey('tenants.id'), nullable=False)
+    gmail_account_id = db.Column(db.Integer, db.ForeignKey('gmail_accounts.id'), nullable=False)
+    customer_id = db.Column(db.Integer, db.ForeignKey('customers.id'), nullable=True)
+    
+    # Gmail data
+    gmail_thread_id = db.Column(db.String(255), nullable=False)
+    subject = db.Column(db.Text)
+    participants = db.Column(db.Text)  # JSON array of email addresses
+    
+    # Thread metadata
+    message_count = db.Column(db.Integer, default=0)
+    unread_count = db.Column(db.Integer, default=0)
+    has_attachments = db.Column(db.Boolean, default=False)
+    
+    # Business context
+    thread_type = db.Column(db.String(50), default='general')  # quote_inquiry, support, sales, general
+    priority = db.Column(db.String(20), default='normal')  # low, normal, high, urgent
+    status = db.Column(db.String(30), default='active')  # active, archived, spam, trash
+    
+    # AI categorization
+    ai_category = db.Column(db.String(100))
+    ai_sentiment = db.Column(db.String(20))  # positive, negative, neutral
+    ai_confidence = db.Column(db.Float)
+    ai_summary = db.Column(db.Text)
+    requires_response = db.Column(db.Boolean, default=False)
+    
+    # Timestamps
+    last_message_at = db.Column(db.DateTime)
+    first_message_at = db.Column(db.DateTime)
+    created_at = db.Column(db.DateTime, default=lambda: datetime.now(timezone.utc))
+    updated_at = db.Column(db.DateTime, default=lambda: datetime.now(timezone.utc), onupdate=lambda: datetime.now(timezone.utc))
+    
+    # Relationships
+    tenant = db.relationship('Tenant', backref='email_threads')
+    customer = db.relationship('Customer', backref='email_threads')
+    email_messages = db.relationship('EmailMessage', backref='email_thread', lazy=True, cascade='all, delete-orphan')
+    email_actions = db.relationship('EmailAction', backref='email_thread', lazy=True)
+    
+    __table_args__ = (
+        db.UniqueConstraint('tenant_id', 'gmail_account_id', 'gmail_thread_id', name='_tenant_gmail_thread_uc'),
+    )
+
+
+class EmailMessage(db.Model):
+    __tablename__ = 'email_messages'
+    
+    id = db.Column(db.Integer, primary_key=True)
+    tenant_id = db.Column(db.Integer, db.ForeignKey('tenants.id'), nullable=False)
+    email_thread_id = db.Column(db.Integer, db.ForeignKey('email_threads.id'), nullable=False)
+    
+    # Gmail data
+    gmail_message_id = db.Column(db.String(255), nullable=False)
+    from_email = db.Column(db.String(255))
+    from_name = db.Column(db.String(255))
+    to_emails = db.Column(db.Text)  # JSON array
+    cc_emails = db.Column(db.Text)  # JSON array
+    bcc_emails = db.Column(db.Text)  # JSON array
+    
+    subject = db.Column(db.Text)
+    body_text = db.Column(db.Text)
+    body_html = db.Column(db.Text)
+    
+    # Message metadata
+    is_read = db.Column(db.Boolean, default=False)
+    is_sent = db.Column(db.Boolean, default=False)
+    is_draft = db.Column(db.Boolean, default=False)
+    has_attachments = db.Column(db.Boolean, default=False)
+    
+    # AI analysis
+    ai_intent = db.Column(db.String(100))  # quote_request, complaint, inquiry, etc.
+    ai_entities = db.Column(db.Text)  # JSON of extracted entities
+    ai_action_items = db.Column(db.Text)  # JSON of suggested actions
+    ai_urgency_score = db.Column(db.Float)
+    
+    sent_at = db.Column(db.DateTime)
+    received_at = db.Column(db.DateTime)
+    created_at = db.Column(db.DateTime, default=lambda: datetime.now(timezone.utc))
+    
+    # Relationships
+    tenant = db.relationship('Tenant', backref='email_messages')
+    email_attachments = db.relationship('EmailAttachment', backref='email_message', lazy=True, cascade='all, delete-orphan')
+    
+    __table_args__ = (
+        db.UniqueConstraint('tenant_id', 'gmail_message_id', name='_tenant_gmail_message_uc'),
+    )
+
+
+class EmailAttachment(db.Model):
+    __tablename__ = 'email_attachments'
+    
+    id = db.Column(db.Integer, primary_key=True)
+    tenant_id = db.Column(db.Integer, db.ForeignKey('tenants.id'), nullable=False)
+    email_message_id = db.Column(db.Integer, db.ForeignKey('email_messages.id'), nullable=False)
+    
+    # Gmail attachment data
+    gmail_attachment_id = db.Column(db.String(255))
+    filename = db.Column(db.String(255))
+    mime_type = db.Column(db.String(100))
+    size_bytes = db.Column(db.Integer)
+    
+    # Local storage
+    local_path = db.Column(db.String(500))
+    is_downloaded = db.Column(db.Boolean, default=False)
+    
+    created_at = db.Column(db.DateTime, default=lambda: datetime.now(timezone.utc))
+    
+    tenant = db.relationship('Tenant', backref='email_attachments')
+
+
+class EmailAction(db.Model):
+    __tablename__ = 'email_actions'
+    
+    id = db.Column(db.Integer, primary_key=True)
+    tenant_id = db.Column(db.Integer, db.ForeignKey('tenants.id'), nullable=False)
+    user_id = db.Column(db.Integer, db.ForeignKey('users.id'), nullable=False)
+    email_thread_id = db.Column(db.Integer, db.ForeignKey('email_threads.id'), nullable=False)
+    
+    # Action details
+    action_type = db.Column(db.String(50), nullable=False)  # reply, forward, create_task, create_quote, etc.
+    action_data = db.Column(db.Text)  # JSON data for the action
+    
+    # AI suggestion context
+    suggested_by_ai = db.Column(db.Boolean, default=False)
+    ai_confidence = db.Column(db.Float)
+    user_feedback = db.Column(db.String(20))  # accepted, rejected, modified
+    
+    # Status
+    status = db.Column(db.String(30), default='pending')  # pending, completed, failed
+    completed_at = db.Column(db.DateTime)
+    
+    created_at = db.Column(db.DateTime, default=lambda: datetime.now(timezone.utc))
+    
+    # Relationships
+    tenant = db.relationship('Tenant', backref='email_actions')
+    user = db.relationship('User', backref='email_actions')
+
+
+class EmailTemplate(db.Model):
+    __tablename__ = 'email_templates'
+    
+    id = db.Column(db.Integer, primary_key=True)
+    tenant_id = db.Column(db.Integer, db.ForeignKey('tenants.id'), nullable=False)
+    user_id = db.Column(db.Integer, db.ForeignKey('users.id'), nullable=False)
+    
+    name = db.Column(db.String(100), nullable=False)
+    category = db.Column(db.String(50))  # quotes, support, sales, follow_up
+    subject_template = db.Column(db.Text)
+    body_template = db.Column(db.Text)
+    
+    # Template settings
+    is_shared = db.Column(db.Boolean, default=False)
+    use_count = db.Column(db.Integer, default=0)
+    
+    created_at = db.Column(db.DateTime, default=lambda: datetime.now(timezone.utc))
+    updated_at = db.Column(db.DateTime, default=lambda: datetime.now(timezone.utc), onupdate=lambda: datetime.now(timezone.utc))
+    
+    # Relationships
+    tenant = db.relationship('Tenant', backref='email_templates')
+    user = db.relationship('User', backref='email_templates')
+
+
+class AISuggestionFeedback(db.Model):
+    __tablename__ = 'ai_suggestion_feedback'
+    
+    id = db.Column(db.Integer, primary_key=True)
+    tenant_id = db.Column(db.Integer, db.ForeignKey('tenants.id'), nullable=False)
+    user_id = db.Column(db.Integer, db.ForeignKey('users.id'), nullable=False)
+    
+    # Suggestion context
+    suggestion_type = db.Column(db.String(50), nullable=False)  # reply, categorization, action_item
+    original_suggestion = db.Column(db.Text)
+    user_action = db.Column(db.String(30))  # accepted, rejected, modified
+    user_modification = db.Column(db.Text)
+    
+    # Context data
+    email_context = db.Column(db.Text)  # JSON context about the email
+    confidence_score = db.Column(db.Float)
+    
+    created_at = db.Column(db.DateTime, default=lambda: datetime.now(timezone.utc))
+    
+    # Relationships
+    tenant = db.relationship('Tenant', backref='ai_feedback')
+    user = db.relationship('User', backref='ai_feedback')
+
