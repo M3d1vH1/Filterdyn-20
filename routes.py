@@ -47,7 +47,11 @@ def test_gemini():
         # Simple test request
         response = client.models.generate_content(
             model="gemini-2.5-flash",
-            contents="Say 'Hello, Gemini is working!' and nothing else."
+            contents="Say 'Hello, Gemini is working!' and nothing else.",
+            config=types.GenerateContentConfig(
+                max_output_tokens=20,
+                temperature=0.1
+            )
         )
         
         return jsonify({
@@ -99,50 +103,54 @@ def ai_extract_task():
         # Initialize Gemini client
         client = genai.Client(api_key=gemini_key)
         
-        # Create system prompt for task extraction
-        system_prompt = """You are a task extraction assistant. Extract structured task data from natural language input in English or Greek. 
+        # Process with Gemini - simplified prompt for better JSON response
+        prompt_text = f"""Extract task data from: "{transcript}"
 
-Return a JSON object with these fields (use null for missing data):
-{
-  "title": "brief task title (max 50 chars)",
-  "description": "detailed description", 
-  "priority": "low|medium|high|urgent",
-  "assignee": "person's name if mentioned",
-  "dueDate": "ISO date string if mentioned"
-}
+Return ONLY this JSON format:
+{{
+  "title": "brief task name",
+  "description": "what needs to be done",
+  "priority": "low|medium|high|urgent", 
+  "assignee": "person name or null",
+  "dueDate": "date or null"
+}}
 
-Guidelines:
-- Infer priority from urgency words (urgent, ASAP, επείγον = urgent; important, σπουδαίο = high)
-- Convert Greek terms appropriately (τίτλος=title, περιγραφή=description, προτεραιότητα=priority)
-- For relative dates: tomorrow/αύριο = +1 day, next week/επόμενη εβδομάδα = +7 days
-- If someone says "assign to me" use "current user"
-- Keep titles concise and descriptive
-
-Respond with valid JSON only."""
+Rules:
+- urgent/ASAP/επείγον = "urgent"
+- important/σπουδαίο = "high" 
+- tomorrow/αύριο = tomorrow's date
+- Just JSON, no explanation"""
 
         # Process with Gemini
         response = client.models.generate_content(
             model="gemini-2.5-flash",
-            contents=[
-                types.Content(role="user", parts=[
-                    types.Part(text=f"{system_prompt}\n\nInput: \"{transcript}\"")
-                ])
-            ],
+            contents=prompt_text,
             config=types.GenerateContentConfig(
                 response_mime_type="application/json",
-                temperature=0.3,
-                max_output_tokens=300
+                temperature=0.1,
+                max_output_tokens=200
             )
         )
         
         # Parse Gemini response
         ai_response = response.text.strip() if response.text else "{}"
         
+        # Debug: log the actual response
+        print(f"DEBUG: Gemini raw response: {ai_response}")
+        print(f"DEBUG: Response length: {len(ai_response)} characters")
+        
         # Clean up response (remove markdown formatting if present)
         if ai_response.startswith('```json'):
             ai_response = ai_response[7:]
         if ai_response.endswith('```'):
             ai_response = ai_response[:-3]
+            
+        # Additional cleanup for common issues
+        ai_response = ai_response.strip()
+        if ai_response.startswith('```'):
+            ai_response = ai_response[3:].strip()
+        if ai_response.endswith('```'):
+            ai_response = ai_response[:-3].strip()
             
         task_data = json.loads(ai_response)
         
