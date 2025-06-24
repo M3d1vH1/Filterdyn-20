@@ -579,9 +579,23 @@ def tasks():
 
 
 @main_bp.route('/tasks/kanban')
-@login_required
-def tasks_kanban():
-    """Kanban board view for tasks"""
+@main_bp.route('/tasks/kanban/<date>')
+@login_required  
+def tasks_kanban(date=None):
+    """Kanban board view for tasks with daily boards"""
+    from datetime import datetime, timedelta
+    
+    # Parse target date or use today
+    if date:
+        try:
+            target_date = datetime.strptime(date, '%Y-%m-%d').date()
+        except ValueError:
+            target_date = datetime.now().date()
+    else:
+        target_date = datetime.now().date()
+    
+    # For now, use regular kanban view without daily board features
+    # to get basic functionality working first
     query = Task.query.filter_by(tenant_id=current_user.tenant_id)
     
     # Filter by user role
@@ -595,16 +609,39 @@ def tasks_kanban():
     
     # Get tasks grouped by status
     statuses = ['pending', 'in_progress', 'completed', 'cancelled']
-    kanban_data = {}
+    kanban_data = {status: [] for status in statuses}
     
     for status in statuses:
         tasks = query.filter_by(status=status).order_by(Task.created_at.desc()).all()
         kanban_data[status] = tasks
     
-    # Get all users for assignment dropdown
-    users = User.query.filter_by(tenant_id=current_user.tenant_id).all()
+    # Get users for assignment
+    users = User.query.filter_by(tenant_id=current_user.tenant_id, is_active=True).all()
     
-    return render_template('tasks/kanban.html', kanban_data=kanban_data, users=users, statuses=statuses)
+    # Create mock daily board for template compatibility
+    class MockDailyBoard:
+        def __init__(self):
+            self.total_tasks = sum(len(tasks) for tasks in kanban_data.values())
+            self.completed_tasks = len(kanban_data['completed'])
+            self.carried_forward = 0
+            self.completion_rate = round((self.completed_tasks / max(self.total_tasks, 1)) * 100, 1)
+    
+    daily_board = MockDailyBoard()
+    
+    # Calculate navigation dates
+    prev_date = target_date - timedelta(days=1)
+    next_date = target_date + timedelta(days=1)
+    is_today = target_date == datetime.now().date()
+    
+    return render_template('tasks/kanban.html', 
+                         kanban_data=kanban_data, 
+                         users=users, 
+                         statuses=statuses,
+                         current_date=target_date,
+                         daily_board=daily_board,
+                         prev_date=prev_date,
+                         next_date=next_date,
+                         is_today=is_today)
 
 def _ensure_daily_board_exists(tenant_id, target_date):
     """Ensure daily board exists and carry forward open tasks if needed"""

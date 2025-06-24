@@ -298,6 +298,24 @@ class Task(db.Model):
             from timezone_utils import is_overdue as check_overdue
             return check_overdue(self.due_date)
         return False
+    
+    @property
+    def age_indicator(self):
+        """Get visual age indicator for task"""
+        # For now, return 'new' for all tasks since we don't have days_open yet
+        return 'new'
+    
+    @property
+    def days_open(self):
+        """Calculate days task has been open"""
+        if self.created_at:
+            return (datetime.now(timezone.utc) - self.created_at).days
+        return 0
+    
+    @property
+    def carried_from_date(self):
+        """Mock property for template compatibility"""
+        return None
 
 class DailyBoard(db.Model):
     __tablename__ = 'daily_boards'
