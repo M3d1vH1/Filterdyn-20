@@ -1,0 +1,117 @@
+{% extends "base.html" %}
+{% block title %}{{ _('Business Settings') }}{% endblock %}
+
+{% block content %}
+<div class="container-fluid">
+    <div class="row mb-4">
+        <div class="col">
+            <nav aria-label="breadcrumb">
+                <ol class="breadcrumb">
+                    <li class="breadcrumb-item"><a href="{{ url_for('settings.index') }}">{{ _('Settings') }}</a></li>
+                    <li class="breadcrumb-item active">{{ _('Business Settings') }}</li>
+                </ol>
+            </nav>
+            <h2><i data-feather="briefcase"></i> {{ _('Business Settings') }}</h2>
+            <p class="text-muted">{{ _('Configure company information and business rules') }}</p>
+        </div>
+    </div>
+
+    <div class="row">
+        <div class="col-lg-8">
+            <div class="card">
+                <div class="card-header">
+                    <h5><i data-feather="edit-2"></i> {{ _('Configuration') }}</h5>
+                </div>
+                <div class="card-body">
+                    <form method="POST">
+                        {{ form.hidden_tag() }}
+                        
+                        <div class="mb-3">
+                            {{ form.company_name.label(class="form-label") }}
+                            {{ form.company_name(class="form-control") }}
+                            {% for error in form.company_name.errors %}
+                                <div class="text-danger">{{ error }}</div>
+                            {% endfor %}
+                        </div>
+
+                        <div class="row">
+                            <div class="col-md-6">
+                                <div class="mb-3">
+                                    {{ form.default_currency.label(class="form-label") }}
+                                    {{ form.default_currency(class="form-select") }}
+                                    {% for error in form.default_currency.errors %}
+                                        <div class="text-danger">{{ error }}</div>
+                                    {% endfor %}
+                                </div>
+                            </div>
+                            <div class="col-md-6">
+                                <div class="mb-3">
+                                    {{ form.default_tax_rate.label(class="form-label") }}
+                                    {{ form.default_tax_rate(class="form-control") }}
+                                    {% for error in form.default_tax_rate.errors %}
+                                        <div class="text-danger">{{ error }}</div>
+                                    {% endfor %}
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="row">
+                            <div class="col-md-6">
+                                <div class="mb-3">
+                                    {{ form.quote_validity_days.label(class="form-label") }}
+                                    {{ form.quote_validity_days(class="form-control") }}
+                                    {% for error in form.quote_validity_days.errors %}
+                                        <div class="text-danger">{{ error }}</div>
+                                    {% endfor %}
+                                </div>
+                            </div>
+                            <div class="col-md-6">
+                                <div class="mb-3">
+                                    {{ form.order_delivery_days.label(class="form-label") }}
+                                    {{ form.order_delivery_days(class="form-control") }}
+                                    {% for error in form.order_delivery_days.errors %}
+                                        <div class="text-danger">{{ error }}</div>
+                                    {% endfor %}
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="d-flex gap-2">
+                            <button type="submit" class="btn btn-primary">
+                                <i data-feather="save"></i> {{ _('Save Settings') }}
+                            </button>
+                            <a href="{{ url_for('settings.index') }}" class="btn btn-secondary">
+                                <i data-feather="arrow-left"></i> {{ _('Back') }}
+                            </a>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+
+        <div class="col-lg-4">
+            <div class="card">
+                <div class="card-header">
+                    <h6><i data-feather="info"></i> {{ _('Help') }}</h6>
+                </div>
+                <div class="card-body">
+                    <h6>{{ _('Company Name') }}</h6>
+                    <p class="small text-muted">{{ _('This name will appear on quotes, orders, and throughout the application') }}</p>
+                    
+                    <h6>{{ _('Default Currency') }}</h6>
+                    <p class="small text-muted">{{ _('Currency used for all financial calculations and displays') }}</p>
+                    
+                    <h6>{{ _('Tax Rate') }}</h6>
+                    <p class="small text-muted">{{ _('Default tax percentage applied to quotes and orders') }}</p>
+                    
+                    <h6>{{ _('Quote Validity') }}</h6>
+                    <p class="small text-muted">{{ _('Number of days quotes remain valid by default') }}</p>
+                    
+                    <h6>{{ _('Delivery Time') }}</h6>
+                    <p class="small text-muted">{{ _('Default delivery timeframe for new orders') }}</p>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

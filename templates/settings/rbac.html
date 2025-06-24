@@ -1,0 +1,101 @@
+{% extends "base.html" %}
+{% block title %}{{ _('Role Permissions') }}{% endblock %}
+
+{% block content %}
+<div class="container-fluid">
+    <div class="row mb-4">
+        <div class="col">
+            <nav aria-label="breadcrumb">
+                <ol class="breadcrumb">
+                    <li class="breadcrumb-item"><a href="{{ url_for('settings.index') }}">{{ _('Settings') }}</a></li>
+                    <li class="breadcrumb-item active">{{ _('Role Permissions') }}</li>
+                </ol>
+            </nav>
+            <h2><i data-feather="users"></i> {{ _('Role Permissions') }}</h2>
+            <p class="text-muted">{{ _('Manage role-based access control and permissions') }}</p>
+        </div>
+        <div class="col-auto">
+            <a href="{{ url_for('settings.rbac_edit') }}" class="btn btn-primary">
+                <i data-feather="plus"></i> {{ _('Edit Permissions') }}
+            </a>
+        </div>
+    </div>
+
+    <div class="row">
+        <div class="col">
+            <div class="card">
+                <div class="card-header">
+                    <h5><i data-feather="shield"></i> {{ _('Current Permissions Matrix') }}</h5>
+                </div>
+                <div class="card-body">
+                    {% if permissions %}
+                        {% for role, resources in permissions.items() %}
+                        <div class="mb-4">
+                            <h6 class="text-primary">
+                                <i data-feather="user"></i> {{ role.title() }}
+                            </h6>
+                            <div class="row">
+                                {% for resource, perms in resources.items() %}
+                                <div class="col-md-4 col-lg-3 mb-3">
+                                    <div class="card border">
+                                        <div class="card-body p-3">
+                                            <h6 class="card-title h6 mb-2">{{ resource.title() }}</h6>
+                                            <div class="d-flex flex-wrap gap-1">
+                                                {% for perm in perms %}
+                                                <span class="badge bg-success">{{ perm }}</span>
+                                                {% endfor %}
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                                {% endfor %}
+                            </div>
+                        </div>
+                        {% endfor %}
+                    {% else %}
+                        <div class="text-center py-4">
+                            <i data-feather="alert-circle" class="text-muted" style="width: 48px; height: 48px;"></i>
+                            <h5 class="text-muted mt-2">{{ _('No permissions configured') }}</h5>
+                            <p class="text-muted">{{ _('Click "Initialize Default Settings" to set up default permissions') }}</p>
+                            <a href="{{ url_for('settings.initialize') }}" class="btn btn-outline-primary">
+                                <i data-feather="refresh-cw"></i> {{ _('Initialize Default Permissions') }}
+                            </a>
+                        </div>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Permission Legend -->
+    <div class="row mt-4">
+        <div class="col">
+            <div class="card">
+                <div class="card-header">
+                    <h6><i data-feather="info"></i> {{ _('Permission Types') }}</h6>
+                </div>
+                <div class="card-body">
+                    <div class="row">
+                        <div class="col-md-6">
+                            <h6>{{ _('Basic Permissions') }}</h6>
+                            <ul class="list-unstyled">
+                                <li><span class="badge bg-primary">create</span> - {{ _('Can create new records') }}</li>
+                                <li><span class="badge bg-info">read</span> - {{ _('Can view records') }}</li>
+                                <li><span class="badge bg-warning">update</span> - {{ _('Can modify existing records') }}</li>
+                                <li><span class="badge bg-danger">delete</span> - {{ _('Can remove records') }}</li>
+                            </ul>
+                        </div>
+                        <div class="col-md-6">
+                            <h6>{{ _('Special Permissions') }}</h6>
+                            <ul class="list-unstyled">
+                                <li><span class="badge bg-success">approve</span> - {{ _('Can approve quotes/orders') }}</li>
+                                <li><span class="badge bg-secondary">export</span> - {{ _('Can export data') }}</li>
+                            </ul>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
