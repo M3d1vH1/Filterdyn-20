@@ -242,6 +242,54 @@
 {% endblock %}
 
 {% block content %}
+<!-- Quick Add Modal -->
+<div class="modal fade" id="quickAddModal" tabindex="-1">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title">{{ _('Quick Add Task') }}</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+            </div>
+            <form id="quick-add-form">
+                <div class="modal-body">
+                    <div class="mb-3">
+                        <label for="quick-title" class="form-label">{{ _('Title') }} *</label>
+                        <input type="text" class="form-control" id="quick-title" required>
+                    </div>
+                    <div class="mb-3">
+                        <label for="quick-description" class="form-label">{{ _('Description') }}</label>
+                        <textarea class="form-control" id="quick-description" rows="3"></textarea>
+                    </div>
+                    <div class="row">
+                        <div class="col-md-6">
+                            <label for="quick-priority" class="form-label">{{ _('Priority') }}</label>
+                            <select class="form-select" id="quick-priority">
+                                <option value="low">{{ _('Low') }}</option>
+                                <option value="medium" selected>{{ _('Medium') }}</option>
+                                <option value="high">{{ _('High') }}</option>
+                                <option value="urgent">{{ _('Urgent') }}</option>
+                            </select>
+                        </div>
+                        <div class="col-md-6">
+                            <label for="quick-assigned" class="form-label">{{ _('Assigned To') }}</label>
+                            <select class="form-select" id="quick-assigned">
+                                {% for user in users %}
+                                <option value="{{ user.id }}" {% if user.id == current_user.id %}selected{% endif %}>
+                                    {{ user.full_name }}
+                                </option>
+                                {% endfor %}
+                            </select>
+                        </div>
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">{{ _('Cancel') }}</button>
+                    <button type="submit" class="btn btn-primary">{{ _('Add Task') }}</button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
 <div class="container-fluid">
     <!-- Daily Board Header -->
     <div class="row mb-4">
@@ -498,11 +546,8 @@ document.addEventListener('DOMContentLoaded', function() {
             if (data.success) {
                 dropZone.appendChild(taskElement);
                 updateTaskCounts();
+                updateProgressMetrics();
                 showNotification('Task updated successfully', 'success');
-                // Refresh to update progress metrics
-                setTimeout(() => {
-                    window.location.reload();
-                }, 1000);
             } else {
                 showNotification(data.message || 'Failed to update task', 'error');
             }
@@ -567,6 +612,136 @@ document.addEventListener('DOMContentLoaded', function() {
             }
         }, 4000);
     }
+    
+    // Quick Add Modal functionality
+    const quickAddBtn = document.getElementById('quick-add-btn');
+    const quickAddModal = new bootstrap.Modal(document.getElementById('quickAddModal'));
+    const quickAddForm = document.getElementById('quick-add-form');
+    
+    quickAddBtn.addEventListener('click', function() {
+        quickAddModal.show();
+        setTimeout(() => {
+            document.getElementById('quick-title').focus();
+        }, 300);
+    });
+    
+    quickAddForm.addEventListener('submit', function(e) {
+        e.preventDefault();
+        
+        const formData = {
+            title: document.getElementById('quick-title').value,
+            description: document.getElementById('quick-description').value,
+            priority: document.getElementById('quick-priority').value,
+            assigned_to: document.getElementById('quick-assigned').value,
+            date: '{{ current_date.strftime('%Y-%m-%d') }}'
+        };
+        
+        fetch('/tasks/kanban/quick-add', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+            },
+            body: JSON.stringify(formData)
+        })
+        .then(response => response.json())
+        .then(data => {
+            if (data.success) {
+                quickAddModal.hide();
+                quickAddForm.reset();
+                
+                // Create new task element and add to pending column
+                createNewTaskElement(data.task_id, formData);
+                updateTaskCounts();
+                updateProgressMetrics();
+                showNotification('Task created successfully', 'success');
+            } else {
+                showNotification('Failed to create task', 'error');
+            }
+        })
+        .catch(error => {
+            console.error('Error:', error);
+            showNotification('Network error occurred', 'error');
+        });
+    });
+    
+    function createNewTaskElement(taskId, taskData) {
+        const pendingZone = document.querySelector('.kanban-drop-zone[data-status="pending"]');
+        const taskElement = document.createElement('div');
+        taskElement.className = `kanban-task priority-${taskData.priority} age-new`;
+        taskElement.setAttribute('data-task-id', taskId);
+        taskElement.setAttribute('data-age', '0');
+        taskElement.setAttribute('draggable', 'true');
+        
+        const assignedUser = users.find(u => u.id == taskData.assigned_to);
+        const userName = assignedUser ? assignedUser.first_name || assignedUser.username : 'Unknown';
+        
+        taskElement.innerHTML = `
+            <div class="task-header">
+                <div class="task-title">${taskData.title}</div>
+                <div class="task-indicators"></div>
+            </div>
+            ${taskData.description ? `<div class="task-description">${taskData.description}</div>` : ''}
+            <div class="task-meta">
+                <div class="task-assignee">
+                    <i data-feather="user" style="width: 10px; height: 10px;"></i>
+                    ${userName}
+                </div>
+                <div class="task-priority">
+                    <span class="priority-badge badge bg-${taskData.priority === 'urgent' ? 'danger' : taskData.priority === 'high' ? 'warning' : taskData.priority === 'medium' ? 'info' : 'secondary'}">
+                        ${taskData.priority[0].toUpperCase()}
+                    </span>
+                </div>
+            </div>
+            <div class="task-actions">
+                <a href="/tasks/${taskId}/edit" class="btn btn-xs btn-outline-secondary">
+                    <i data-feather="edit-2" style="width: 10px; height: 10px;"></i>
+                </a>
+            </div>
+        `;
+        
+        // Add drag event listeners
+        taskElement.addEventListener('dragstart', function(e) {
+            draggedTask = this;
+            this.classList.add('dragging');
+            e.dataTransfer.effectAllowed = 'move';
+        });
+        
+        taskElement.addEventListener('dragend', function(e) {
+            this.classList.remove('dragging');
+            draggedTask = null;
+        });
+        
+        taskElement.addEventListener('dblclick', function(e) {
+            const taskId = this.getAttribute('data-task-id');
+            window.location.href = `/tasks/${taskId}/edit`;
+        });
+        
+        pendingZone.appendChild(taskElement);
+        
+        // Refresh icons for the new element
+        if (typeof feather !== 'undefined' && window.FilterdynApp) {
+            window.FilterdynApp.refreshFeatherIcons();
+        }
+    }
+    
+    // Make users data available to the function
+    const users = {{ users|tojson }};
+    
+    // Compact view toggle
+    const toggleCompactBtn = document.getElementById('toggle-compact');
+    const kanbanBoard = document.querySelector('.kanban-board');
+    
+    toggleCompactBtn.addEventListener('click', function() {
+        kanbanBoard.classList.toggle('compact-view');
+        const isCompact = kanbanBoard.classList.contains('compact-view');
+        this.innerHTML = isCompact ? 
+            '<i data-feather="maximize-2"></i> {{ _('Normal') }}' : 
+            '<i data-feather="minimize-2"></i> {{ _('Compact') }}';
+        
+        if (typeof feather !== 'undefined' && window.FilterdynApp) {
+            window.FilterdynApp.refreshFeatherIcons();
+        }
+    });
 });
 </script>
 {% endblock %}
