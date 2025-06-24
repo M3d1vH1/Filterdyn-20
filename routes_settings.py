@@ -199,6 +199,67 @@ def rbac():
     return render_template('settings/rbac.html', permissions=permissions)
 
 
+@settings_bp.route('/system', methods=['GET', 'POST'])
+@login_required
+def system():
+    """System settings management"""
+    if current_user.role != 'superadmin':
+        flash(_('Access denied. Super administrator privileges required.'), 'error')
+        return redirect(url_for('settings.index'))
+    
+    settings_manager = SettingsManager()
+    form = SystemSettingsForm()
+    
+    if form.validate_on_submit():
+        # Save system settings
+        settings_manager.set_setting('system', 'backup_enabled', form.backup_enabled.data, 'boolean')
+        settings_manager.set_setting('system', 'backup_frequency', form.backup_frequency.data, 'string')
+        settings_manager.set_setting('system', 'debug_mode', form.debug_mode.data, 'boolean')
+        settings_manager.set_setting('system', 'maintenance_mode', form.maintenance_mode.data, 'boolean')
+        
+        flash(_('System settings updated successfully.'), 'success')
+        return redirect(url_for('settings.system'))
+    
+    # Load current settings
+    system_settings = settings_manager.get_category_settings('system')
+    if system_settings:
+        form.backup_enabled.data = system_settings.get('backup_enabled', {}).get('value', True)
+        form.backup_frequency.data = system_settings.get('backup_frequency', {}).get('value', 'daily')
+        form.debug_mode.data = system_settings.get('debug_mode', {}).get('value', False)
+        form.maintenance_mode.data = system_settings.get('maintenance_mode', {}).get('value', False)
+    
+    return render_template('settings/system.html', form=form)
+
+
+@settings_bp.route('/rbac/edit', methods=['GET', 'POST'])
+@login_required
+def rbac_edit():
+    """Edit RBAC permissions"""
+    admin_check = require_admin()
+    if admin_check:
+        return admin_check
+    
+    rbac_manager = RBACManager()
+    form = RolePermissionForm()
+    
+    if form.validate_on_submit():
+        success = rbac_manager.set_permission(
+            form.role.data,
+            form.resource.data,
+            form.permission.data,
+            form.granted.data
+        )
+        
+        if success:
+            flash(_('Permission updated successfully.'), 'success')
+        else:
+            flash(_('Error updating permission.'), 'error')
+        
+        return redirect(url_for('settings.rbac'))
+    
+    return render_template('settings/rbac_edit.html', form=form)
+
+
 @settings_bp.route('/initialize')
 @login_required
 def initialize():

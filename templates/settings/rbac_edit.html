@@ -1,0 +1,126 @@
+{% extends "base.html" %}
+{% block title %}{{ _('Edit Permissions') }}{% endblock %}
+
+{% block content %}
+<div class="container-fluid">
+    <div class="row mb-4">
+        <div class="col">
+            <nav aria-label="breadcrumb">
+                <ol class="breadcrumb">
+                    <li class="breadcrumb-item"><a href="{{ url_for('settings.index') }}">{{ _('Settings') }}</a></li>
+                    <li class="breadcrumb-item"><a href="{{ url_for('settings.rbac') }}">{{ _('Role Permissions') }}</a></li>
+                    <li class="breadcrumb-item active">{{ _('Edit Permission') }}</li>
+                </ol>
+            </nav>
+            <h2><i data-feather="user-plus"></i> {{ _('Edit Role Permission') }}</h2>
+            <p class="text-muted">{{ _('Grant or revoke permissions for specific roles and resources') }}</p>
+        </div>
+    </div>
+
+    <div class="row">
+        <div class="col-lg-8">
+            <div class="card">
+                <div class="card-header">
+                    <h5><i data-feather="edit-2"></i> {{ _('Permission Configuration') }}</h5>
+                </div>
+                <div class="card-body">
+                    <form method="POST">
+                        {{ form.hidden_tag() }}
+                        
+                        <div class="row">
+                            <div class="col-md-6">
+                                <div class="mb-3">
+                                    {{ form.role.label(class="form-label") }}
+                                    {{ form.role(class="form-select") }}
+                                    {% for error in form.role.errors %}
+                                        <div class="text-danger">{{ error }}</div>
+                                    {% endfor %}
+                                </div>
+                            </div>
+                            <div class="col-md-6">
+                                <div class="mb-3">
+                                    {{ form.resource.label(class="form-label") }}
+                                    {{ form.resource(class="form-select") }}
+                                    {% for error in form.resource.errors %}
+                                        <div class="text-danger">{{ error }}</div>
+                                    {% endfor %}
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="row">
+                            <div class="col-md-6">
+                                <div class="mb-3">
+                                    {{ form.permission.label(class="form-label") }}
+                                    {{ form.permission(class="form-select") }}
+                                    {% for error in form.permission.errors %}
+                                        <div class="text-danger">{{ error }}</div>
+                                    {% endfor %}
+                                </div>
+                            </div>
+                            <div class="col-md-6">
+                                <div class="mb-3">
+                                    <label class="form-label">{{ _('Access') }}</label>
+                                    <div class="form-check">
+                                        {{ form.granted(class="form-check-input") }}
+                                        {{ form.granted.label(class="form-check-label") }}
+                                    </div>
+                                    {% for error in form.granted.errors %}
+                                        <div class="text-danger">{{ error }}</div>
+                                    {% endfor %}
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="d-flex gap-2">
+                            <button type="submit" class="btn btn-primary">
+                                <i data-feather="save"></i> {{ _('Update Permission') }}
+                            </button>
+                            <a href="{{ url_for('settings.rbac') }}" class="btn btn-secondary">
+                                <i data-feather="arrow-left"></i> {{ _('Back to Permissions') }}
+                            </a>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+
+        <div class="col-lg-4">
+            <div class="card">
+                <div class="card-header">
+                    <h6><i data-feather="info"></i> {{ _('Role Descriptions') }}</h6>
+                </div>
+                <div class="card-body">
+                    <h6>{{ _('User') }}</h6>
+                    <p class="small text-muted">{{ _('Basic access to view and update assigned tasks') }}</p>
+                    
+                    <h6>{{ _('Manager') }}</h6>
+                    <p class="small text-muted">{{ _('Can create and manage quotes, orders, and team tasks') }}</p>
+                    
+                    <h6>{{ _('Admin') }}</h6>
+                    <p class="small text-muted">{{ _('Full access to business data and user management') }}</p>
+                    
+                    <h6>{{ _('Super Admin') }}</h6>
+                    <p class="small text-muted">{{ _('Complete system access including settings and exports') }}</p>
+                </div>
+            </div>
+
+            <div class="card mt-3">
+                <div class="card-header">
+                    <h6><i data-feather="shield"></i> {{ _('Permission Types') }}</h6>
+                </div>
+                <div class="card-body">
+                    <ul class="list-unstyled small">
+                        <li><strong>Create:</strong> {{ _('Add new records') }}</li>
+                        <li><strong>Read:</strong> {{ _('View existing records') }}</li>
+                        <li><strong>Update:</strong> {{ _('Modify records') }}</li>
+                        <li><strong>Delete:</strong> {{ _('Remove records') }}</li>
+                        <li><strong>Approve:</strong> {{ _('Approve quotes/orders') }}</li>
+                        <li><strong>Export:</strong> {{ _('Export data') }}</li>
+                    </ul>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

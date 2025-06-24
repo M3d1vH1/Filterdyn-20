@@ -1,0 +1,131 @@
+{% extends "base.html" %}
+{% block title %}{{ _('System Settings') }}{% endblock %}
+
+{% block content %}
+<div class="container-fluid">
+    <div class="row mb-4">
+        <div class="col">
+            <nav aria-label="breadcrumb">
+                <ol class="breadcrumb">
+                    <li class="breadcrumb-item"><a href="{{ url_for('settings.index') }}">{{ _('Settings') }}</a></li>
+                    <li class="breadcrumb-item active">{{ _('System Settings') }}</li>
+                </ol>
+            </nav>
+            <h2><i data-feather="server"></i> {{ _('System Settings') }}</h2>
+            <p class="text-muted">{{ _('Configure system-wide settings and maintenance options') }}</p>
+        </div>
+    </div>
+
+    <div class="row">
+        <div class="col-lg-8">
+            <div class="card">
+                <div class="card-header">
+                    <h5><i data-feather="edit-2"></i> {{ _('System Configuration') }}</h5>
+                </div>
+                <div class="card-body">
+                    <form method="POST">
+                        {{ form.hidden_tag() }}
+                        
+                        <div class="row">
+                            <div class="col-md-6">
+                                <div class="mb-3">
+                                    <label class="form-label">{{ _('Backup Settings') }}</label>
+                                    <div class="form-check">
+                                        {{ form.backup_enabled(class="form-check-input") }}
+                                        {{ form.backup_enabled.label(class="form-check-label") }}
+                                    </div>
+                                    {% for error in form.backup_enabled.errors %}
+                                        <div class="text-danger">{{ error }}</div>
+                                    {% endfor %}
+                                </div>
+                            </div>
+                            <div class="col-md-6">
+                                <div class="mb-3">
+                                    {{ form.backup_frequency.label(class="form-label") }}
+                                    {{ form.backup_frequency(class="form-select") }}
+                                    {% for error in form.backup_frequency.errors %}
+                                        <div class="text-danger">{{ error }}</div>
+                                    {% endfor %}
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="row">
+                            <div class="col-md-6">
+                                <div class="mb-3">
+                                    <label class="form-label">{{ _('System Modes') }}</label>
+                                    <div class="form-check">
+                                        {{ form.debug_mode(class="form-check-input") }}
+                                        {{ form.debug_mode.label(class="form-check-label") }}
+                                    </div>
+                                    {% for error in form.debug_mode.errors %}
+                                        <div class="text-danger">{{ error }}</div>
+                                    {% endfor %}
+                                </div>
+                            </div>
+                            <div class="col-md-6">
+                                <div class="mb-3">
+                                    <label class="form-label">&nbsp;</label>
+                                    <div class="form-check">
+                                        {{ form.maintenance_mode(class="form-check-input") }}
+                                        {{ form.maintenance_mode.label(class="form-check-label") }}
+                                    </div>
+                                    {% for error in form.maintenance_mode.errors %}
+                                        <div class="text-danger">{{ error }}</div>
+                                    {% endfor %}
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="d-flex gap-2">
+                            <button type="submit" class="btn btn-primary">
+                                <i data-feather="save"></i> {{ _('Save Settings') }}
+                            </button>
+                            <a href="{{ url_for('settings.index') }}" class="btn btn-secondary">
+                                <i data-feather="arrow-left"></i> {{ _('Back') }}
+                            </a>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+
+        <div class="col-lg-4">
+            <div class="card">
+                <div class="card-header">
+                    <h6><i data-feather="info"></i> {{ _('System Information') }}</h6>
+                </div>
+                <div class="card-body">
+                    <h6>{{ _('Application Version') }}</h6>
+                    <p class="small text-muted">Filterdyn Operations Suite v1.0</p>
+                    
+                    <h6>{{ _('Database') }}</h6>
+                    <p class="small text-muted">PostgreSQL (Neon.tech)</p>
+                    
+                    <h6>{{ _('Framework') }}</h6>
+                    <p class="small text-muted">Flask 3.1.1 + SQLAlchemy</p>
+                    
+                    <h6>{{ _('Deployment') }}</h6>
+                    <p class="small text-muted">Replit Autoscale</p>
+                </div>
+            </div>
+
+            <div class="card mt-3">
+                <div class="card-header">
+                    <h6><i data-feather="alert-triangle"></i> {{ _('Important Notes') }}</h6>
+                </div>
+                <div class="card-body">
+                    <h6>{{ _('Debug Mode') }}</h6>
+                    <p class="small text-muted">{{ _('Only enable for development. Never use in production.') }}</p>
+                    
+                    <h6>{{ _('Maintenance Mode') }}</h6>
+                    <p class="small text-muted">{{ _('Prevents normal users from accessing the system') }}</p>
+                    
+                    <h6>{{ _('Backups') }}</h6>
+                    <p class="small text-muted">{{ _('Automated backups help protect your data') }}</p>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
