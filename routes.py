@@ -693,6 +693,57 @@ def kanban_quick_add():
     
     return jsonify({'success': True, 'task_id': task.id})
 
+@main_bp.route('/tasks/<int:task_id>/postpone', methods=['POST'])
+@login_required
+def postpone_task(task_id):
+    """Postpone a task with reason"""
+    task = Task.query.filter_by(
+        id=task_id, 
+        tenant_id=current_user.tenant_id
+    ).first_or_404()
+    
+    # Check permissions
+    if current_user.role == 'user' and task.assigned_to != current_user.id and task.created_by != current_user.id:
+        return jsonify({'success': False, 'message': 'Permission denied'}), 403
+    
+    data = request.get_json()
+    new_due_date = data.get('new_due_date')
+    reason = data.get('reason', '').strip()
+    notes = data.get('notes', '').strip()
+    
+    if not new_due_date or not reason:
+        return jsonify({'success': False, 'message': 'New due date and reason are required'}), 400
+    
+    try:
+        # Parse the new due date
+        new_date = datetime.fromisoformat(new_due_date.replace('Z', '+00:00'))
+        
+        # Store original due date if this is the first postponement
+        if task.postpone_count == 0 and task.due_date:
+            task.original_due_date = task.due_date
+        
+        # Update task
+        task.due_date = new_date
+        task.postpone_count = (task.postpone_count or 0) + 1
+        task.postpone_reason = reason
+        if notes:
+            current_notes = task.notes or ''
+            task.notes = f"{current_notes}\n\n[Postponed {task.postpone_count} time(s)]: {reason}\n{notes}".strip()
+        
+        db.session.commit()
+        
+        return jsonify({
+            'success': True, 
+            'message': f'Task postponed successfully',
+            'postpone_count': task.postpone_count
+        })
+        
+    except ValueError as e:
+        return jsonify({'success': False, 'message': 'Invalid date format'}), 400
+    except Exception as e:
+        db.session.rollback()
+        return jsonify({'success': False, 'message': 'Failed to postpone task'}), 500
+
 def _update_daily_board_metrics(tenant_id, target_date):
     """Update daily board metrics based on current tasks"""
     from datetime import datetime

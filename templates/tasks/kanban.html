@@ -165,6 +165,38 @@
     margin-top: 0.25rem;
 }
 
+.action-buttons {
+    display: flex;
+    gap: 0.25rem;
+}
+
+.task-indicators-right {
+    display: flex;
+    align-items: center;
+    gap: 0.25rem;
+}
+
+.postpone-indicator {
+    background: #ffc107;
+    color: #000;
+    padding: 0.1rem 0.25rem;
+    border-radius: 0.25rem;
+    font-size: 0.55rem;
+    display: flex;
+    align-items: center;
+    gap: 0.1rem;
+}
+
+.customer-badge {
+    color: #6c757d;
+}
+
+.btn-xs {
+    padding: 0.15rem 0.25rem;
+    font-size: 0.6rem;
+    border-radius: 0.2rem;
+}
+
 .kanban-drop-zone.drag-over {
     background: #e3f2fd;
     border: 2px dashed #2196f3;
@@ -352,6 +384,46 @@
         </div>
     </div>
 </div>
+
+<!-- Postpone Modal -->
+<div class="modal fade" id="postponeModal" tabindex="-1">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title">{{ _('Postpone Task') }}</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+            </div>
+            <form id="postpone-form">
+                <div class="modal-body">
+                    <div class="mb-3">
+                        <label for="postpone-task-title" class="form-label">{{ _('Task') }}</label>
+                        <input type="text" class="form-control" id="postpone-task-title" readonly>
+                        <input type="hidden" id="postpone-task-id">
+                    </div>
+                    <div class="mb-3">
+                        <label for="postpone-new-date" class="form-label">{{ _('New Due Date') }} *</label>
+                        <input type="datetime-local" class="form-control" id="postpone-new-date" required>
+                    </div>
+                    <div class="mb-3">
+                        <label for="postpone-reason" class="form-label">{{ _('Reason for Postponement') }} *</label>
+                        <textarea class="form-control" id="postpone-reason" rows="3" required 
+                                  placeholder="{{ _('Please explain why this task needs to be postponed...') }}"></textarea>
+                    </div>
+                    <div class="mb-3">
+                        <label for="postpone-notes" class="form-label">{{ _('Additional Notes') }}</label>
+                        <textarea class="form-control" id="postpone-notes" rows="2" 
+                                  placeholder="{{ _('Any additional information...') }}"></textarea>
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">{{ _('Cancel') }}</button>
+                    <button type="submit" class="btn btn-warning">{{ _('Postpone Task') }}</button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+
 <div class="container-fluid">
     <!-- Daily Board Header -->
     <div class="row mb-4">
@@ -506,15 +578,33 @@
                     {% endif %}
                     
                     <div class="task-actions">
-                        <a href="{{ url_for('main.edit_task', id=task.id) }}" 
-                           class="btn btn-xs btn-outline-secondary">
-                            <i data-feather="edit-2" style="width: 10px; height: 10px;"></i>
-                        </a>
-                        {% if task.customer %}
-                        <span class="customer-badge" title="{{ task.customer.name }}">
-                            <i data-feather="briefcase" style="width: 10px; height: 10px;"></i>
-                        </span>
-                        {% endif %}
+                        <div class="action-buttons">
+                            {% if task.status != 'completed' %}
+                            <button class="btn btn-xs btn-outline-warning postpone-btn" 
+                                    data-task-id="{{ task.id }}" 
+                                    title="{{ _('Postpone Task') }}">
+                                <i data-feather="clock" style="width: 8px; height: 8px;"></i>
+                            </button>
+                            {% endif %}
+                            <a href="{{ url_for('main.edit_task', id=task.id) }}" 
+                               class="btn btn-xs btn-outline-secondary" 
+                               title="{{ _('Edit Task') }}">
+                                <i data-feather="edit-2" style="width: 8px; height: 8px;"></i>
+                            </a>
+                        </div>
+                        <div class="task-indicators-right">
+                            {% if task.customer %}
+                            <span class="customer-badge" title="{{ task.customer.name }}">
+                                <i data-feather="briefcase" style="width: 8px; height: 8px;"></i>
+                            </span>
+                            {% endif %}
+                            {% if task.postpone_count > 0 %}
+                            <span class="postpone-indicator" title="{{ _('Postponed') }} {{ task.postpone_count }} {{ _('times') }}">
+                                <i data-feather="clock" style="width: 8px; height: 8px;"></i>
+                                <small>{{ task.postpone_count }}</small>
+                            </span>
+                            {% endif %}
+                        </div>
                     </div>
                 </div>
                 {% endfor %}
@@ -753,9 +843,17 @@ document.addEventListener('DOMContentLoaded', function() {
                 </div>
             </div>
             <div class="task-actions">
-                <a href="/tasks/${taskId}/edit" class="btn btn-xs btn-outline-secondary">
-                    <i data-feather="edit-2" style="width: 10px; height: 10px;"></i>
-                </a>
+                <div class="action-buttons">
+                    <button class="btn btn-xs btn-outline-warning postpone-btn" 
+                            data-task-id="${taskId}" 
+                            title="Postpone Task">
+                        <i data-feather="clock" style="width: 8px; height: 8px;"></i>
+                    </button>
+                    <a href="/tasks/${taskId}/edit" class="btn btn-xs btn-outline-secondary" title="Edit Task">
+                        <i data-feather="edit-2" style="width: 8px; height: 8px;"></i>
+                    </a>
+                </div>
+                <div class="task-indicators-right"></div>
             </div>
         `;
         
@@ -775,6 +873,15 @@ document.addEventListener('DOMContentLoaded', function() {
             const taskId = this.getAttribute('data-task-id');
             window.location.href = `/tasks/${taskId}/edit`;
         });
+        
+        // Add postpone button event listener
+        const postponeBtn = taskElement.querySelector('.postpone-btn');
+        if (postponeBtn) {
+            postponeBtn.addEventListener('click', function(e) {
+                e.stopPropagation();
+                showPostponeModal(taskId, taskData.title);
+            });
+        }
         
         pendingZone.appendChild(taskElement);
         
@@ -811,6 +918,96 @@ document.addEventListener('DOMContentLoaded', function() {
             window.FilterdynApp.refreshFeatherIcons();
         }
     });
+    
+    // Postpone functionality
+    const postponeModal = new bootstrap.Modal(document.getElementById('postponeModal'));
+    const postponeForm = document.getElementById('postpone-form');
+    
+    // Add event listeners to existing postpone buttons
+    document.querySelectorAll('.postpone-btn').forEach(btn => {
+        btn.addEventListener('click', function(e) {
+            e.stopPropagation();
+            const taskId = this.getAttribute('data-task-id');
+            const taskTitle = this.closest('.kanban-task').querySelector('.task-title').textContent;
+            showPostponeModal(taskId, taskTitle);
+        });
+    });
+    
+    function showPostponeModal(taskId, taskTitle) {
+        document.getElementById('postpone-task-id').value = taskId;
+        document.getElementById('postpone-task-title').value = taskTitle;
+        document.getElementById('postpone-new-date').value = '';
+        document.getElementById('postpone-reason').value = '';
+        document.getElementById('postpone-notes').value = '';
+        postponeModal.show();
+    }
+    
+    postponeForm.addEventListener('submit', function(e) {
+        e.preventDefault();
+        
+        const taskId = document.getElementById('postpone-task-id').value;
+        const newDate = document.getElementById('postpone-new-date').value;
+        const reason = document.getElementById('postpone-reason').value;
+        const notes = document.getElementById('postpone-notes').value;
+        
+        fetch(`/tasks/${taskId}/postpone`, {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+            },
+            body: JSON.stringify({
+                new_due_date: newDate,
+                reason: reason,
+                notes: notes
+            })
+        })
+        .then(response => response.json())
+        .then(data => {
+            if (data.success) {
+                postponeModal.hide();
+                showNotification('Task postponed successfully', 'success');
+                
+                // Update the task card to show postpone indicator
+                const taskCard = document.querySelector(`[data-task-id="${taskId}"]`);
+                if (taskCard) {
+                    updateTaskPostponeIndicator(taskCard, data.postpone_count);
+                }
+            } else {
+                showNotification(data.message || 'Failed to postpone task', 'error');
+            }
+        })
+        .catch(error => {
+            console.error('Error:', error);
+            showNotification('Network error occurred', 'error');
+        });
+    });
+    
+    function updateTaskPostponeIndicator(taskCard, postponeCount) {
+        const indicatorsRight = taskCard.querySelector('.task-indicators-right');
+        
+        // Remove existing postpone indicator
+        const existingIndicator = indicatorsRight.querySelector('.postpone-indicator');
+        if (existingIndicator) {
+            existingIndicator.remove();
+        }
+        
+        // Add new postpone indicator
+        if (postponeCount > 0) {
+            const indicator = document.createElement('span');
+            indicator.className = 'postpone-indicator';
+            indicator.title = `Postponed ${postponeCount} time${postponeCount > 1 ? 's' : ''}`;
+            indicator.innerHTML = `
+                <i data-feather="clock" style="width: 8px; height: 8px;"></i>
+                <small>${postponeCount}</small>
+            `;
+            indicatorsRight.appendChild(indicator);
+            
+            // Refresh feather icons
+            if (typeof feather !== 'undefined' && window.FilterdynApp) {
+                window.FilterdynApp.refreshFeatherIcons();
+            }
+        }
+    }
 });
 </script>
 {% endblock %}

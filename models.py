@@ -281,6 +281,16 @@ class Task(db.Model):
     completed_at = db.Column(db.DateTime)
     notes = db.Column(db.Text)
     
+    # Postpone tracking
+    postpone_count = db.Column(db.Integer, default=0)
+    postpone_reason = db.Column(db.Text)
+    original_due_date = db.Column(db.DateTime)
+    
+    # Soft delete for cancelled tasks
+    is_deleted = db.Column(db.Boolean, default=False)
+    deleted_at = db.Column(db.DateTime)
+    deletion_reason = db.Column(db.Text)
+    
     # Timestamps
     created_at = db.Column(db.DateTime, default=lambda: datetime.now(timezone.utc))
     updated_at = db.Column(db.DateTime, default=lambda: datetime.now(timezone.utc), onupdate=lambda: datetime.now(timezone.utc))
