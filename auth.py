@@ -50,16 +50,17 @@ def logout():
     return redirect(url_for('auth.login'))
 
 @auth_bp.route('/google/login')
-@login_required
 def google_login():
     """Initiate Google OAuth login"""
     client_id = os.environ.get('GOOGLE_CLIENT_ID')
     if not client_id:
-        flash('Google OAuth is not configured. Please contact your administrator.', 'error')
-        return redirect(url_for('main.ai_assistant'))
+        return "Google OAuth is not configured. Please contact your administrator.", 500
     
-    # Get the current domain dynamically
-    redirect_uri = request.url_root.rstrip('/') + '/auth/google/callback'
+    # Get the current domain dynamically - use external domain for Replit
+    if 'replit.dev' in request.host or 'kirk.replit.dev' in request.host:
+        redirect_uri = f"https://{request.host}/auth/google/callback"
+    else:
+        redirect_uri = request.url_root.rstrip('/') + '/auth/google/callback'
     
     # Google OAuth parameters
     params = {
