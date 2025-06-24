@@ -1,0 +1,415 @@
+{% extends "base.html" %}
+{% set active_page = "gmail" %}
+
+{% block title %}{{ thread.subject or _('(No Subject)') }}{% endblock %}
+
+{% block content %}
+<div class="container-fluid">
+    <div class="d-flex justify-content-between flex-wrap flex-md-nowrap align-items-center pt-3 pb-2 mb-3 border-bottom">
+        <h1 class="h4">
+            <i data-feather="mail" class="me-2"></i>{{ thread.subject or _('(No Subject)') }}
+            <span class="badge bg-secondary ms-2">{{ messages|length }} {{ _('messages') }}</span>
+        </h1>
+        <div class="btn-toolbar mb-2 mb-md-0">
+            <div class="btn-group me-2">
+                <a href="{{ url_for('gmail.compose') }}?reply_to={{ messages[-1].id if messages else '' }}" 
+                   class="btn btn-primary">
+                    <i data-feather="corner-up-left"></i> {{ _('Reply') }}
+                </a>
+                <button onclick="analyzeThread()" class="btn btn-outline-info">
+                    <i data-feather="zap"></i> {{ _('AI Analysis') }}
+                </button>
+                <a href="{{ url_for('gmail.inbox') }}" class="btn btn-outline-secondary">
+                    <i data-feather="arrow-left"></i> {{ _('Back to Inbox') }}
+                </a>
+            </div>
+        </div>
+    </div>
+
+    <!-- Thread Messages -->
+    <div class="row">
+        <div class="col-lg-8">
+            {% for message in messages %}
+            <div class="card mb-3 shadow-sm">
+                <div class="card-header d-flex justify-content-between align-items-start">
+                    <div>
+                        <h6 class="mb-1">
+                            <strong>{{ message.sender_name or message.sender_email }}</strong>
+                            {% if message.sender_email and message.sender_name %}
+                                <small class="text-muted">&lt;{{ message.sender_email }}&gt;</small>
+                            {% endif %}
+                        </h6>
+                        <div class="small text-muted">
+                            <strong>{{ _('To') }}:</strong> 
+                            {% if message.recipients %}
+                                {% set recipients = message.recipients|from_json %}
+                                {{ recipients|join(', ') if recipients else _('Unknown') }}
+                            {% else %}
+                                {{ _('Unknown') }}
+                            {% endif %}
+                            {% if message.cc_recipients %}
+                                {% set cc_recipients = message.cc_recipients|from_json %}
+                                {% if cc_recipients %}
+                                    <br><strong>{{ _('CC') }}:</strong> {{ cc_recipients|join(', ') }}
+                                {% endif %}
+                            {% endif %}
+                        </div>
+                    </div>
+                    <div class="text-end">
+                        <div class="small text-muted">
+                            {{ message.sent_at|safe_datetime_format if message.sent_at else _('Unknown date') }}
+                        </div>
+                        <div class="mt-1">
+                            {% if message.is_starred %}
+                                <i data-feather="star" class="text-warning me-1"></i>
+                            {% endif %}
+                            {% if message.is_important %}
+                                <i data-feather="alert-circle" class="text-danger me-1"></i>
+                            {% endif %}
+                            {% if message.has_attachments %}
+                                <i data-feather="paperclip" class="text-muted"></i>
+                            {% endif %}
+                        </div>
+                    </div>
+                </div>
+                
+                <div class="card-body">
+                    <div class="email-content mb-3">
+                        {% if message.body_html %}
+                            <div class="email-body-html">{{ message.body_html|safe }}</div>
+                        {% elif message.body_plain %}
+                            <pre class="email-body-plain">{{ message.body_plain }}</pre>
+                        {% else %}
+                            <div class="text-muted fst-italic">{{ _('No content available') }}</div>
+                        {% endif %}
+                    </div>
+
+                    <!-- Attachments -->
+                    {% if message.attachments %}
+                    <div class="attachments mb-3">
+                        <h6>{{ _('Attachments') }}:</h6>
+                        <div class="row">
+                            {% for attachment in message.attachments %}
+                            <div class="col-md-6 col-lg-4 mb-2">
+                                <div class="card border">
+                                    <div class="card-body p-2">
+                                        <div class="d-flex align-items-center">
+                                            <i data-feather="file" class="me-2"></i>
+                                            <div class="flex-grow-1">
+                                                <a href="{{ url_for('gmail.download_attachment', attachment_id=attachment.id) }}" 
+                                                   class="text-decoration-none">
+                                                    <small class="fw-bold">{{ attachment.filename }}</small>
+                                                </a>
+                                                <div class="text-muted small">
+                                                    {{ (attachment.file_size / 1024)|round(1) }} KB
+                                                </div>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                            {% endfor %}
+                        </div>
+                    </div>
+                    {% endif %}
+
+                    <!-- AI Analysis Button -->
+                    <div class="ai-actions">
+                        <button onclick="analyzeMessage({{ message.id }})" 
+                                class="btn btn-sm btn-outline-info me-2"
+                                id="analyze-btn-{{ message.id }}">
+                            <i data-feather="zap"></i> {{ _('Analyze') }}
+                        </button>
+                        <button onclick="suggestReply({{ message.id }})" 
+                                class="btn btn-sm btn-outline-success"
+                                id="suggest-btn-{{ message.id }}">
+                            <i data-feather="edit-3"></i> {{ _('Suggest Reply') }}
+                        </button>
+                    </div>
+
+                    <!-- AI Results -->
+                    <div id="ai-results-{{ message.id }}" class="ai-results mt-3" style="display: none;"></div>
+                </div>
+            </div>
+            {% endfor %}
+        </div>
+
+        <!-- Sidebar -->
+        <div class="col-lg-4">
+            <!-- Thread Info -->
+            <div class="card mb-3">
+                <div class="card-header">
+                    <h6 class="mb-0">{{ _('Thread Information') }}</h6>
+                </div>
+                <div class="card-body">
+                    <div class="row mb-2">
+                        <div class="col-sm-4"><strong>{{ _('Participants') }}:</strong></div>
+                        <div class="col-sm-8">
+                            {% if thread.participants %}
+                                {% set participants = thread.participants|from_json %}
+                                {{ participants|join(', ') if participants else _('Unknown') }}
+                            {% else %}
+                                {{ _('Unknown') }}
+                            {% endif %}
+                        </div>
+                    </div>
+                    <div class="row mb-2">
+                        <div class="col-sm-4"><strong>{{ _('Messages') }}:</strong></div>
+                        <div class="col-sm-8">{{ thread.message_count }}</div>
+                    </div>
+                    <div class="row mb-2">
+                        <div class="col-sm-4"><strong>{{ _('Last Message') }}:</strong></div>
+                        <div class="col-sm-8">{{ thread.last_message_at|safe_datetime_format if thread.last_message_at else _('Unknown') }}</div>
+                    </div>
+                    {% if thread.labels %}
+                    <div class="row">
+                        <div class="col-sm-4"><strong>{{ _('Labels') }}:</strong></div>
+                        <div class="col-sm-8">
+                            {% for label in thread.labels %}
+                                <span class="badge bg-secondary me-1">{{ label }}</span>
+                            {% endfor %}
+                        </div>
+                    </div>
+                    {% endif %}
+                </div>
+            </div>
+
+            <!-- Business Links -->
+            <div class="card mb-3">
+                <div class="card-header">
+                    <h6 class="mb-0">{{ _('Business Links') }}</h6>
+                </div>
+                <div class="card-body">
+                    {% if thread.business_links %}
+                        {% for link in thread.business_links %}
+                        <div class="mb-2">
+                            <span class="badge bg-primary">{{ link.association_type }}</span>
+                            {% if link.customer %}
+                                <a href="{{ url_for('customers.view', id=link.customer.id) }}">{{ link.customer.name }}</a>
+                            {% elif link.order %}
+                                <a href="{{ url_for('orders.view', id=link.order.id) }}">{{ _('Order') }} #{{ link.order.id }}</a>
+                            {% elif link.quote %}
+                                <a href="{{ url_for('quotes.view', id=link.quote.id) }}">{{ _('Quote') }} #{{ link.quote.id }}</a>
+                            {% elif link.task %}
+                                <a href="{{ url_for('tasks.view', id=link.task.id) }}">{{ link.task.title }}</a>
+                            {% endif %}
+                        </div>
+                        {% endfor %}
+                    {% else %}
+                        <p class="text-muted mb-0">{{ _('No business associations found') }}</p>
+                        <button onclick="suggestBusinessLinks()" class="btn btn-sm btn-outline-primary mt-2">
+                            <i data-feather="link"></i> {{ _('Suggest Links') }}
+                        </button>
+                    {% endif %}
+                </div>
+            </div>
+
+            <!-- AI Analysis Summary -->
+            <div class="card">
+                <div class="card-header">
+                    <h6 class="mb-0">{{ _('AI Analysis') }}</h6>
+                </div>
+                <div class="card-body">
+                    <div id="thread-analysis-summary">
+                        <p class="text-muted">{{ _('Click "AI Analysis" to analyze this email thread') }}</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+function analyzeMessage(messageId) {
+    const btn = document.getElementById(`analyze-btn-${messageId}`);
+    const resultsDiv = document.getElementById(`ai-results-${messageId}`);
+    const originalText = btn.innerHTML;
+    
+    btn.innerHTML = '<i data-feather="loader" class="spin"></i> {{ _("Analyzing...") }}';
+    btn.disabled = true;
+    
+    // Get message content
+    const messageCard = btn.closest('.card');
+    const emailContent = messageCard.querySelector('.email-body-html, .email-body-plain');
+    const emailText = emailContent ? emailContent.innerText || emailContent.textContent : '';
+    
+    fetch('{{ url_for("gmail.api_analyze") }}', {
+        method: 'POST',
+        headers: {
+            'Content-Type': 'application/json',
+            'X-CSRFToken': '{{ csrf_token() }}'
+        },
+        body: JSON.stringify({ email_text: emailText })
+    })
+    .then(response => response.json())
+    .then(data => {
+        if (data.error) {
+            throw new Error(data.error);
+        }
+        
+        let html = '<div class="ai-analysis-results border rounded p-3 bg-light">';
+        html += '<h6 class="text-info mb-3"><i data-feather="zap"></i> {{ _("AI Analysis Results") }}</h6>';
+        
+        if (data.summary) {
+            html += `<div class="mb-2"><strong>{{ _("Summary") }}:</strong> ${data.summary}</div>`;
+        }
+        if (data.sentiment) {
+            const sentimentColor = data.sentiment === 'positive' ? 'success' : data.sentiment === 'negative' ? 'danger' : 'secondary';
+            html += `<div class="mb-2"><strong>{{ _("Sentiment") }}:</strong> <span class="badge bg-${sentimentColor}">${data.sentiment}</span></div>`;
+        }
+        if (data.intent) {
+            html += `<div class="mb-2"><strong>{{ _("Intent") }}:</strong> ${data.intent}</div>`;
+        }
+        if (data.priority) {
+            const priorityColor = data.priority === 'urgent' ? 'danger' : data.priority === 'high' ? 'warning' : 'secondary';
+            html += `<div class="mb-2"><strong>{{ _("Priority") }}:</strong> <span class="badge bg-${priorityColor}">${data.priority}</span></div>`;
+        }
+        if (data.key_info && data.key_info.length > 0) {
+            html += `<div class="mb-2"><strong>{{ _("Key Information") }}:</strong><ul class="mb-0">`;
+            data.key_info.forEach(info => html += `<li>${info}</li>`);
+            html += `</ul></div>`;
+        }
+        
+        html += '</div>';
+        
+        resultsDiv.innerHTML = html;
+        resultsDiv.style.display = 'block';
+        feather.replace();
+    })
+    .catch(error => {
+        resultsDiv.innerHTML = `<div class="alert alert-danger"><i data-feather="alert-circle"></i> {{ _("Analysis failed") }}: ${error.message}</div>`;
+        resultsDiv.style.display = 'block';
+        feather.replace();
+    })
+    .finally(() => {
+        btn.innerHTML = originalText;
+        btn.disabled = false;
+        feather.replace();
+    });
+}
+
+function suggestReply(messageId) {
+    const btn = document.getElementById(`suggest-btn-${messageId}`);
+    const resultsDiv = document.getElementById(`ai-results-${messageId}`);
+    const originalText = btn.innerHTML;
+    
+    btn.innerHTML = '<i data-feather="loader" class="spin"></i> {{ _("Suggesting...") }}';
+    btn.disabled = true;
+    
+    // Get message content
+    const messageCard = btn.closest('.card');
+    const emailContent = messageCard.querySelector('.email-body-html, .email-body-plain');
+    const emailText = emailContent ? emailContent.innerText || emailContent.textContent : '';
+    
+    fetch('{{ url_for("gmail.api_suggest") }}', {
+        method: 'POST',
+        headers: {
+            'Content-Type': 'application/json',
+            'X-CSRFToken': '{{ csrf_token() }}'
+        },
+        body: JSON.stringify({ 
+            email_text: emailText,
+            tone: 'professional',
+            language: '{{ get_locale() }}'
+        })
+    })
+    .then(response => response.json())
+    .then(data => {
+        if (data.error) {
+            throw new Error(data.error);
+        }
+        
+        let html = '<div class="ai-suggestion-results border rounded p-3 bg-light">';
+        html += '<h6 class="text-success mb-3"><i data-feather="edit-3"></i> {{ _("Suggested Reply") }}</h6>';
+        html += `<div class="suggested-reply mb-3">${data.suggestion.replace(/\n/g, '<br>')}</div>`;
+        html += `<button onclick="useReply('${data.suggestion.replace(/'/g, "\\'")}', ${messageId})" class="btn btn-sm btn-success">{{ _("Use This Reply") }}</button>`;
+        html += '</div>';
+        
+        resultsDiv.innerHTML = html;
+        resultsDiv.style.display = 'block';
+        feather.replace();
+    })
+    .catch(error => {
+        resultsDiv.innerHTML = `<div class="alert alert-danger"><i data-feather="alert-circle"></i> {{ _("Suggestion failed") }}: ${error.message}</div>`;
+        resultsDiv.style.display = 'block';
+        feather.replace();
+    })
+    .finally(() => {
+        btn.innerHTML = originalText;
+        btn.disabled = false;
+        feather.replace();
+    });
+}
+
+function useReply(suggestion, messageId) {
+    const composeUrl = '{{ url_for("gmail.compose") }}?reply_to=' + messageId + '&suggestion=' + encodeURIComponent(suggestion);
+    window.open(composeUrl, '_blank');
+}
+
+function analyzeThread() {
+    // Implement thread-level analysis
+    const summary = document.getElementById('thread-analysis-summary');
+    summary.innerHTML = '<div class="text-info"><i data-feather="loader" class="spin"></i> {{ _("Analyzing thread...") }}</div>';
+    
+    // For now, just show a placeholder
+    setTimeout(() => {
+        summary.innerHTML = '<div class="small"><strong>{{ _("Thread Analysis") }}:</strong><br>{{ _("This appears to be a customer inquiry thread with") }} {{ messages|length }} {{ _("messages. Consider following up if no recent response.") }}</div>';
+        feather.replace();
+    }, 2000);
+}
+
+function suggestBusinessLinks() {
+    alert('{{ _("Business link suggestions coming soon!") }}');
+}
+
+// Auto-refresh icons
+feather.replace();
+</script>
+
+<style>
+.email-content {
+    max-height: 400px;
+    overflow-y: auto;
+}
+
+.email-body-html {
+    font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+    line-height: 1.6;
+    color: #333;
+    background: #fff;
+    padding: 1rem;
+    border-radius: 0.375rem;
+    border: 1px solid #dee2e6;
+}
+
+.email-body-plain {
+    font-family: 'Courier New', monospace;
+    font-size: 0.9rem;
+    background: #f8f9fa;
+    padding: 1rem;
+    border-radius: 0.375rem;
+    border: 1px solid #dee2e6;
+    white-space: pre-wrap;
+    max-height: 300px;
+    overflow-y: auto;
+}
+
+.ai-results {
+    animation: fadeIn 0.3s ease-in;
+}
+
+@keyframes fadeIn {
+    from { opacity: 0; transform: translateY(-10px); }
+    to { opacity: 1; transform: translateY(0); }
+}
+
+.spin {
+    animation: spin 1s linear infinite;
+}
+
+@keyframes spin {
+    from { transform: rotate(0deg); }
+    to { transform: rotate(360deg); }
+}
+</style>
+{% endblock %}

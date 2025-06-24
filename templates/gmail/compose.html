@@ -1,0 +1,520 @@
+{% extends "base.html" %}
+{% set active_page = "gmail" %}
+
+{% block title %}{{ _('Compose Email') }}{% endblock %}
+
+{% block content %}
+<div class="container-fluid">
+    <div class="d-flex justify-content-between flex-wrap flex-md-nowrap align-items-center pt-3 pb-2 mb-3 border-bottom">
+        <h1 class="h2">
+            <i data-feather="edit-3" class="me-2"></i>{{ _('Compose Email') }}
+        </h1>
+        <div class="btn-toolbar mb-2 mb-md-0">
+            <div class="btn-group me-2">
+                <a href="{{ url_for('gmail.inbox') }}" class="btn btn-outline-secondary">
+                    <i data-feather="arrow-left"></i> {{ _('Back to Inbox') }}
+                </a>
+            </div>
+        </div>
+    </div>
+
+    <div class="row">
+        <div class="col-lg-8">
+            <div class="card shadow">
+                <form method="post" enctype="multipart/form-data" id="compose-form">
+                    {{ csrf_token() }}
+                    <div class="card-body">
+                        <!-- To Field -->
+                        <div class="mb-3">
+                            <label for="to" class="form-label">{{ _('To') }} <span class="text-danger">*</span></label>
+                            <input type="email" class="form-control" id="to" name="to" required
+                                   {% if original_message %}value="{{ original_message.sender_email }}"{% endif %}
+                                   placeholder="{{ _('recipient@example.com') }}">
+                        </div>
+
+                        <!-- CC Field -->
+                        <div class="mb-3">
+                            <label for="cc" class="form-label">{{ _('CC') }}</label>
+                            <input type="email" class="form-control" id="cc" name="cc"
+                                   placeholder="{{ _('Optional: cc@example.com') }}">
+                        </div>
+
+                        <!-- BCC Field -->
+                        <div class="mb-3">
+                            <label for="bcc" class="form-label">{{ _('BCC') }}</label>
+                            <input type="email" class="form-control" id="bcc" name="bcc"
+                                   placeholder="{{ _('Optional: bcc@example.com') }}">
+                        </div>
+
+                        <!-- Subject Field -->
+                        <div class="mb-3">
+                            <label for="subject" class="form-label">{{ _('Subject') }} <span class="text-danger">*</span></label>
+                            <input type="text" class="form-control" id="subject" name="subject" required
+                                   {% if original_message %}value="Re: {{ original_message.subject }}"{% endif %}
+                                   placeholder="{{ _('Email subject') }}">
+                        </div>
+
+                        <!-- Body Field -->
+                        <div class="mb-3">
+                            <label for="body" class="form-label">{{ _('Message') }} <span class="text-danger">*</span></label>
+                            <textarea class="form-control" id="body" name="body" rows="12" required
+                                      placeholder="{{ _('Type your message here...') }}">{% if request.args.get('suggestion') %}{{ request.args.get('suggestion') }}{% elif original_message %}
+
+
+---
+{{ _('Original message from') }} {{ original_message.sender_name or original_message.sender_email }}:
+{{ original_message.body_plain or original_message.snippet }}{% endif %}</textarea>
+                        </div>
+
+                        <!-- Attachments -->
+                        <div class="mb-3">
+                            <label for="attachments" class="form-label">{{ _('Attachments') }}</label>
+                            <input type="file" class="form-control" id="attachments" name="attachments" multiple
+                                   accept="*/*">
+                            <div class="form-text">{{ _('You can select multiple files. Maximum size: 25MB per file.') }}</div>
+                        </div>
+
+                        <!-- AI Assistance -->
+                        <div class="mb-3">
+                            <div class="card border-info">
+                                <div class="card-header bg-info text-white">
+                                    <h6 class="mb-0">
+                                        <i data-feather="zap"></i> {{ _('AI Assistant') }}
+                                    </h6>
+                                </div>
+                                <div class="card-body">
+                                    <div class="row">
+                                        <div class="col-md-6 mb-2">
+                                            <button type="button" class="btn btn-outline-info w-100" onclick="improveEmail()">
+                                                <i data-feather="edit"></i> {{ _('Improve Writing') }}
+                                            </button>
+                                        </div>
+                                        <div class="col-md-6 mb-2">
+                                            <button type="button" class="btn btn-outline-info w-100" onclick="checkTone()">
+                                                <i data-feather="user-check"></i> {{ _('Check Tone') }}
+                                            </button>
+                                        </div>
+                                        <div class="col-md-6 mb-2">
+                                            <button type="button" class="btn btn-outline-info w-100" onclick="suggestTemplates()">
+                                                <i data-feather="file-text"></i> {{ _('Templates') }}
+                                            </button>
+                                        </div>
+                                        <div class="col-md-6 mb-2">
+                                            <button type="button" class="btn btn-outline-info w-100" onclick="translateEmail()">
+                                                <i data-feather="globe"></i> {{ _('Translate') }}
+                                            </button>
+                                        </div>
+                                    </div>
+                                    
+                                    <!-- AI Results -->
+                                    <div id="ai-assistance-results" class="mt-3" style="display: none;"></div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="card-footer d-flex justify-content-between">
+                        <div>
+                            <button type="submit" class="btn btn-primary me-2">
+                                <i data-feather="send"></i> {{ _('Send Email') }}
+                            </button>
+                            <button type="button" class="btn btn-outline-secondary" onclick="saveDraft()">
+                                <i data-feather="save"></i> {{ _('Save Draft') }}
+                            </button>
+                        </div>
+                        <div>
+                            <a href="{{ url_for('gmail.inbox') }}" class="btn btn-secondary">
+                                {{ _('Cancel') }}
+                            </a>
+                        </div>
+                    </div>
+                </form>
+            </div>
+        </div>
+
+        <!-- Sidebar -->
+        <div class="col-lg-4">
+            <!-- Quick Actions -->
+            <div class="card mb-3">
+                <div class="card-header">
+                    <h6 class="mb-0">{{ _('Quick Actions') }}</h6>
+                </div>
+                <div class="card-body">
+                    <div class="d-grid gap-2">
+                        <button class="btn btn-outline-primary btn-sm" onclick="insertSignature()">
+                            <i data-feather="edit-3"></i> {{ _('Insert Signature') }}
+                        </button>
+                        <button class="btn btn-outline-primary btn-sm" onclick="insertTemplate('follow_up')">
+                            <i data-feather="clock"></i> {{ _('Follow-up Template') }}
+                        </button>
+                        <button class="btn btn-outline-primary btn-sm" onclick="insertTemplate('thank_you')">
+                            <i data-feather="heart"></i> {{ _('Thank You Template') }}
+                        </button>
+                        <button class="btn btn-outline-primary btn-sm" onclick="insertTemplate('meeting')">
+                            <i data-feather="calendar"></i> {{ _('Meeting Request') }}
+                        </button>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Customer Lookup -->
+            <div class="card mb-3">
+                <div class="card-header">
+                    <h6 class="mb-0">{{ _('Customer Lookup') }}</h6>
+                </div>
+                <div class="card-body">
+                    <div class="input-group mb-2">
+                        <input type="text" class="form-control form-control-sm" id="customer-search"
+                               placeholder="{{ _('Search customers...') }}">
+                        <button class="btn btn-outline-secondary btn-sm" onclick="searchCustomers()">
+                            <i data-feather="search"></i>
+                        </button>
+                    </div>
+                    <div id="customer-results" class="small"></div>
+                </div>
+            </div>
+
+            <!-- Email Tips -->
+            <div class="card">
+                <div class="card-header">
+                    <h6 class="mb-0">{{ _('Email Tips') }}</h6>
+                </div>
+                <div class="card-body">
+                    <ul class="small mb-0">
+                        <li>{{ _('Keep subject lines clear and specific') }}</li>
+                        <li>{{ _('Use professional greetings and closings') }}</li>
+                        <li>{{ _('Check spelling and grammar before sending') }}</li>
+                        <li>{{ _('Include all necessary attachments') }}</li>
+                        <li>{{ _('Use CC sparingly and BCC for privacy') }}</li>
+                    </ul>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+function improveEmail() {
+    const bodyText = document.getElementById('body').value;
+    const resultsDiv = document.getElementById('ai-assistance-results');
+    
+    if (!bodyText.trim()) {
+        alert('{{ _("Please enter some email content first") }}');
+        return;
+    }
+    
+    showAILoading('{{ _("Improving your email...") }}');
+    
+    fetch('{{ url_for("gmail.api_suggest") }}', {
+        method: 'POST',
+        headers: {
+            'Content-Type': 'application/json',
+            'X-CSRFToken': '{{ csrf_token() }}'
+        },
+        body: JSON.stringify({
+            email_text: bodyText,
+            tone: 'professional',
+            language: '{{ get_locale() }}'
+        })
+    })
+    .then(response => response.json())
+    .then(data => {
+        if (data.error) {
+            throw new Error(data.error);
+        }
+        
+        showAIResult('{{ _("Improved Version") }}', data.suggestion, 'improvement');
+    })
+    .catch(error => {
+        showAIError('{{ _("Failed to improve email") }}', error.message);
+    });
+}
+
+function checkTone() {
+    const bodyText = document.getElementById('body').value;
+    
+    if (!bodyText.trim()) {
+        alert('{{ _("Please enter some email content first") }}');
+        return;
+    }
+    
+    showAILoading('{{ _("Analyzing tone...") }}');
+    
+    fetch('{{ url_for("gmail.api_analyze") }}', {
+        method: 'POST',
+        headers: {
+            'Content-Type': 'application/json',
+            'X-CSRFToken': '{{ csrf_token() }}'
+        },
+        body: JSON.stringify({ email_text: bodyText })
+    })
+    .then(response => response.json())
+    .then(data => {
+        if (data.error) {
+            throw new Error(data.error);
+        }
+        
+        let result = `<strong>{{ _("Tone Analysis") }}:</strong><br>`;
+        result += `{{ _("Sentiment") }}: <span class="badge bg-${data.sentiment === 'positive' ? 'success' : data.sentiment === 'negative' ? 'danger' : 'secondary'}">${data.sentiment || 'neutral'}</span><br>`;
+        result += `{{ _("Suggested improvements") }}: ${data.summary || '{{ _("The tone appears appropriate for business communication") }}'}`;
+        
+        showAIResult('{{ _("Tone Analysis") }}', result, 'analysis');
+    })
+    .catch(error => {
+        showAIError('{{ _("Failed to analyze tone") }}', error.message);
+    });
+}
+
+function suggestTemplates() {
+    const subject = document.getElementById('subject').value;
+    const bodyText = document.getElementById('body').value;
+    
+    showAILoading('{{ _("Loading templates...") }}');
+    
+    fetch('{{ url_for("gmail.api_templates") }}', {
+        method: 'POST',
+        headers: {
+            'Content-Type': 'application/json',
+            'X-CSRFToken': '{{ csrf_token() }}'
+        },
+        body: JSON.stringify({
+            email_text: subject + ' ' + bodyText,
+            language: '{{ get_locale() }}'
+        })
+    })
+    .then(response => response.json())
+    .then(data => {
+        if (data.error) {
+            throw new Error(data.error);
+        }
+        
+        let html = '<div class="templates-result">';
+        html += '<h6>{{ _("Suggested Templates") }}:</h6>';
+        
+        if (data.templates && data.templates.length > 0) {
+            data.templates.forEach((template, index) => {
+                html += `<div class="template-option mb-2 p-2 border rounded">`;
+                html += `<div class="d-flex justify-content-between align-items-center">`;
+                html += `<span class="badge bg-info">${template.tone}</span>`;
+                html += `<button onclick="useTemplate('${template.subject.replace(/'/g, "\\'")}', '${template.body.replace(/'/g, "\\'")}', '${template.tone}')" class="btn btn-sm btn-outline-primary">{{ _("Use") }}</button>`;
+                html += `</div>`;
+                html += `<div class="mt-1"><strong>${template.subject}</strong></div>`;
+                html += `<div class="small text-muted">${template.body.substring(0, 100)}...</div>`;
+                html += `</div>`;
+            });
+        } else {
+            html += '<p class="text-muted">{{ _("No templates available") }}</p>';
+        }
+        
+        html += '</div>';
+        showAIResult('{{ _("Email Templates") }}', html, 'templates');
+    })
+    .catch(error => {
+        showAIError('{{ _("Failed to load templates") }}', error.message);
+    });
+}
+
+function translateEmail() {
+    alert('{{ _("Translation feature coming soon!") }}');
+}
+
+function useTemplate(subject, body, tone) {
+    if (confirm(`{{ _("Replace current content with") }} ${tone} {{ _("template") }}?`)) {
+        document.getElementById('subject').value = subject;
+        document.getElementById('body').value = body;
+    }
+}
+
+function insertSignature() {
+    const signature = `\n\n{{ _("Best regards") }},\n{{ current_user.first_name }} {{ current_user.last_name }}\n{{ current_user.email }}`;
+    const bodyField = document.getElementById('body');
+    bodyField.value += signature;
+}
+
+function insertTemplate(type) {
+    const templates = {
+        'follow_up': '{{ _("Following up on our previous conversation. Please let me know if you need any additional information.") }}',
+        'thank_you': '{{ _("Thank you for your time and consideration. I look forward to hearing from you soon.") }}',
+        'meeting': '{{ _("I would like to schedule a meeting to discuss this further. Please let me know your availability.") }}'
+    };
+    
+    const bodyField = document.getElementById('body');
+    const template = templates[type];
+    if (template) {
+        bodyField.value += '\n\n' + template;
+    }
+}
+
+function searchCustomers() {
+    const query = document.getElementById('customer-search').value;
+    const resultsDiv = document.getElementById('customer-results');
+    
+    if (!query.trim()) {
+        resultsDiv.innerHTML = '';
+        return;
+    }
+    
+    // Simulate customer search - replace with actual API call
+    resultsDiv.innerHTML = '<div class="text-muted">{{ _("Searching customers...") }}</div>';
+    
+    setTimeout(() => {
+        resultsDiv.innerHTML = `
+            <div class="customer-result mb-1 p-1 border rounded cursor-pointer" onclick="selectCustomer('customer@example.com', 'Example Corp')">
+                <strong>Example Corp</strong><br>
+                <small>customer@example.com</small>
+            </div>
+        `;
+    }, 500);
+}
+
+function selectCustomer(email, name) {
+    document.getElementById('to').value = email;
+    document.getElementById('customer-results').innerHTML = `<div class="text-success small">{{ _("Selected") }}: ${name}</div>`;
+}
+
+function saveDraft() {
+    alert('{{ _("Draft saving functionality coming soon!") }}');
+}
+
+function showAILoading(message) {
+    const resultsDiv = document.getElementById('ai-assistance-results');
+    resultsDiv.innerHTML = `<div class="text-info"><i data-feather="loader" class="spin me-2"></i>${message}</div>`;
+    resultsDiv.style.display = 'block';
+    feather.replace();
+}
+
+function showAIResult(title, content, type) {
+    const resultsDiv = document.getElementById('ai-assistance-results');
+    let html = `<div class="ai-result border rounded p-3 bg-light">`;
+    html += `<h6 class="text-info mb-2"><i data-feather="zap"></i> ${title}</h6>`;
+    html += `<div class="ai-content">${content}</div>`;
+    
+    if (type === 'improvement') {
+        html += `<div class="mt-2">`;
+        html += `<button onclick="replaceEmailContent('${content.replace(/'/g, "\\'")}', 'body')" class="btn btn-sm btn-success me-2">{{ _("Use This Version") }}</button>`;
+        html += `<button onclick="copyToClipboard('${content.replace(/'/g, "\\'")}') class="btn btn-sm btn-outline-secondary">{{ _("Copy") }}</button>`;
+        html += `</div>`;
+    }
+    
+    html += `</div>`;
+    resultsDiv.innerHTML = html;
+    resultsDiv.style.display = 'block';
+    feather.replace();
+}
+
+function showAIError(title, error) {
+    const resultsDiv = document.getElementById('ai-assistance-results');
+    resultsDiv.innerHTML = `<div class="alert alert-danger"><i data-feather="alert-circle"></i> ${title}: ${error}</div>`;
+    resultsDiv.style.display = 'block';
+    feather.replace();
+}
+
+function replaceEmailContent(content, fieldId) {
+    if (confirm('{{ _("Replace current content?") }}')) {
+        document.getElementById(fieldId).value = content;
+    }
+}
+
+function copyToClipboard(text) {
+    navigator.clipboard.writeText(text).then(() => {
+        alert('{{ _("Copied to clipboard!") }}');
+    });
+}
+
+// Form validation
+document.getElementById('compose-form').addEventListener('submit', function(e) {
+    const requiredFields = ['to', 'subject', 'body'];
+    let isValid = true;
+    
+    requiredFields.forEach(fieldId => {
+        const field = document.getElementById(fieldId);
+        if (!field.value.trim()) {
+            field.classList.add('is-invalid');
+            isValid = false;
+        } else {
+            field.classList.remove('is-invalid');
+        }
+    });
+    
+    if (!isValid) {
+        e.preventDefault();
+        alert('{{ _("Please fill in all required fields") }}');
+    }
+});
+
+// Auto-save draft functionality (every 30 seconds)
+setInterval(function() {
+    const bodyContent = document.getElementById('body').value;
+    if (bodyContent.trim()) {
+        // Store in localStorage as simple draft backup
+        localStorage.setItem('gmail_draft', JSON.stringify({
+            to: document.getElementById('to').value,
+            subject: document.getElementById('subject').value,
+            body: bodyContent,
+            timestamp: new Date().toISOString()
+        }));
+    }
+}, 30000);
+
+// Load draft on page load
+window.addEventListener('load', function() {
+    const draft = localStorage.getItem('gmail_draft');
+    if (draft) {
+        const draftData = JSON.parse(draft);
+        const draftAge = (new Date() - new Date(draftData.timestamp)) / (1000 * 60); // minutes
+        
+        if (draftAge < 60 && !document.getElementById('body').value.trim()) { // Less than 1 hour old
+            if (confirm('{{ _("Found a recent draft. Would you like to restore it?") }}')) {
+                document.getElementById('to').value = draftData.to || '';
+                document.getElementById('subject').value = draftData.subject || '';
+                document.getElementById('body').value = draftData.body || '';
+            }
+        }
+    }
+});
+
+// Initialize feather icons
+feather.replace();
+</script>
+
+<style>
+.cursor-pointer {
+    cursor: pointer;
+}
+
+.customer-result:hover {
+    background-color: var(--bs-light);
+}
+
+.template-option:hover {
+    background-color: var(--bs-light);
+}
+
+.ai-content {
+    white-space: pre-wrap;
+    font-family: inherit;
+}
+
+.spin {
+    animation: spin 1s linear infinite;
+}
+
+@keyframes spin {
+    from { transform: rotate(0deg); }
+    to { transform: rotate(360deg); }
+}
+
+.is-invalid {
+    border-color: #dc3545;
+}
+
+.ai-result {
+    animation: fadeIn 0.3s ease-in;
+}
+
+@keyframes fadeIn {
+    from { opacity: 0; transform: translateY(-10px); }
+    to { opacity: 1; transform: translateY(0); }
+}
+</style>
+{% endblock %}

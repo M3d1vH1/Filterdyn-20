@@ -1,0 +1,223 @@
+{% extends "base.html" %}
+{% set active_page = "gmail" %}
+
+{% block title %}{{ _('Gmail Inbox') }}{% endblock %}
+
+{% block content %}
+<div class="container-fluid">
+    <div class="d-flex justify-content-between flex-wrap flex-md-nowrap align-items-center pt-3 pb-2 mb-3 border-bottom">
+        <h1 class="h2">
+            <i data-feather="mail" class="me-2"></i>{{ _('Gmail Inbox') }}
+            <small class="text-muted">{{ account.email_address }}</small>
+        </h1>
+        <div class="btn-toolbar mb-2 mb-md-0">
+            <div class="btn-group me-2">
+                <a href="{{ url_for('gmail.compose') }}" class="btn btn-primary">
+                    <i data-feather="edit-3"></i> {{ _('Compose') }}
+                </a>
+                <button onclick="syncEmails()" class="btn btn-outline-secondary" id="sync-btn">
+                    <i data-feather="refresh-cw"></i> {{ _('Sync') }}
+                </button>
+                <a href="{{ url_for('main.ai_assistant') }}" class="btn btn-outline-secondary">
+                    <i data-feather="arrow-left"></i> {{ _('Back') }}
+                </a>
+            </div>
+        </div>
+    </div>
+
+    <!-- Search Bar -->
+    <div class="row mb-4">
+        <div class="col-lg-8">
+            <form method="get" action="{{ url_for('gmail.inbox') }}">
+                <div class="input-group">
+                    <input type="text" class="form-control" name="q" 
+                           placeholder="{{ _('Search emails...') }}" 
+                           value="{{ search_query }}">
+                    <button class="btn btn-outline-secondary" type="submit">
+                        <i data-feather="search"></i>
+                    </button>
+                </div>
+            </form>
+        </div>
+        <div class="col-lg-4 text-end">
+            <small class="text-muted">
+                {{ _('Last sync') }}: 
+                {% if account.last_sync_at %}
+                    {{ account.last_sync_at|safe_datetime_format }}
+                {% else %}
+                    {{ _('Never') }}
+                {% endif %}
+            </small>
+        </div>
+    </div>
+
+    <!-- Email Threads -->
+    <div class="card shadow">
+        <div class="card-header">
+            <h5 class="mb-0">
+                {{ _('Email Threads') }}
+                <span class="badge bg-secondary">{{ threads.total }}</span>
+            </h5>
+        </div>
+        <div class="list-group list-group-flush gmail-inbox-list">
+            {% for thread in threads.items %}
+            <a href="{{ url_for('gmail.view_thread', thread_id=thread.id) }}" 
+               class="list-group-item list-group-item-action d-flex justify-content-between align-items-center py-3
+                      {% if not thread.is_read %}fw-bold{% endif %}">
+                <div class="d-flex flex-column flex-md-row align-items-start align-items-md-center w-100">
+                    <div class="me-3 mb-2 mb-md-0" style="min-width: 200px;">
+                        {% set latest_message = thread.messages[-1] if thread.messages else None %}
+                        <strong>{{ latest_message.sender_name or latest_message.sender_email if latest_message else _('Unknown') }}</strong>
+                        {% if thread.message_count > 1 %}
+                            <span class="badge bg-light text-dark ms-1">{{ thread.message_count }}</span>
+                        {% endif %}
+                    </div>
+                    <div class="flex-grow-1 me-3">
+                        <div class="fw-bold mb-1">{{ thread.subject or _('(No Subject)') }}</div>
+                        {% if latest_message and latest_message.snippet %}
+                            <div class="text-muted small">{{ latest_message.snippet|truncate(100) }}</div>
+                        {% endif %}
+                    </div>
+                    <div class="d-flex align-items-center">
+                        {% if thread.has_attachments %}
+                            <i data-feather="paperclip" class="me-2 text-muted"></i>
+                        {% endif %}
+                        {% if thread.is_starred %}
+                            <i data-feather="star" class="me-2 text-warning"></i>
+                        {% endif %}
+                        <div class="text-end">
+                            <div class="small text-muted">
+                                {{ thread.last_message_at|safe_datetime_format if thread.last_message_at else '' }}
+                            </div>
+                            {% if not thread.is_read %}
+                                <span class="badge bg-primary">{{ _('New') }}</span>
+                            {% endif %}
+                        </div>
+                    </div>
+                </div>
+            </a>
+            {% else %}
+            <div class="list-group-item text-center text-muted py-5">
+                <i data-feather="inbox" class="mb-3" style="width: 48px; height: 48px;"></i>
+                <h5>{{ _('No emails found') }}</h5>
+                <p class="mb-0">
+                    {% if search_query %}
+                        {{ _('No emails match your search criteria.') }}
+                        <a href="{{ url_for('gmail.inbox') }}">{{ _('View all emails') }}</a>
+                    {% else %}
+                        {{ _('Your inbox is empty or emails haven\'t been synced yet.') }}
+                        <button onclick="syncEmails()" class="btn btn-sm btn-primary mt-2">
+                            <i data-feather="refresh-cw"></i> {{ _('Sync Now') }}
+                        </button>
+                    {% endif %}
+                </p>
+            </div>
+            {% endfor %}
+        </div>
+        
+        <!-- Pagination -->
+        {% if threads.pages > 1 %}
+        <div class="card-footer">
+            <nav aria-label="Email pagination">
+                <ul class="pagination pagination-sm justify-content-center mb-0">
+                    {% if threads.has_prev %}
+                        <li class="page-item">
+                            <a class="page-link" href="{{ url_for('gmail.inbox', page=threads.prev_num, q=search_query) }}">
+                                <i data-feather="chevron-left"></i>
+                            </a>
+                        </li>
+                    {% endif %}
+                    
+                    {% for page_num in threads.iter_pages() %}
+                        {% if page_num %}
+                            {% if page_num != threads.page %}
+                                <li class="page-item">
+                                    <a class="page-link" href="{{ url_for('gmail.inbox', page=page_num, q=search_query) }}">{{ page_num }}</a>
+                                </li>
+                            {% else %}
+                                <li class="page-item active">
+                                    <span class="page-link">{{ page_num }}</span>
+                                </li>
+                            {% endif %}
+                        {% else %}
+                            <li class="page-item disabled">
+                                <span class="page-link">…</span>
+                            </li>
+                        {% endif %}
+                    {% endfor %}
+                    
+                    {% if threads.has_next %}
+                        <li class="page-item">
+                            <a class="page-link" href="{{ url_for('gmail.inbox', page=threads.next_num, q=search_query) }}">
+                                <i data-feather="chevron-right"></i>
+                            </a>
+                        </li>
+                    {% endif %}
+                </ul>
+            </nav>
+        </div>
+        {% endif %}
+    </div>
+</div>
+
+<script>
+function syncEmails() {
+    const btn = document.getElementById('sync-btn');
+    const originalText = btn.innerHTML;
+    
+    btn.innerHTML = '<i data-feather="refresh-cw" class="spin"></i> {{ _("Syncing...") }}';
+    btn.disabled = true;
+    
+    fetch('{{ url_for("gmail.sync") }}')
+        .then(response => response.json())
+        .then(data => {
+            if (data.success) {
+                window.location.reload();
+            } else {
+                alert('{{ _("Sync failed") }}: ' + (data.error || '{{ _("Unknown error") }}'));
+            }
+        })
+        .catch(error => {
+            alert('{{ _("Sync failed") }}: ' + error.message);
+        })
+        .finally(() => {
+            btn.innerHTML = originalText;
+            btn.disabled = false;
+            feather.replace();
+        });
+}
+
+// Auto-sync every 5 minutes
+setInterval(function() {
+    fetch('{{ url_for("gmail.sync") }}')
+        .then(response => response.json())
+        .catch(error => console.log('Background sync failed:', error));
+}, 300000);
+</script>
+
+<style>
+.gmail-inbox-list .list-group-item {
+    border-left: 3px solid transparent;
+    transition: all 0.2s ease;
+}
+
+.gmail-inbox-list .list-group-item:hover {
+    border-left-color: var(--bs-primary);
+    background-color: var(--bs-light);
+}
+
+.gmail-inbox-list .list-group-item.fw-bold {
+    border-left-color: var(--bs-primary);
+    background-color: rgba(var(--bs-primary-rgb), 0.05);
+}
+
+.spin {
+    animation: spin 1s linear infinite;
+}
+
+@keyframes spin {
+    from { transform: rotate(0deg); }
+    to { transform: rotate(360deg); }
+}
+</style>
+{% endblock %}
