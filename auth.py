@@ -52,7 +52,7 @@ def logout():
 @auth_bp.route('/google/login')
 def google_login():
     """Initiate Google OAuth login"""
-    client_id = os.environ.get('GOOGLE_CLIENT_ID')
+    client_id = os.environ.get('GOOGLE_CLIENT_ID', '').strip()
     if not client_id:
         return "Google OAuth is not configured. Please contact your administrator.", 500
     
@@ -90,8 +90,8 @@ def google_callback():
         return redirect(url_for('main.ai_assistant'))
     
     # Exchange code for tokens
-    client_id = os.environ.get('GOOGLE_CLIENT_ID')
-    client_secret = os.environ.get('GOOGLE_CLIENT_SECRET')
+    client_id = os.environ.get('GOOGLE_CLIENT_ID', '').strip()
+    client_secret = os.environ.get('GOOGLE_CLIENT_SECRET', '').strip()
     
     if not client_id or not client_secret:
         flash('Google OAuth credentials not configured', 'error')
