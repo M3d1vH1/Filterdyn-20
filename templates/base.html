@@ -87,24 +87,7 @@
                             {{ _('Settings') }}
                         </a>
                     </li>
-                    <li class="nav-item dropdown">
-                        <a class="nav-link dropdown-toggle" href="#" id="aiDropdown" role="button" data-bs-toggle="dropdown">
-                            <i data-feather="cpu" class="me-1"></i>
-                            {{ _('AI Assistant') }}
-                        </a>
-                        <ul class="dropdown-menu">
-                            <li><a class="dropdown-item" href="{{ url_for('main.ai_assistant') }}">
-                                <i data-feather="home" class="me-2"></i>{{ _('Dashboard') }}
-                            </a></li>
-                            <li><a class="dropdown-item" href="{{ url_for('main.gmail_inbox') }}">
-                                <i data-feather="mail" class="me-2"></i>{{ _('Gmail Inbox') }}
-                            </a></li>
-                            <li><hr class="dropdown-divider"></li>
-                            <li><a class="dropdown-item" href="{{ url_for('main.ai_learning_dashboard') }}">
-                                <i data-feather="bar-chart-2" class="me-2"></i>{{ _('Learning Stats') }}
-                            </a></li>
-                        </ul>
-                    </li>
+
                     {% endif %}
                 </ul>
                 
@@ -226,7 +209,7 @@
                         <a href="{{ url_for('main.gmail_inbox') }}" class="btn btn-sm btn-outline-secondary w-100 mb-2">
                             <i data-feather="mail" class="me-2"></i>{{ _('Gmail Setup') }}
                         </a>
-                        <a href="{{ url_for('main.ai_learning') }}" class="btn btn-sm btn-outline-info w-100">
+                        <a href="{{ url_for('main.ai_learning_dashboard') }}" class="btn btn-sm btn-outline-info w-100">
                             <i data-feather="brain" class="me-2"></i>{{ _('Learning') }}
                         </a>
                     </div>

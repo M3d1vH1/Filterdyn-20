@@ -695,7 +695,7 @@ def ai_learning_dashboard():
 def edit_task(id):
     """Edit task"""
     task = Task.query.filter_by(
-        id=task_id,
+        id=id,
         tenant_id=current_user.tenant_id
     ).first_or_404()
     
