@@ -1,0 +1,163 @@
+{% extends "base.html" %}
+{% block title %}{{ _('Custom Settings') }}{% endblock %}
+
+{% block content %}
+<div class="container-fluid">
+    <div class="row mb-4">
+        <div class="col">
+            <nav aria-label="breadcrumb">
+                <ol class="breadcrumb">
+                    <li class="breadcrumb-item"><a href="{{ url_for('settings.index') }}">{{ _('Settings') }}</a></li>
+                    <li class="breadcrumb-item active">{{ _('Custom Settings') }}</li>
+                </ol>
+            </nav>
+            <h2><i data-feather="plus"></i> {{ _('Custom Settings') }}</h2>
+            <p class="text-muted">{{ _('Add custom application settings and configuration options') }}</p>
+        </div>
+    </div>
+
+    <div class="row">
+        <div class="col-lg-6">
+            <div class="card">
+                <div class="card-header">
+                    <h5><i data-feather="plus-circle"></i> {{ _('Add New Setting') }}</h5>
+                </div>
+                <div class="card-body">
+                    <form method="POST">
+                        <div class="mb-3">
+                            <label for="category" class="form-label">{{ _('Category') }}</label>
+                            <input type="text" class="form-control" id="category" name="category" required>
+                            <div class="form-text">{{ _('Group settings by category (e.g., api, integration, custom)') }}</div>
+                        </div>
+
+                        <div class="mb-3">
+                            <label for="key" class="form-label">{{ _('Key') }}</label>
+                            <input type="text" class="form-control" id="key" name="key" required>
+                            <div class="form-text">{{ _('Unique identifier for this setting') }}</div>
+                        </div>
+
+                        <div class="mb-3">
+                            <label for="value" class="form-label">{{ _('Value') }}</label>
+                            <textarea class="form-control" id="value" name="value" rows="3"></textarea>
+                        </div>
+
+                        <div class="row">
+                            <div class="col-md-6">
+                                <div class="mb-3">
+                                    <label for="value_type" class="form-label">{{ _('Value Type') }}</label>
+                                    <select class="form-select" id="value_type" name="value_type">
+                                        <option value="string">{{ _('String') }}</option>
+                                        <option value="integer">{{ _('Integer') }}</option>
+                                        <option value="boolean">{{ _('Boolean') }}</option>
+                                        <option value="json">{{ _('JSON') }}</option>
+                                        <option value="list">{{ _('List') }}</option>
+                                    </select>
+                                </div>
+                            </div>
+                            <div class="col-md-6">
+                                <div class="mb-3">
+                                    <label class="form-label">{{ _('Options') }}</label>
+                                    <div class="form-check">
+                                        <input class="form-check-input" type="checkbox" id="is_sensitive" name="is_sensitive">
+                                        <label class="form-check-label" for="is_sensitive">
+                                            {{ _('Sensitive (Hide Value)') }}
+                                        </label>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="mb-3">
+                            <label for="description" class="form-label">{{ _('Description') }}</label>
+                            <textarea class="form-control" id="description" name="description" rows="2"></textarea>
+                        </div>
+
+                        <div class="d-flex gap-2">
+                            <button type="submit" class="btn btn-primary">
+                                <i data-feather="save"></i> {{ _('Add Setting') }}
+                            </button>
+                            <a href="{{ url_for('settings.index') }}" class="btn btn-secondary">
+                                <i data-feather="arrow-left"></i> {{ _('Back') }}
+                            </a>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+
+        <div class="col-lg-6">
+            <div class="card">
+                <div class="card-header">
+                    <h5><i data-feather="list"></i> {{ _('All Settings') }}</h5>
+                </div>
+                <div class="card-body">
+                    {% if all_settings %}
+                        <div class="table-responsive">
+                            <table class="table table-sm">
+                                <thead>
+                                    <tr>
+                                        <th>{{ _('Category') }}</th>
+                                        <th>{{ _('Key') }}</th>
+                                        <th>{{ _('Type') }}</th>
+                                        <th>{{ _('Value') }}</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    {% for setting in all_settings %}
+                                    <tr>
+                                        <td><span class="badge bg-secondary">{{ setting.category }}</span></td>
+                                        <td><code>{{ setting.key }}</code></td>
+                                        <td><small class="text-muted">{{ setting.value_type }}</small></td>
+                                        <td>
+                                            {% if setting.is_sensitive %}
+                                                <span class="text-muted">{{ _('***hidden***') }}</span>
+                                            {% else %}
+                                                <small>{{ setting.value[:50] }}{% if setting.value|length > 50 %}...{% endif %}</small>
+                                            {% endif %}
+                                        </td>
+                                    </tr>
+                                    {% endfor %}
+                                </tbody>
+                            </table>
+                        </div>
+                    {% else %}
+                        <div class="text-center py-4">
+                            <i data-feather="settings" class="text-muted" style="width: 48px; height: 48px;"></i>
+                            <h6 class="text-muted mt-2">{{ _('No custom settings yet') }}</h6>
+                            <p class="text-muted">{{ _('Add your first custom setting using the form') }}</p>
+                        </div>
+                    {% endif %}
+                </div>
+            </div>
+
+            <div class="card mt-3">
+                <div class="card-header">
+                    <h6><i data-feather="info"></i> {{ _('Examples') }}</h6>
+                </div>
+                <div class="card-body">
+                    <h6>{{ _('API Integration') }}</h6>
+                    <p class="small text-muted">
+                        Category: <code>api</code><br>
+                        Key: <code>external_service_url</code><br>
+                        Type: string
+                    </p>
+                    
+                    <h6>{{ _('Feature Flags') }}</h6>
+                    <p class="small text-muted">
+                        Category: <code>features</code><br>
+                        Key: <code>enable_notifications</code><br>
+                        Type: boolean
+                    </p>
+                    
+                    <h6>{{ _('Configuration') }}</h6>
+                    <p class="small text-muted">
+                        Category: <code>config</code><br>
+                        Key: <code>retry_attempts</code><br>
+                        Type: integer
+                    </p>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

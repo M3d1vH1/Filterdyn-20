@@ -260,6 +260,45 @@ def rbac_edit():
     return render_template('settings/rbac_edit.html', form=form)
 
 
+@settings_bp.route('/custom', methods=['GET', 'POST'])
+@login_required
+def custom():
+    """Custom settings management"""
+    if current_user.role != 'superadmin':
+        flash(_('Access denied. Super administrator privileges required.'), 'error')
+        return redirect(url_for('settings.index'))
+    
+    settings_manager = SettingsManager()
+    
+    if request.method == 'POST':
+        category = request.form.get('category', '').strip()
+        key = request.form.get('key', '').strip()
+        value = request.form.get('value', '').strip()
+        value_type = request.form.get('value_type', 'string')
+        description = request.form.get('description', '').strip()
+        is_sensitive = bool(request.form.get('is_sensitive'))
+        
+        if category and key:
+            success = settings_manager.set_setting(
+                category, key, value, value_type, description, is_sensitive
+            )
+            
+            if success:
+                flash(_('Custom setting saved successfully.'), 'success')
+            else:
+                flash(_('Error saving custom setting.'), 'error')
+        else:
+            flash(_('Category and key are required.'), 'error')
+        
+        return redirect(url_for('settings.custom'))
+    
+    # Get all current settings for display
+    from models import ApplicationSetting
+    all_settings = ApplicationSetting.query.filter_by(tenant_id=current_user.tenant_id).all()
+    
+    return render_template('settings/custom.html', all_settings=all_settings)
+
+
 @settings_bp.route('/initialize')
 @login_required
 def initialize():
