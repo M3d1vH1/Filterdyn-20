@@ -1,0 +1,105 @@
+{% extends "base.html" %}
+
+{% block title %}{{ _('Gmail Setup') }} - Filterdyn{% endblock %}
+
+{% block content %}
+<div class="container-fluid">
+    <div class="row">
+        <div class="col-md-8 mx-auto">
+            <div class="card">
+                <div class="card-header">
+                    <h3 class="card-title">
+                        <i data-feather="mail" class="me-2"></i>
+                        {{ _('Gmail Account Setup') }}
+                    </h3>
+                </div>
+                
+                <div class="card-body">
+                    {% if gmail_accounts %}
+                        <h5>{{ _('Connected Accounts') }}</h5>
+                        <div class="list-group mb-4">
+                            {% for account in gmail_accounts %}
+                            <div class="list-group-item d-flex justify-content-between align-items-center">
+                                <div>
+                                    <h6 class="mb-1">{{ account.email_address }}</h6>
+                                    <small class="text-muted">
+                                        {% if account.is_active %}
+                                            <i data-feather="check-circle" class="text-success me-1"></i>
+                                            {{ _('Active') }}
+                                        {% else %}
+                                            <i data-feather="x-circle" class="text-danger me-1"></i>
+                                            {{ _('Disconnected') }}
+                                        {% endif %}
+                                        {% if account.last_sync %}
+                                            | {{ _('Last sync') }}: {{ account.last_sync.strftime('%Y-%m-%d %H:%M') }}
+                                        {% endif %}
+                                    </small>
+                                </div>
+                                <div>
+                                    {% if account.is_active %}
+                                        <a href="{{ url_for('gmail.disconnect', account_id=account.id) }}" 
+                                           class="btn btn-outline-danger btn-sm">
+                                            {{ _('Disconnect') }}
+                                        </a>
+                                    {% else %}
+                                        <a href="{{ url_for('gmail.connect') }}" 
+                                           class="btn btn-outline-primary btn-sm">
+                                            {{ _('Reconnect') }}
+                                        </a>
+                                    {% endif %}
+                                </div>
+                            </div>
+                            {% endfor %}
+                        </div>
+                    {% endif %}
+                    
+                    <div class="text-center">
+                        <h5>{{ _('Add Gmail Account') }}</h5>
+                        <p class="text-muted">{{ _('Connect your Gmail account to start managing emails with AI assistance.') }}</p>
+                        
+                        <a href="{{ url_for('gmail.connect') }}" class="btn btn-primary btn-lg">
+                            <i data-feather="plus" class="me-2"></i>
+                            {{ _('Connect Gmail Account') }}
+                        </a>
+                    </div>
+                    
+                    <div class="mt-5">
+                        <h6>{{ _('Features Available') }}</h6>
+                        <div class="row">
+                            <div class="col-md-6">
+                                <ul class="list-unstyled">
+                                    <li><i data-feather="check" class="text-success me-2"></i>{{ _('Full inbox management') }}</li>
+                                    <li><i data-feather="check" class="text-success me-2"></i>{{ _('AI email categorization') }}</li>
+                                    <li><i data-feather="check" class="text-success me-2"></i>{{ _('Smart response suggestions') }}</li>
+                                    <li><i data-feather="check" class="text-success me-2"></i>{{ _('Customer association') }}</li>
+                                </ul>
+                            </div>
+                            <div class="col-md-6">
+                                <ul class="list-unstyled">
+                                    <li><i data-feather="check" class="text-success me-2"></i>{{ _('Quote request detection') }}</li>
+                                    <li><i data-feather="check" class="text-success me-2"></i>{{ _('Email templates') }}</li>
+                                    <li><i data-feather="check" class="text-success me-2"></i>{{ _('Analytics and insights') }}</li>
+                                    <li><i data-feather="check" class="text-success me-2"></i>{{ _('Task creation from emails') }}</li>
+                                </ul>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                
+                <div class="card-footer">
+                    <div class="text-center">
+                        <a href="{{ url_for('main.dashboard') }}" class="btn btn-secondary">
+                            {{ _('Back to Dashboard') }}
+                        </a>
+                        {% if gmail_accounts and gmail_accounts|selectattr('is_active')|list %}
+                            <a href="{{ url_for('gmail.inbox') }}" class="btn btn-primary ms-2">
+                                {{ _('Go to Inbox') }}
+                            </a>
+                        {% endif %}
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

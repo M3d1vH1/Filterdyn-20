@@ -15,7 +15,7 @@ from google.auth.transport.requests import Request
 from google.oauth2.credentials import Credentials
 from google_auth_oauthlib.flow import Flow
 from flask import current_app
-from models_gmail import GmailAccount, EmailMessage, EmailAttachment, EmailThread
+from models import GmailAccount, EmailMessage, EmailAttachment, EmailThread
 from app import db
 from utils.ai_processor import AIEmailProcessor
 import logging

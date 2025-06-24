@@ -9,9 +9,8 @@ from flask_babel import _, get_locale
 from datetime import datetime, timezone, timedelta
 from services.gmail_service import GmailService
 from utils.ai_processor import AIEmailProcessor
-from models_gmail import (GmailAccount, EmailMessage, EmailThread, EmailTemplate, 
-                        EmailAttachment)
-from models import Customer, Quote, Order
+from models import (GmailAccount, EmailMessage, EmailThread, EmailTemplate, 
+                   EmailAttachment, Customer, Quote, Order)
 from app import db
 from utils import admin_required, manager_required
 import json

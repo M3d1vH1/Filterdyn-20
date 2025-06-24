@@ -1,0 +1,190 @@
+{% extends "base.html" %}
+
+{% block title %}{{ _('Compose Email') }} - Filterdyn{% endblock %}
+
+{% block extra_css %}
+<link href="{{ url_for('static', filename='css/gmail.css') }}" rel="stylesheet">
+{% endblock %}
+
+{% block content %}
+<div class="container-fluid">
+    <div class="row">
+        <div class="col-md-10 mx-auto">
+            <div class="card">
+                <div class="card-header">
+                    <h3 class="card-title">
+                        <i data-feather="edit" class="me-2"></i>
+                        {{ _('Compose Email') }}
+                    </h3>
+                </div>
+                
+                <div class="card-body">
+                    <form id="compose-form">
+                        <!-- Gmail Account Selection -->
+                        <div class="row mb-3">
+                            <div class="col-md-6">
+                                <label for="gmail-account" class="form-label">{{ _('From Account') }}</label>
+                                <select class="form-select" id="gmail-account" name="gmail_account_id" required>
+                                    {% for account in gmail_accounts %}
+                                    <option value="{{ account.id }}">{{ account.email_address }}</option>
+                                    {% endfor %}
+                                </select>
+                            </div>
+                            <div class="col-md-6">
+                                <label for="template-select" class="form-label">{{ _('Use Template') }}</label>
+                                <select class="form-select" id="template-select">
+                                    <option value="">{{ _('No template') }}</option>
+                                    <!-- Templates will be loaded dynamically -->
+                                </select>
+                            </div>
+                        </div>
+                        
+                        <!-- Recipients -->
+                        <div class="mb-3">
+                            <label for="to" class="form-label">{{ _('To') }}</label>
+                            <input type="email" class="form-control" id="to" name="to" multiple required>
+                            <div class="form-text">
+                                {{ _('Separate multiple emails with commas') }}
+                            </div>
+                        </div>
+                        
+                        <div class="row mb-3">
+                            <div class="col-md-6">
+                                <label for="cc" class="form-label">{{ _('CC') }}</label>
+                                <input type="email" class="form-control" id="cc" name="cc" multiple>
+                            </div>
+                            <div class="col-md-6">
+                                <label for="bcc" class="form-label">{{ _('BCC') }}</label>
+                                <input type="email" class="form-control" id="bcc" name="bcc" multiple>
+                            </div>
+                        </div>
+                        
+                        <!-- Subject -->
+                        <div class="mb-3">
+                            <label for="subject" class="form-label">{{ _('Subject') }}</label>
+                            <input type="text" class="form-control" id="subject" name="subject" required>
+                        </div>
+                        
+                        <!-- Email Body -->
+                        <div class="mb-3">
+                            <label for="body" class="form-label">{{ _('Message') }}</label>
+                            <textarea class="form-control" id="body" name="body" rows="15" required></textarea>
+                        </div>
+                        
+                        <!-- AI Assistance -->
+                        <div class="mb-3">
+                            <div class="card border-info">
+                                <div class="card-header bg-light">
+                                    <h6 class="mb-0">
+                                        <i data-feather="zap" class="me-2"></i>
+                                        {{ _('AI Assistance') }}
+                                    </h6>
+                                </div>
+                                <div class="card-body">
+                                    <div class="d-flex gap-2 flex-wrap">
+                                        <button type="button" class="btn btn-outline-info btn-sm" id="ai-improve">
+                                            {{ _('Improve Writing') }}
+                                        </button>
+                                        <button type="button" class="btn btn-outline-info btn-sm" id="ai-professional">
+                                            {{ _('Make Professional') }}
+                                        </button>
+                                        <button type="button" class="btn btn-outline-info btn-sm" id="ai-friendly">
+                                            {{ _('Make Friendly') }}
+                                        </button>
+                                        <button type="button" class="btn btn-outline-info btn-sm" id="ai-translate">
+                                            {{ _('Translate to Greek') }}
+                                        </button>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                        
+                        <!-- Customer Association -->
+                        <div class="mb-3">
+                            <label for="customer-association" class="form-label">{{ _('Associate with Customer') }}</label>
+                            <select class="form-select" id="customer-association">
+                                <option value="">{{ _('No customer association') }}</option>
+                                {% for customer in customers %}
+                                <option value="{{ customer.id }}">{{ customer.name }}</option>
+                                {% endfor %}
+                            </select>
+                        </div>
+                        
+                        <!-- Action Buttons -->
+                        <div class="d-flex justify-content-between">
+                            <div>
+                                <button type="button" class="btn btn-outline-secondary" id="save-draft">
+                                    <i data-feather="save" class="me-1"></i>
+                                    {{ _('Save Draft') }}
+                                </button>
+                            </div>
+                            <div>
+                                <button type="button" class="btn btn-secondary me-2" onclick="window.close()">
+                                    {{ _('Cancel') }}
+                                </button>
+                                <button type="submit" class="btn btn-primary">
+                                    <i data-feather="send" class="me-1"></i>
+                                    {{ _('Send Email') }}
+                                </button>
+                            </div>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- AI Processing Modal -->
+<div class="modal fade" id="aiProcessingModal" tabindex="-1">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title">{{ _('AI Processing') }}</h5>
+            </div>
+            <div class="modal-body text-center">
+                <div class="spinner-border text-primary" role="status">
+                    <span class="visually-hidden">{{ _('Processing...') }}</span>
+                </div>
+                <div class="mt-2">{{ _('AI is improving your email...') }}</div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Customer Quick Add Modal -->
+<div class="modal fade" id="quickAddCustomerModal" tabindex="-1">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title">{{ _('Quick Add Customer') }}</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+            </div>
+            <div class="modal-body">
+                <form id="quick-customer-form">
+                    <div class="mb-3">
+                        <label class="form-label">{{ _('Company Name') }}</label>
+                        <input type="text" class="form-control" name="name" required>
+                    </div>
+                    <div class="mb-3">
+                        <label class="form-label">{{ _('Email') }}</label>
+                        <input type="email" class="form-control" name="email" required>
+                    </div>
+                    <div class="mb-3">
+                        <label class="form-label">{{ _('Contact Person') }}</label>
+                        <input type="text" class="form-control" name="contact_person">
+                    </div>
+                </form>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">{{ _('Cancel') }}</button>
+                <button type="button" class="btn btn-primary" id="save-quick-customer">{{ _('Add Customer') }}</button>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script src="{{ url_for('static', filename='js/gmail-compose.js') }}"></script>
+{% endblock %}
