@@ -604,6 +604,8 @@ def tasks_kanban():
     # Get all users for assignment dropdown
     users = User.query.filter_by(tenant_id=current_user.tenant_id).all()
     
+    return render_template('tasks/kanban.html', kanban_data=kanban_data, users=users, statuses=statuses)
+
 def _ensure_daily_board_exists(tenant_id, target_date):
     """Ensure daily board exists and carry forward open tasks if needed"""
     from datetime import datetime, timedelta
