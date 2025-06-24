@@ -607,8 +607,8 @@ def tasks_kanban(date=None):
             )
         )
     
-    # Get tasks grouped by status
-    statuses = ['pending', 'in_progress', 'completed', 'cancelled']
+    # Get tasks grouped by status (excluding cancelled)
+    statuses = ['pending', 'in_progress', 'completed']
     kanban_data = {status: [] for status in statuses}
     
     for status in statuses:

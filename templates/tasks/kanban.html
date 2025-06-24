@@ -83,10 +83,22 @@
     transform: rotate(2deg);
 }
 
-.kanban-task.priority-urgent { border-left-color: #dc3545; }
-.kanban-task.priority-high { border-left-color: #fd7e14; }
-.kanban-task.priority-medium { border-left-color: #ffc107; }
-.kanban-task.priority-low { border-left-color: #28a745; }
+.kanban-task.priority-urgent { 
+    border-left-color: #dc3545; 
+    border-left-width: 4px;
+}
+.kanban-task.priority-high { 
+    border-left-color: #fd7e14; 
+    border-left-width: 4px;
+}
+.kanban-task.priority-medium { 
+    border-left-color: #0d6efd; 
+    border-left-width: 3px;
+}
+.kanban-task.priority-low { 
+    border-left-color: #6c757d; 
+    border-left-width: 2px;
+}
 
 .task-title {
     font-weight: 600;
@@ -118,6 +130,20 @@
     display: flex;
     align-items: center;
     gap: 0.25rem;
+}
+
+.task-priority {
+    display: flex;
+    align-items: center;
+    gap: 0.25rem;
+}
+
+.priority-badge {
+    font-size: 0.6rem !important;
+    padding: 0.15rem 0.4rem !important;
+    font-weight: 600;
+    border-radius: 0.25rem !important;
+    color: white !important;
 }
 
 .task-due-date {
@@ -410,15 +436,13 @@
         {% set status_titles = {
             'pending': _('To Do'),
             'in_progress': _('In Progress'), 
-            'completed': _('Completed'),
-            'cancelled': _('Cancelled')
+            'completed': _('Completed')
         } %}
         
         {% set status_colors = {
             'pending': '#6c757d',
             'in_progress': '#007bff',
-            'completed': '#28a745',
-            'cancelled': '#dc3545'
+            'completed': '#28a745'
         } %}
 
         {% for status in statuses %}
@@ -468,7 +492,7 @@
                             {{ task.assignee.first_name or task.assignee.username }}
                         </div>
                         <div class="task-priority">
-                            <span class="priority-badge badge bg-{{ 'danger' if task.priority == 'urgent' else 'warning' if task.priority == 'high' else 'info' if task.priority == 'medium' else 'secondary' }}">
+                            <span class="priority-badge badge bg-{{ 'danger' if task.priority == 'urgent' else 'warning' if task.priority == 'high' else 'primary' if task.priority == 'medium' else 'secondary' }}">
                                 {{ task.priority[0].upper() }}
                             </span>
                         </div>
@@ -723,7 +747,7 @@ document.addEventListener('DOMContentLoaded', function() {
                     ${userName}
                 </div>
                 <div class="task-priority">
-                    <span class="priority-badge badge bg-${taskData.priority === 'urgent' ? 'danger' : taskData.priority === 'high' ? 'warning' : taskData.priority === 'medium' ? 'info' : 'secondary'}">
+                    <span class="priority-badge badge bg-${taskData.priority === 'urgent' ? 'danger' : taskData.priority === 'high' ? 'warning' : taskData.priority === 'medium' ? 'primary' : 'secondary'}">
                         ${taskData.priority[0].toUpperCase()}
                     </span>
                 </div>
