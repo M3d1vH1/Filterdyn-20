@@ -137,6 +137,7 @@ User Request -> Tenant Verification -> Data Filtering by tenant_id -> Response D
 
 ## Changelog
 
+- June 24, 2025: **AI ASSISTANT & KANBAN BOARD FIXES** - Successfully moved AI Assistant to floating bottom-right button with parallax effect and fixed kanban board interface with clean styling and working drag-and-drop functionality
 - June 24, 2025: **COMPREHENSIVE SETTINGS SYSTEM** - Implemented robust settings management with database storage, RBAC permissions, and admin interface for all application configurations
 - June 19, 2025: **COMPREHENSIVE README ADDED** - Created detailed documentation with installation guide, architecture overview, and feature descriptions
 - June 19, 2025: **TIMEZONE FIX COMPLETED & PUSHED TO GIT** - Resolved all naive/aware datetime comparison errors with comprehensive UTC storage and local display conversion
