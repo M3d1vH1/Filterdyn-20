@@ -415,30 +415,7 @@ body {
     font-family: "Segoe UI", Tahoma, Geneva, Verdana, sans-serif;
 }
 
-.ai-chat-toggle {
-    width: 60px;
-    height: 60px;
-    border-radius: 50%;
-    background: linear-gradient(135deg, var(--filterdyn-teal), var(--filterdyn-dark-teal));
-    border: none;
-    color: white;
-    box-shadow: 0 4px 20px rgba(27, 163, 163, 0.3);
-    cursor: pointer;
-    transition: all 0.3s ease;
-    position: relative;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-}
-
-.ai-chat-toggle:hover {
-    transform: translateY(-2px);
-    box-shadow: 0 6px 25px rgba(27, 163, 163, 0.4);
-}
-
-.ai-chat-toggle.active {
-    background: linear-gradient(135deg, var(--filterdyn-danger), #c82333);
-}
+/* AI chat toggle styles removed - functionality moved to unified FAB */
 
 .ai-notification-badge {
     position: absolute;
