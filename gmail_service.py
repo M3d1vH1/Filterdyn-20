@@ -42,9 +42,14 @@ class GmailService:
         if not client_id or not client_secret:
             raise ValueError("Google OAuth credentials not configured")
         
-        # Debug OAuth configuration
-        current_app.logger.info(f"OAuth Debug - Client ID: {client_id[:20]}...")
-        current_app.logger.info(f"OAuth Debug - Redirect URI: {redirect_uri}")
+        # Debug OAuth configuration (safe for production)
+        try:
+            current_app.logger.info(f"OAuth Debug - Client ID: {client_id[:20]}...")
+            current_app.logger.info(f"OAuth Debug - Redirect URI: {redirect_uri}")
+        except:
+            # Fallback if current_app is not available
+            print(f"OAuth Debug - Client ID: {client_id[:20]}...")
+            print(f"OAuth Debug - Redirect URI: {redirect_uri}")
         
         flow = Flow.from_client_config(
             {
