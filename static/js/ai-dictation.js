@@ -56,6 +56,14 @@ class AIDictationManager extends DictationManager {
                     // AI task parsing for task creation pages
                     await this.parseWithAI(transcript);
                 } else {
+                    // Default behavior for other pages
+                    this.showNotification('Voice input recorded: ' + transcript, 'info');
+                }
+            }
+        } catch (error) {
+            console.error('Error processing transcript:', error);
+            this.showError('Failed to process voice input');
+        }
                     // For other pages, try to find the most likely input field
                     const possibleFields = document.querySelectorAll('input[type="text"], input[type="search"], textarea');
                     if (possibleFields.length > 0) {
@@ -93,6 +101,14 @@ class AIDictationManager extends DictationManager {
                 this.showError('Could not extract task information from speech');
                 return;
             }
+            
+            // Fill in the form fields with extracted data
+            this.fillFormWithTaskData(taskData);
+            this.showSuccess('Task information extracted and filled successfully');
+        } catch (error) {
+            console.error('Error parsing task with AI:', error);
+            this.showError('Failed to parse task information');
+        }
 
             let fieldsUpdated = 0;
 
@@ -198,6 +214,21 @@ Respond only with valid JSON.`;
                     'X-CSRFToken': this.getCSRFToken()
                 },
                 body: JSON.stringify({
+                    transcript: transcript,
+                    prompt: prompt
+                })
+            });
+            
+            if (!response.ok) {
+                throw new Error(`API request failed: ${response.status}`);
+            }
+            
+            const data = await response.json();
+            return data.task_data || null;
+        } catch (error) {
+            console.error('Error extracting task data:', error);
+            return null;
+        }
                     prompt: prompt,
                     transcript: transcript,
                     language: this.detectLanguage(transcript)
