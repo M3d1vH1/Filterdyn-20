@@ -73,9 +73,8 @@ def oauth_callback():
             credentials
         )
         
-        # Store session info
-        session['google_connected'] = True
-        session['google_email'] = account.email_address
+        # Store session info - remove session-based tracking, use database only
+        # Session cleared - using database-only approach for Phase 3
         
         flash(_('Gmail connected successfully!'), 'success')
         
@@ -102,9 +101,11 @@ def disconnect():
             account.sync_enabled = False
             db.session.commit()
         
-        # Clear session
+        # Clear any legacy session data
         session.pop('google_connected', None)
         session.pop('google_email', None)
+        session.pop('google_access_token', None)
+        session.pop('google_refresh_token', None)
         
         flash(_('Gmail account disconnected'), 'info')
         return redirect(url_for('main.ai_assistant'))

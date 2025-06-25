@@ -51,12 +51,12 @@ def logout():
 
 @auth_bp.route('/google/login')
 def google_login():
-    """Redirect to Gmail OAuth flow"""
+    """Initiate Google OAuth login - Use Gmail routes implementation"""
     return redirect(url_for('gmail.connect'))
 
-@auth_bp.route('/google/callback')
+@auth_bp.route('/google/callback')  
 def google_callback():
-    """Redirect to Gmail OAuth callback"""
+    """Handle Google OAuth callback - Use Gmail routes implementation"""
     return redirect(url_for('gmail.oauth_callback', **request.args))
 
 @auth_bp.route('/google/disconnect')
