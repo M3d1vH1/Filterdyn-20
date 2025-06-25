@@ -675,4 +675,9 @@ const aiStyles = `
 `;
 
 // Inject styles
-document.head.insertAdjacentHTML('beforeend', aiStyles);
+if (!document.querySelector('style[data-gmail-ai-styles]')) {
+    const styleElement = document.createElement('style');
+    styleElement.setAttribute('data-gmail-ai-styles', 'true');
+    styleElement.innerHTML = aiStyles.replace('<style>', '').replace('</style>', '');
+    document.head.appendChild(styleElement);
+}
