@@ -17,10 +17,16 @@ gmail_bp = Blueprint('gmail', __name__, url_prefix='/gmail')
 def connect():
     """Initiate Gmail OAuth connection"""
     try:
-        # Use external URL for proper OAuth redirect
-        if 'replit.dev' in request.host:
-            redirect_uri = f"https://{request.host}/gmail/oauth-callback"
+        # Use proper Replit deployment domain for OAuth
+        import os
+        repl_slug = os.environ.get('REPL_SLUG', '')
+        repl_owner = os.environ.get('REPL_OWNER', '')
+        
+        if repl_slug and repl_owner:
+            # Use proper .repl.co domain for deployment
+            redirect_uri = f"https://{repl_slug}--{repl_owner}.repl.co/gmail/oauth-callback"
         else:
+            # Fallback for development
             redirect_uri = url_for('gmail.oauth_callback', _external=True)
             
         flow = GmailService.get_flow(redirect_uri)
@@ -57,9 +63,13 @@ def oauth_callback():
             flash(_('Invalid OAuth state'), 'error')
             return redirect(url_for('main.ai_assistant'))
         
-        # Use the same redirect URI format as in connect()
-        if 'replit.dev' in request.host:
-            redirect_uri = f"https://{request.host}/gmail/oauth-callback"
+        # Use proper Replit deployment domain for OAuth callback (same as connect())
+        import os
+        repl_slug = os.environ.get('REPL_SLUG', '')
+        repl_owner = os.environ.get('REPL_OWNER', '')
+        
+        if repl_slug and repl_owner:
+            redirect_uri = f"https://{repl_slug}--{repl_owner}.repl.co/gmail/oauth-callback"
         else:
             redirect_uri = url_for('gmail.oauth_callback', _external=True)
             
