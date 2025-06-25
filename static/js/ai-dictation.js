@@ -64,6 +64,7 @@ class AIDictationManager extends DictationManager {
             console.error('Error processing transcript:', error);
             this.showError('Failed to process voice input');
         }
+    }
                     // For other pages, try to find the most likely input field
                     const possibleFields = document.querySelectorAll('input[type="text"], input[type="search"], textarea');
                     if (possibleFields.length > 0) {
