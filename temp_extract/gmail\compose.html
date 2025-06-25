@@ -1,0 +1,65 @@
+{% extends "base.html" %}
+{% block title %}Compose Email{% endblock %}
+{% block content %}
+<div class="container-fluid">
+    <div class="card my-4">
+        <div class="card-header">
+            <h2 class="h5 mb-0">Compose Email</h2>
+        </div>
+        <form method="post" enctype="multipart/form-data">
+            <div class="card-body">
+                <div class="mb-3">
+                    <label for="to" class="form-label">To</label>
+                    <input type="email" class="form-control" id="to" name="to" required>
+                </div>
+                <div class="mb-3">
+                    <label for="cc" class="form-label">CC</label>
+                    <input type="email" class="form-control" id="cc" name="cc">
+                </div>
+                <div class="mb-3">
+                    <label for="bcc" class="form-label">BCC</label>
+                    <input type="email" class="form-control" id="bcc" name="bcc">
+                </div>
+                <div class="mb-3">
+                    <label for="subject" class="form-label">Subject</label>
+                    <input type="text" class="form-control" id="subject" name="subject" required>
+                </div>
+                <div class="mb-3">
+                    <label for="body" class="form-label">Body</label>
+                    <textarea class="form-control" id="body" name="body" rows="8" required></textarea>
+                </div>
+                <div class="mb-3">
+                    <label for="attachments" class="form-label">Attachments</label>
+                    <input type="file" class="form-control" id="attachments" name="attachments" multiple>
+                </div>
+                <div class="mb-3">
+                    <button type="button" class="btn btn-info" onclick="suggestEmail()">
+                        <i data-feather="zap"></i> AI Suggest
+                    </button>
+                    <div id="ai-suggestion-result" class="mt-2"></div>
+                </div>
+            </div>
+            <div class="card-footer text-end">
+                <button type="submit" class="btn btn-primary">
+                    <i data-feather="send"></i> Send
+                </button>
+                <a href="{{ url_for('gmail.inbox') }}" class="btn btn-secondary">Cancel</a>
+            </div>
+        </form>
+    </div>
+</div>
+<script>
+function suggestEmail() {
+    const body = document.getElementById('body').value;
+    fetch('/gmail/api/suggest', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ email_text: body })
+    })
+    .then(r => r.json())
+    .then(data => {
+        document.getElementById('ai-suggestion-result').innerText = data.suggestion;
+    });
+}
+</script>
+{% endblock %} 
