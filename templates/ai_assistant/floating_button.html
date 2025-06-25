@@ -1,0 +1,521 @@
+<!-- AI Assistant Floating Button -->
+<div id="ai-assistant-floating" class="ai-assistant-floating" style="display: none;">
+    <div class="ai-assistant-btn" onclick="toggleAIAssistant()" id="ai-assistant-btn">
+        <i data-feather="cpu" class="ai-icon"></i>
+        <i data-feather="x" class="ai-close-icon" style="display: none;"></i>
+        <div class="ai-pulse"></div>
+    </div>
+    
+    <div class="ai-assistant-panel" id="ai-assistant-panel" style="display: none;">
+        <div class="ai-header">
+            <h6 class="mb-0">
+                <i data-feather="cpu" class="me-2"></i>
+                {{ _('AI Assistant') }}
+                <span class="ai-badge">Gemini</span>
+            </h6>
+            <button class="btn-close" onclick="closeAIAssistant()"></button>
+        </div>
+        
+        <div class="ai-content">
+            <!-- Quick Actions -->
+            <div class="ai-section">
+                <h6 class="ai-section-title">{{ _('Quick Actions') }}</h6>
+                <div class="ai-actions" id="ai-actions">
+                    <div class="ai-loading">
+                        <div class="spinner-border spinner-border-sm me-2"></div>
+                        {{ _('Loading actions...') }}
+                    </div>
+                </div>
+            </div>
+            
+            <!-- Voice Commands -->
+            <div class="ai-section">
+                <h6 class="ai-section-title">{{ _('Voice Commands') }}</h6>
+                <div class="ai-voice-controls">
+                    <button class="btn btn-outline-primary btn-sm w-100" onclick="startDictation()" id="voice-btn">
+                        <i data-feather="mic" class="me-2"></i>
+                        {{ _('Start Voice Input') }}
+                    </button>
+                    <div class="ai-voice-status" id="voice-status" style="display: none;">
+                        <div class="text-center">
+                            <div class="voice-visualizer">
+                                <div class="voice-bar"></div>
+                                <div class="voice-bar"></div>
+                                <div class="voice-bar"></div>
+                                <div class="voice-bar"></div>
+                            </div>
+                            <small class="text-muted">{{ _('Listening...') }}</small>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            
+            <!-- Status -->
+            <div class="ai-section">
+                <h6 class="ai-section-title">{{ _('Status') }}</h6>
+                <div class="ai-status" id="ai-status">
+                    <div class="ai-loading">
+                        <div class="spinner-border spinner-border-sm me-2"></div>
+                        {{ _('Loading status...') }}
+                    </div>
+                </div>
+            </div>
+        </div>
+        
+        <div class="ai-footer">
+            <small class="text-muted">
+                {{ _('Powered by Google Gemini AI') }}
+            </small>
+        </div>
+    </div>
+</div>
+
+<style>
+.ai-assistant-floating {
+    position: fixed;
+    bottom: 20px;
+    right: 20px;
+    z-index: 9999;
+}
+
+.ai-assistant-btn {
+    width: 60px;
+    height: 60px;
+    border-radius: 50%;
+    background: linear-gradient(135deg, #4285f4, #34a853);
+    color: white;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    cursor: pointer;
+    box-shadow: 0 4px 12px rgba(66, 133, 244, 0.3);
+    transition: all 0.3s ease;
+    position: relative;
+    overflow: hidden;
+}
+
+.ai-assistant-btn:hover {
+    transform: scale(1.1);
+    box-shadow: 0 6px 16px rgba(66, 133, 244, 0.4);
+}
+
+.ai-assistant-btn.active {
+    background: linear-gradient(135deg, #ea4335, #fbbc04);
+}
+
+.ai-pulse {
+    position: absolute;
+    width: 100%;
+    height: 100%;
+    border-radius: 50%;
+    background: rgba(66, 133, 244, 0.6);
+    animation: aiPulse 2s infinite;
+    pointer-events: none;
+}
+
+@keyframes aiPulse {
+    0% { transform: scale(1); opacity: 1; }
+    100% { transform: scale(1.5); opacity: 0; }
+}
+
+.ai-assistant-panel {
+    position: absolute;
+    bottom: 70px;
+    right: 0;
+    width: 350px;
+    max-width: 90vw;
+    background: white;
+    border: 1px solid #dee2e6;
+    border-radius: 12px;
+    box-shadow: 0 8px 32px rgba(0,0,0,0.15);
+    animation: slideUp 0.3s ease-out;
+}
+
+@keyframes slideUp {
+    from { transform: translateY(20px); opacity: 0; }
+    to { transform: translateY(0); opacity: 1; }
+}
+
+.ai-header {
+    padding: 1rem;
+    border-bottom: 1px solid #e9ecef;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    background: linear-gradient(135deg, #f8f9fa, #e9ecef);
+    border-radius: 12px 12px 0 0;
+}
+
+.ai-content {
+    padding: 1rem;
+    max-height: 400px;
+    overflow-y: auto;
+}
+
+.ai-section {
+    margin-bottom: 1.5rem;
+}
+
+.ai-section:last-child {
+    margin-bottom: 0;
+}
+
+.ai-section-title {
+    font-size: 0.875rem;
+    color: #495057;
+    margin-bottom: 0.75rem;
+    font-weight: 600;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+}
+
+.ai-actions {
+    display: grid;
+    gap: 0.5rem;
+}
+
+.ai-action-item {
+    display: flex;
+    align-items: center;
+    padding: 0.75rem;
+    background: #f8f9fa;
+    border: 1px solid #e9ecef;
+    border-radius: 8px;
+    cursor: pointer;
+    transition: all 0.2s ease;
+    text-decoration: none;
+    color: inherit;
+}
+
+.ai-action-item:hover {
+    background: #e3f2fd;
+    border-color: #2196f3;
+    transform: translateY(-1px);
+    color: inherit;
+    text-decoration: none;
+}
+
+.ai-action-icon {
+    width: 32px;
+    height: 32px;
+    background: #007bff;
+    color: white;
+    border-radius: 6px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    margin-right: 0.75rem;
+    flex-shrink: 0;
+}
+
+.ai-action-content {
+    flex-grow: 1;
+}
+
+.ai-action-title {
+    font-weight: 600;
+    margin-bottom: 0.25rem;
+    font-size: 0.875rem;
+}
+
+.ai-action-desc {
+    color: #6c757d;
+    font-size: 0.75rem;
+    margin: 0;
+}
+
+.ai-voice-controls {
+    text-align: center;
+}
+
+.ai-voice-status {
+    margin-top: 1rem;
+    padding: 1rem;
+    background: #f8f9fa;
+    border-radius: 8px;
+}
+
+.voice-visualizer {
+    display: flex;
+    justify-content: center;
+    align-items: flex-end;
+    gap: 4px;
+    height: 40px;
+    margin-bottom: 0.5rem;
+}
+
+.voice-bar {
+    width: 4px;
+    background: #4285f4;
+    border-radius: 2px;
+    animation: voiceBar 1.5s ease-in-out infinite;
+}
+
+.voice-bar:nth-child(2) { animation-delay: 0.1s; }
+.voice-bar:nth-child(3) { animation-delay: 0.2s; }
+.voice-bar:nth-child(4) { animation-delay: 0.3s; }
+
+@keyframes voiceBar {
+    0%, 100% { height: 8px; }
+    50% { height: 32px; }
+}
+
+.ai-status {
+    font-size: 0.875rem;
+}
+
+.ai-status-item {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 0.5rem 0;
+    border-bottom: 1px solid #f1f3f4;
+}
+
+.ai-status-item:last-child {
+    border-bottom: none;
+}
+
+.ai-status-label {
+    color: #6c757d;
+}
+
+.ai-status-value {
+    font-weight: 600;
+}
+
+.ai-footer {
+    padding: 0.75rem 1rem;
+    border-top: 1px solid #e9ecef;
+    background: #f8f9fa;
+    border-radius: 0 0 12px 12px;
+    text-align: center;
+}
+
+.ai-badge {
+    background: linear-gradient(135deg, #4285f4, #34a853);
+    color: white;
+    padding: 0.25rem 0.5rem;
+    border-radius: 10px;
+    font-size: 0.7rem;
+    font-weight: 500;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+}
+
+.ai-loading {
+    text-align: center;
+    padding: 1rem;
+    color: #6c757d;
+}
+
+/* Mobile Responsiveness */
+@media (max-width: 768px) {
+    .ai-assistant-floating {
+        bottom: 15px;
+        right: 15px;
+    }
+    
+    .ai-assistant-btn {
+        width: 50px;
+        height: 50px;
+    }
+    
+    .ai-assistant-panel {
+        width: 300px;
+        bottom: 60px;
+    }
+}
+
+@media (max-width: 480px) {
+    .ai-assistant-panel {
+        width: calc(100vw - 30px);
+        right: -15px;
+    }
+}
+</style>
+
+<script>
+let aiAssistantOpen = false;
+let voiceActive = false;
+
+document.addEventListener('DOMContentLoaded', function() {
+    // Show AI Assistant after page load
+    setTimeout(() => {
+        document.getElementById('ai-assistant-floating').style.display = 'block';
+        loadAIActions();
+        loadAIStatus();
+    }, 1000);
+});
+
+function toggleAIAssistant() {
+    const panel = document.getElementById('ai-assistant-panel');
+    const btn = document.getElementById('ai-assistant-btn');
+    const aiIcon = btn.querySelector('.ai-icon');
+    const closeIcon = btn.querySelector('.ai-close-icon');
+    
+    if (aiAssistantOpen) {
+        closeAIAssistant();
+    } else {
+        openAIAssistant();
+    }
+}
+
+function openAIAssistant() {
+    const panel = document.getElementById('ai-assistant-panel');
+    const btn = document.getElementById('ai-assistant-btn');
+    const aiIcon = btn.querySelector('.ai-icon');
+    const closeIcon = btn.querySelector('.ai-close-icon');
+    
+    panel.style.display = 'block';
+    btn.classList.add('active');
+    aiIcon.style.display = 'none';
+    closeIcon.style.display = 'inline';
+    aiAssistantOpen = true;
+    
+    // Refresh feather icons
+    if (typeof feather !== 'undefined') {
+        feather.replace();
+    }
+}
+
+function closeAIAssistant() {
+    const panel = document.getElementById('ai-assistant-panel');
+    const btn = document.getElementById('ai-assistant-btn');
+    const aiIcon = btn.querySelector('.ai-icon');
+    const closeIcon = btn.querySelector('.ai-close-icon');
+    
+    panel.style.display = 'none';
+    btn.classList.remove('active');
+    aiIcon.style.display = 'inline';
+    closeIcon.style.display = 'none';
+    aiAssistantOpen = false;
+}
+
+async function loadAIActions() {
+    try {
+        const response = await fetch('/ai-assistant/quick-actions');
+        const data = await response.json();
+        
+        if (data.success) {
+            displayAIActions(data.actions);
+        }
+    } catch (error) {
+        console.log('Failed to load AI actions:', error);
+        document.getElementById('ai-actions').innerHTML = `
+            <div class="text-muted small">{{ _('Actions unavailable') }}</div>
+        `;
+    }
+}
+
+function displayAIActions(actions) {
+    const container = document.getElementById('ai-actions');
+    
+    let html = '';
+    actions.forEach(action => {
+        const onclick = action.action || `window.location.href='${action.url}'`;
+        html += `
+            <div class="ai-action-item" onclick="${onclick}">
+                <div class="ai-action-icon">
+                    <i data-feather="${action.icon}" style="width: 16px; height: 16px;"></i>
+                </div>
+                <div class="ai-action-content">
+                    <div class="ai-action-title">${action.title}</div>
+                    <div class="ai-action-desc">${action.description}</div>
+                </div>
+            </div>
+        `;
+    });
+    
+    container.innerHTML = html;
+    
+    if (typeof feather !== 'undefined') {
+        feather.replace();
+    }
+}
+
+async function loadAIStatus() {
+    try {
+        const response = await fetch('/ai-assistant/status');
+        const data = await response.json();
+        
+        if (data.success) {
+            displayAIStatus(data.status);
+        }
+    } catch (error) {
+        console.log('Failed to load AI status:', error);
+        document.getElementById('ai-status').innerHTML = `
+            <div class="text-muted small">{{ _('Status unavailable') }}</div>
+        `;
+    }
+}
+
+function displayAIStatus(status) {
+    const container = document.getElementById('ai-status');
+    
+    const html = `
+        <div class="ai-status-item">
+            <span class="ai-status-label">{{ _('User') }}</span>
+            <span class="ai-status-value">${status.user.name}</span>
+        </div>
+        <div class="ai-status-item">
+            <span class="ai-status-label">{{ _('Pending Tasks') }}</span>
+            <span class="ai-status-value">${status.quick_stats.pending_tasks}</span>
+        </div>
+        <div class="ai-status-item">
+            <span class="ai-status-label">{{ _('Today Tasks') }}</span>
+            <span class="ai-status-value">${status.quick_stats.today_tasks}</span>
+        </div>
+    `;
+    
+    container.innerHTML = html;
+}
+
+function startDictation() {
+    if (window.dictationManager) {
+        window.dictationManager.toggleDictation();
+        updateVoiceStatus();
+    } else {
+        alert('{{ _("Voice input not available") }}');
+    }
+}
+
+function toggleDictation() {
+    startDictation();
+}
+
+function updateVoiceStatus() {
+    const voiceBtn = document.getElementById('voice-btn');
+    const voiceStatus = document.getElementById('voice-status');
+    
+    if (window.dictationManager && window.dictationManager.isListening) {
+        voiceBtn.innerHTML = '<i data-feather="mic-off" class="me-2"></i>{{ _("Stop Listening") }}';
+        voiceBtn.classList.add('btn-danger');
+        voiceBtn.classList.remove('btn-outline-primary');
+        voiceStatus.style.display = 'block';
+        voiceActive = true;
+    } else {
+        voiceBtn.innerHTML = '<i data-feather="mic" class="me-2"></i>{{ _("Start Voice Input") }}';
+        voiceBtn.classList.remove('btn-danger');
+        voiceBtn.classList.add('btn-outline-primary');
+        voiceStatus.style.display = 'none';
+        voiceActive = false;
+    }
+    
+    if (typeof feather !== 'undefined') {
+        feather.replace();
+    }
+}
+
+// Listen for dictation events
+document.addEventListener('dictationStateChanged', function(e) {
+    updateVoiceStatus();
+});
+
+// Close panel when clicking outside
+document.addEventListener('click', function(e) {
+    if (aiAssistantOpen && !e.target.closest('.ai-assistant-floating')) {
+        closeAIAssistant();
+    }
+});
+</script>

@@ -237,6 +237,11 @@
     <!-- Additional JS -->
     {% block js %}{% endblock %}
     
+    <!-- AI Assistant Floating Button -->
+    {% if current_user.is_authenticated %}
+        {% include 'ai_assistant/floating_button.html' %}
+    {% endif %}
+    
     <!-- Initialize page-specific features -->
     <script>
         document.addEventListener('DOMContentLoaded', function() {

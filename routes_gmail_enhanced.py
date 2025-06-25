@@ -8,14 +8,12 @@ from flask_babel import _, get_locale
 from datetime import datetime, timezone
 import os
 import logging
+# Use existing Gmail models from existing codebase
 try:
-    from models_gmail import GmailAccount, GmailMessage, GmailAttachment, AIEmailAnalysis
+    from models import GmailAccount, GmailMessage, GmailAttachment, AIEmailAnalysis
 except ImportError:
-    # Fallback - use existing Gmail models if available
-    try:
-        from models import GmailAccount, GmailMessage, GmailAttachment, AIEmailAnalysis
-    except ImportError:
-        GmailAccount = GmailMessage = GmailAttachment = AIEmailAnalysis = None
+    # Create placeholder classes if models don't exist
+    GmailAccount = GmailMessage = GmailAttachment = AIEmailAnalysis = None
 from gmail_ai_enhanced_service import GmailAIEnhancedService
 from gmail_service import GmailService
 from app import db

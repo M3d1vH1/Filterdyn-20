@@ -89,6 +89,13 @@ def create_app():
     except ImportError:
         pass
     
+    # Register AI Assistant routes
+    try:
+        from routes_ai_assistant import ai_assistant_bp
+        app.register_blueprint(ai_assistant_bp)
+    except ImportError:
+        pass
+    
     # Register custom template filters
     from template_filters import register_filters
     register_filters(app)

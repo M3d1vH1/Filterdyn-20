@@ -8,15 +8,12 @@ import logging
 from typing import Dict, List, Optional, Any
 from datetime import datetime, timezone
 import google.generativeai as genai
+# Use existing models from codebase
 try:
-    from models_gmail import GmailMessage, AIEmailAnalysis, AIEmailLearningData
+    from models import GmailMessage, AIEmailAnalysis, AIEmailLearningData, Customer, Order, Quote, Task
 except ImportError:
-    # Fallback for existing models
+    # Create placeholder classes if models don't exist
     GmailMessage = AIEmailAnalysis = AIEmailLearningData = None
-
-try:
-    from models import Customer, Order, Quote, Task
-except ImportError:
     Customer = Order = Quote = Task = None
 from app import db
 from flask_login import current_user
