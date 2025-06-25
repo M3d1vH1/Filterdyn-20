@@ -576,7 +576,12 @@ function closeAIPanel() {
 }
 
 function openGmail() {
-    window.location.href = '/gmail/complete-interface';
+    // Check if Gmail is connected, if not redirect to connect first
+    {% if session.get('google_connected') %}
+        window.location.href = '/gmail/complete-interface';
+    {% else %}
+        window.location.href = '/gmail/connect';
+    {% endif %}
 }
 
 function openQuickTask() {

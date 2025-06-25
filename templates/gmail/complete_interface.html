@@ -384,9 +384,14 @@
             </a>
         </div>
         <div class="text-center">
-            <small class="text-muted">
-                {{ _('Secure OAuth2 authentication with Google') }}
-            </small>
+            <a href="{{ url_for('gmail.connect') }}" class="btn btn-primary btn-lg">
+                <i data-feather="mail" class="me-2"></i>{{ _('Connect Gmail Account') }}
+            </a>
+            <div class="mt-2">
+                <small class="text-muted">
+                    {{ _('Secure OAuth2 authentication with Google') }}
+                </small>
+            </div>
         </div>
     </div>
     {% endif %}
