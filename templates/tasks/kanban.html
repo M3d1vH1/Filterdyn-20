@@ -328,16 +328,7 @@
 }
 
 /* Quick add button floating */
-#quick-add-btn.floating {
-    position: fixed;
-    bottom: 20px;
-    right: 20px;
-    border-radius: 50%;
-    width: 60px;
-    height: 60px;
-    z-index: 1000;
-    box-shadow: 0 4px 12px rgba(0,0,0,0.3);
-}
+/* Quick add button styling removed - now integrated into unified FAB */
 
 .empty-column {
     text-align: center;
@@ -911,17 +902,7 @@ document.addEventListener('DOMContentLoaded', function() {
         }, 4000);
     }
     
-    // Quick Add Modal functionality
-    const quickAddBtn = document.getElementById('quick-add-btn');
-    const quickAddModal = new bootstrap.Modal(document.getElementById('quickAddModal'));
-    const quickAddForm = document.getElementById('quick-add-form');
-    
-    quickAddBtn.addEventListener('click', function() {
-        quickAddModal.show();
-        setTimeout(() => {
-            document.getElementById('quick-title').focus();
-        }, 300);
-    });
+    // Quick Add functionality simplified - main action moved to unified FAB
     
     quickAddForm.addEventListener('submit', function(e) {
         e.preventDefault();

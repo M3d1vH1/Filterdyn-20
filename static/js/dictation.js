@@ -40,131 +40,13 @@ class DictationManager {
         // Skip creating separate dictation button - now integrated into unified FAB
         console.log('Dictation integrated into unified FAB');
         return;
-        this.floatingButton.innerHTML = `
-            <div class="dictation-btn-content">
-                <i data-feather="mic" class="dictation-icon"></i>
-                <i data-feather="mic-off" class="dictation-icon-off" style="display: none;"></i>
-                <span class="dictation-tooltip">Voice Input</span>
-            </div>
-        `;
-
-        // Add CSS styles
-        const style = document.createElement('style');
-        style.textContent = `
-            .floating-dictation-btn {
-                position: fixed;
-                bottom: 20px;
-                right: 20px; /* Position on right side */
-                width: 60px;
-                height: 60px;
-                background: linear-gradient(135deg, #28a745, #20c997);
-                border-radius: 50%;
-                box-shadow: 0 4px 12px rgba(40, 167, 69, 0.3);
-                cursor: pointer;
-                z-index: 10002; /* Higher z-index for dictation */
-                transition: all 0.3s ease;
-                display: flex;
-                align-items: center;
-                justify-content: center;
-            }
-
-            .floating-dictation-btn:hover {
-                transform: scale(1.1);
-                box-shadow: 0 6px 16px rgba(40, 167, 69, 0.4);
-            }
-
-            .floating-dictation-btn.listening {
-                background: linear-gradient(135deg, #dc3545, #fd7e14);
-                animation: dictation-pulse 1.5s infinite;
-            }
-
-            .dictation-btn-content {
-                position: relative;
-                color: white;
-                display: flex;
-                align-items: center;
-                justify-content: center;
-            }
-
-            .dictation-tooltip {
-                position: absolute;
-                right: 70px;
-                top: 50%;
-                transform: translateY(-50%);
-                background: rgba(0, 0, 0, 0.8);
-                color: white;
-                padding: 8px 12px;
-                border-radius: 6px;
-                font-size: 12px;
-                white-space: nowrap;
-                opacity: 0;
-                pointer-events: none;
-                transition: opacity 0.3s ease;
-            }
-
-            .floating-dictation-btn:hover .dictation-tooltip {
-                opacity: 1;
-            }
-
-            @keyframes dictation-pulse {
-                0% { opacity: 1; transform: scale(1); }
-                50% { opacity: 0.7; transform: scale(1.05); }
-                100% { opacity: 1; transform: scale(1); }
-            }
-
-            .dictation-status {
-                position: fixed;
-                bottom: 90px;
-                right: 20px; /* Align with dictation button */
-                background: rgba(0, 0, 0, 0.8);
-                color: white;
-                padding: 10px 15px;
-                border-radius: 20px;
-                font-size: 14px;
-                z-index: 10003; /* Highest z-index for status */
-                display: none;
-                animation: dictation-pulse 1.5s infinite;
-            }
-
-            @media (max-width: 768px) {
-                .floating-dictation-btn {
-                    width: 50px;
-                    height: 50px;
-                    bottom: 15px;
-                    right: 15px; /* Keep on right side for mobile */
-                }
-                
-                .dictation-tooltip {
-                    display: none;
-                }
-                
-                .dictation-status {
-                    bottom: 75px; /* Adjust for smaller button */
-                    right: 15px;
-                }
-            }
-        `;
-        document.head.appendChild(style);
-
-        // Create status indicator
-        const statusDiv = document.createElement('div');
-        statusDiv.id = 'dictation-status';
-        statusDiv.className = 'dictation-status';
-        statusDiv.innerHTML = '<i data-feather="mic" style="width: 14px; height: 14px;"></i> Listening...';
-
-        document.body.appendChild(this.floatingButton);
-        document.body.appendChild(statusDiv);
-
-        // Refresh feather icons
-        if (typeof feather !== 'undefined') {
-            feather.replace();
-        }
     }
 
     setupEventListeners() {
-        if (this.floatingButton) {
-            this.floatingButton.addEventListener('click', () => this.toggleDictation());
-        }
+        // Skip floating button events - handled by unified FAB
+        // if (this.floatingButton) {
+        //     this.floatingButton.addEventListener('click', () => this.toggleDictation());
+        // }
 
         // Auto-detect focused input fields
         document.addEventListener('focusin', (e) => {
