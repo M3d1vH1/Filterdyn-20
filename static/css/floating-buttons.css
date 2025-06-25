@@ -18,7 +18,7 @@
     position: fixed !important;
     bottom: 20px !important;
     right: 20px !important;
-    z-index: 9999 !important; /* Highest priority for voice input */
+    z-index: 10002 !important; /* Highest priority for voice input */
 }
 
 /* AI Assistant - Secondary position */
@@ -26,7 +26,7 @@
     position: fixed !important;
     bottom: 20px !important;
     right: 90px !important; /* 60px button + 15px gap + 15px margin */
-    z-index: 9998 !important;
+    z-index: 10001 !important;
 }
 
 /* Quick Add Task Button (if exists) - Tertiary position */
@@ -42,7 +42,7 @@
     position: fixed !important;
     bottom: 90px !important;
     right: 20px !important;
-    z-index: 10000 !important;
+    z-index: 10003 !important;
 }
 
 /* Mobile responsiveness for button coordination */

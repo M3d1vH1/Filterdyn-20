@@ -68,7 +68,7 @@ class DictationManager {
                 border-radius: 50%;
                 box-shadow: 0 4px 12px rgba(40, 167, 69, 0.3);
                 cursor: pointer;
-                z-index: 9999; /* Higher z-index for dictation */
+                z-index: 10002; /* Higher z-index for dictation */
                 transition: all 0.3s ease;
                 display: flex;
                 align-items: center;
@@ -128,7 +128,7 @@ class DictationManager {
                 padding: 10px 15px;
                 border-radius: 20px;
                 font-size: 14px;
-                z-index: 10000; /* Highest z-index for status */
+                z-index: 10003; /* Highest z-index for status */
                 display: none;
                 animation: dictation-pulse 1.5s infinite;
             }

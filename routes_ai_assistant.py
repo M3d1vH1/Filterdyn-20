@@ -45,7 +45,7 @@ def get_quick_actions():
             'title': _('Daily Kanban'),
             'description': _('Today\'s task board'),
             'icon': 'columns',
-            'url': url_for('main.kanban'),
+            'url': url_for('main.tasks_kanban'),
             'category': 'productivity'
         },
         {
