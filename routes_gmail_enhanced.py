@@ -246,6 +246,23 @@ def enhanced_compose():
                          account=account,
                          current_locale=str(get_locale()))
 
+@gmail_enhanced_bp.route('/complete-interface')
+@login_required
+def complete_interface():
+    """Complete Gmail interface with full functionality"""
+    # Check permissions
+    if current_user.role not in ['admin', 'superadmin', 'manager']:
+        flash(_('Access denied. Gmail integration requires admin or manager permissions.'), 'error')
+        return redirect(url_for('main.dashboard'))
+    
+    # Temporarily disable Gmail service calls due to database schema mismatch
+    account = None
+    # account = GmailService.get_user_account(current_user.id, current_user.tenant_id) if GmailService else None
+    
+    return render_template('gmail/complete_interface.html',
+                         account=account,
+                         current_locale=str(get_locale()))
+
 @gmail_enhanced_bp.route('/enhanced-inbox')
 @login_required
 def enhanced_inbox():

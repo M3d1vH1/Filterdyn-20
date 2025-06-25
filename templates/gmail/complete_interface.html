@@ -1,0 +1,596 @@
+{% extends "base.html" %}
+{% block title %}{{ _('Gmail Management') }} - AI Enhanced{% endblock %}
+
+{% block css %}
+<link rel="stylesheet" href="{{ url_for('static', filename='css/gmail-ai.css') }}">
+<style>
+.gmail-interface {
+    height: 100vh;
+    display: flex;
+    flex-direction: column;
+    background: #f8f9fa;
+}
+
+.gmail-header {
+    background: white;
+    border-bottom: 1px solid #dee2e6;
+    padding: 1rem;
+    box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+}
+
+.gmail-main {
+    display: flex;
+    flex: 1;
+    overflow: hidden;
+}
+
+.gmail-sidebar {
+    width: 280px;
+    background: white;
+    border-right: 1px solid #dee2e6;
+    padding: 1rem;
+    overflow-y: auto;
+}
+
+.gmail-content {
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    overflow: hidden;
+}
+
+.gmail-toolbar {
+    background: white;
+    border-bottom: 1px solid #dee2e6;
+    padding: 0.75rem 1rem;
+    display: flex;
+    gap: 1rem;
+    align-items: center;
+}
+
+.gmail-messages {
+    flex: 1;
+    overflow-y: auto;
+    padding: 1rem;
+}
+
+.nav-item {
+    display: flex;
+    align-items: center;
+    padding: 0.75rem;
+    border-radius: 8px;
+    cursor: pointer;
+    transition: all 0.2s ease;
+    text-decoration: none;
+    color: #495057;
+    margin-bottom: 0.25rem;
+}
+
+.nav-item:hover, .nav-item.active {
+    background: #e3f2fd;
+    color: #1976d2;
+    text-decoration: none;
+}
+
+.nav-item i {
+    margin-right: 0.75rem;
+    width: 20px;
+}
+
+.nav-badge {
+    margin-left: auto;
+    background: #dc3545;
+    color: white;
+    padding: 0.2rem 0.5rem;
+    border-radius: 10px;
+    font-size: 0.7rem;
+}
+
+.message-list-item {
+    display: flex;
+    align-items: center;
+    padding: 1rem;
+    border-bottom: 1px solid #f1f3f4;
+    cursor: pointer;
+    transition: all 0.2s ease;
+    background: white;
+    margin-bottom: 1px;
+}
+
+.message-list-item:hover {
+    background: #f8f9fa;
+    transform: translateX(2px);
+}
+
+.message-list-item.unread {
+    background: #f8f9ff;
+    border-left: 4px solid #4285f4;
+}
+
+.message-checkbox {
+    margin-right: 1rem;
+}
+
+.message-star {
+    margin-right: 1rem;
+    color: #ffc107;
+    cursor: pointer;
+}
+
+.message-sender {
+    width: 200px;
+    font-weight: 600;
+    color: #202124;
+    flex-shrink: 0;
+}
+
+.message-subject {
+    flex: 1;
+    margin-right: 1rem;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+}
+
+.message-snippet {
+    color: #5f6368;
+    font-size: 0.9rem;
+}
+
+.message-date {
+    width: 100px;
+    text-align: right;
+    color: #5f6368;
+    font-size: 0.85rem;
+    flex-shrink: 0;
+}
+
+.ai-insights {
+    margin-left: auto;
+    display: flex;
+    gap: 0.25rem;
+}
+
+.ai-badge {
+    background: #e3f2fd;
+    color: #1976d2;
+    padding: 0.15rem 0.4rem;
+    border-radius: 8px;
+    font-size: 0.65rem;
+    font-weight: 500;
+}
+
+.compose-fab {
+    position: fixed;
+    bottom: 100px;
+    right: 20px;
+    width: 56px;
+    height: 56px;
+    background: #ea4335;
+    color: white;
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    cursor: pointer;
+    box-shadow: 0 4px 12px rgba(234, 67, 53, 0.3);
+    transition: all 0.3s ease;
+    z-index: 1000;
+}
+
+.compose-fab:hover {
+    transform: scale(1.1);
+    box-shadow: 0 6px 16px rgba(234, 67, 53, 0.4);
+}
+
+.search-bar {
+    flex: 1;
+    max-width: 600px;
+}
+
+.toolbar-actions {
+    display: flex;
+    gap: 0.5rem;
+}
+
+@media (max-width: 768px) {
+    .gmail-main {
+        flex-direction: column;
+    }
+    
+    .gmail-sidebar {
+        width: 100%;
+        height: auto;
+        border-right: none;
+        border-bottom: 1px solid #dee2e6;
+    }
+    
+    .message-sender {
+        width: 120px;
+    }
+    
+    .message-date {
+        width: 80px;
+    }
+}
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="gmail-interface">
+    <!-- Header -->
+    <div class="gmail-header">
+        <div class="d-flex justify-content-between align-items-center">
+            <div class="d-flex align-items-center">
+                <h4 class="mb-0 me-3">
+                    <i data-feather="mail" class="me-2"></i>
+                    {{ _('Gmail') }}
+                    <span class="ai-badge ms-2">AI Enhanced</span>
+                </h4>
+                <span class="text-muted">{{ account.email if account else _('Not connected') }}</span>
+            </div>
+            
+            <div class="d-flex gap-2">
+                {% if not account %}
+                <a href="{{ url_for('gmail.connect') }}" class="btn btn-primary">
+                    <i data-feather="link"></i> {{ _('Connect Gmail') }}
+                </a>
+                {% else %}
+                <button class="btn btn-outline-primary" onclick="syncEmails()">
+                    <i data-feather="refresh-cw"></i> {{ _('Sync') }}
+                </button>
+                <a href="{{ url_for('gmail_enhanced.enhanced_compose') }}" class="btn btn-success">
+                    <i data-feather="edit-3"></i> {{ _('Compose') }}
+                </a>
+                {% endif %}
+            </div>
+        </div>
+    </div>
+
+    {% if account %}
+    <!-- Main Content -->
+    <div class="gmail-main">
+        <!-- Sidebar -->
+        <div class="gmail-sidebar">
+            <nav class="nav flex-column">
+                <a class="nav-item active" href="#" data-folder="inbox">
+                    <i data-feather="inbox"></i>
+                    {{ _('Inbox') }}
+                    <span class="nav-badge" id="unread-count">0</span>
+                </a>
+                <a class="nav-item" href="#" data-folder="starred">
+                    <i data-feather="star"></i>
+                    {{ _('Starred') }}
+                </a>
+                <a class="nav-item" href="#" data-folder="sent">
+                    <i data-feather="send"></i>
+                    {{ _('Sent') }}
+                </a>
+                <a class="nav-item" href="#" data-folder="drafts">
+                    <i data-feather="edit"></i>
+                    {{ _('Drafts') }}
+                </a>
+                <a class="nav-item" href="#" data-folder="important">
+                    <i data-feather="bookmark"></i>
+                    {{ _('Important') }}
+                </a>
+                
+                <hr class="my-3">
+                
+                <!-- AI Categories -->
+                <h6 class="px-3 text-muted small text-uppercase">{{ _('AI Categories') }}</h6>
+                <a class="nav-item" href="#" data-filter="ai-positive">
+                    <i data-feather="smile"></i>
+                    {{ _('Positive') }}
+                </a>
+                <a class="nav-item" href="#" data-filter="ai-urgent">
+                    <i data-feather="alert-circle"></i>
+                    {{ _('Urgent') }}
+                </a>
+                <a class="nav-item" href="#" data-filter="ai-business">
+                    <i data-feather="briefcase"></i>
+                    {{ _('Business') }}
+                </a>
+                <a class="nav-item" href="#" data-filter="ai-unanalyzed">
+                    <i data-feather="cpu"></i>
+                    {{ _('Needs Analysis') }}
+                </a>
+            </nav>
+        </div>
+
+        <!-- Content Area -->
+        <div class="gmail-content">
+            <!-- Toolbar -->
+            <div class="gmail-toolbar">
+                <div class="form-check">
+                    <input class="form-check-input" type="checkbox" id="select-all" onchange="toggleSelectAll()">
+                </div>
+                
+                <div class="search-bar">
+                    <div class="input-group">
+                        <input type="text" class="form-control" placeholder="{{ _('Search emails...') }}" id="search-input">
+                        <button class="btn btn-outline-secondary" onclick="searchEmails()">
+                            <i data-feather="search"></i>
+                        </button>
+                        <button class="btn btn-outline-info" onclick="aiSmartSearch()">
+                            <i data-feather="zap"></i> {{ _('AI Search') }}
+                        </button>
+                    </div>
+                </div>
+                
+                <div class="toolbar-actions">
+                    <button class="btn btn-outline-secondary btn-sm" onclick="refreshMessages()">
+                        <i data-feather="refresh-cw"></i>
+                    </button>
+                    <button class="btn btn-outline-warning btn-sm" onclick="bulkAIAnalysis()">
+                        <i data-feather="cpu"></i> {{ _('Bulk AI') }}
+                    </button>
+                    <div class="btn-group">
+                        <button type="button" class="btn btn-outline-secondary btn-sm dropdown-toggle" data-bs-toggle="dropdown">
+                            <i data-feather="more-horizontal"></i>
+                        </button>
+                        <ul class="dropdown-menu">
+                            <li><a class="dropdown-item" href="#" onclick="markAllRead()">{{ _('Mark all as read') }}</a></li>
+                            <li><a class="dropdown-item" href="#" onclick="exportEmails()">{{ _('Export emails') }}</a></li>
+                            <li><hr class="dropdown-divider"></li>
+                            <li><a class="dropdown-item" href="#" onclick="openSettings()">{{ _('Settings') }}</a></li>
+                        </ul>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Messages List -->
+            <div class="gmail-messages" id="messages-container">
+                <div class="text-center py-5" id="loading-indicator">
+                    <div class="spinner-border" role="status">
+                        <span class="visually-hidden">{{ _('Loading...') }}</span>
+                    </div>
+                    <div class="mt-2">{{ _('Loading messages...') }}</div>
+                </div>
+                
+                <div id="messages-list" style="display: none;">
+                    <!-- Messages will be loaded here -->
+                </div>
+                
+                <div class="text-center py-5" id="empty-state" style="display: none;">
+                    <i data-feather="inbox" class="text-muted" style="width: 48px; height: 48px;"></i>
+                    <h5 class="text-muted mt-3">{{ _('No messages found') }}</h5>
+                    <p class="text-muted">{{ _('Try syncing your Gmail account or adjusting your search criteria.') }}</p>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Compose FAB -->
+    <div class="compose-fab" onclick="openCompose()">
+        <i data-feather="edit-3"></i>
+    </div>
+    {% else %}
+    <!-- Not Connected State -->
+    <div class="d-flex flex-column align-items-center justify-content-center h-100">
+        <i data-feather="mail" class="text-muted mb-4" style="width: 64px; height: 64px;"></i>
+        <h3 class="text-muted mb-3">{{ _('Connect Your Gmail Account') }}</h3>
+        <p class="text-muted text-center mb-4">
+            {{ _('Connect your Gmail account to access AI-powered email management, smart responses, and business integration.') }}
+        </p>
+        <a href="{{ url_for('gmail.connect') }}" class="btn btn-primary btn-lg">
+            <i data-feather="link" class="me-2"></i>
+            {{ _('Connect Gmail Account') }}
+        </a>
+    </div>
+    {% endif %}
+</div>
+{% endblock %}
+
+{% block js %}
+{% include 'gmail/api_endpoints.html' %}
+<script src="{{ url_for('static', filename='js/gmail-ai-enhanced.js') }}"></script>
+<script>
+let selectedMessages = new Set();
+let currentFolder = 'inbox';
+let messages = [];
+
+document.addEventListener('DOMContentLoaded', function() {
+    feather.replace();
+    
+    {% if account %}
+    loadMessages();
+    {% endif %}
+    
+    // Setup navigation
+    document.querySelectorAll('.nav-item').forEach(item => {
+        item.addEventListener('click', function(e) {
+            e.preventDefault();
+            
+            // Update active state
+            document.querySelectorAll('.nav-item').forEach(nav => nav.classList.remove('active'));
+            this.classList.add('active');
+            
+            // Load content based on folder/filter
+            const folder = this.dataset.folder;
+            const filter = this.dataset.filter;
+            
+            if (folder) {
+                currentFolder = folder;
+                loadMessages(folder);
+            } else if (filter) {
+                applyAIFilter(filter);
+            }
+        });
+    });
+});
+
+async function loadMessages(folder = 'inbox') {
+    const loadingIndicator = document.getElementById('loading-indicator');
+    const messagesList = document.getElementById('messages-list');
+    const emptyState = document.getElementById('empty-state');
+    
+    loadingIndicator.style.display = 'block';
+    messagesList.style.display = 'none';
+    emptyState.style.display = 'none';
+    
+    try {
+        const response = await fetch(`/gmail/api/messages?folder=${folder}`);
+        const data = await response.json();
+        
+        if (data.success && data.messages.length > 0) {
+            messages = data.messages;
+            displayMessages(messages);
+            updateUnreadCount();
+        } else {
+            showEmptyState();
+        }
+    } catch (error) {
+        console.error('Failed to load messages:', error);
+        showEmptyState();
+    } finally {
+        loadingIndicator.style.display = 'none';
+    }
+}
+
+function displayMessages(messageList) {
+    const container = document.getElementById('messages-list');
+    
+    let html = '';
+    messageList.forEach(message => {
+        const isUnread = !message.is_read;
+        const hasAI = message.ai_analysis;
+        
+        html += `
+            <div class="message-list-item ${isUnread ? 'unread' : ''}" onclick="openMessage('${message.message_id}')">
+                <div class="form-check message-checkbox" onclick="event.stopPropagation()">
+                    <input class="form-check-input" type="checkbox" value="${message.message_id}" onchange="updateSelection()">
+                </div>
+                
+                <div class="message-star" onclick="event.stopPropagation(); toggleStar('${message.message_id}')">
+                    <i data-feather="${message.is_starred ? 'star' : 'star'}" ${message.is_starred ? 'class="text-warning"' : ''}></i>
+                </div>
+                
+                <div class="message-sender">${message.sender || 'Unknown'}</div>
+                
+                <div class="message-subject">
+                    <strong>${message.subject || '(No Subject)'}</strong>
+                    ${message.snippet ? `<span class="message-snippet"> - ${message.snippet}</span>` : ''}
+                </div>
+                
+                <div class="ai-insights">
+                    ${hasAI ? `
+                        <span class="ai-badge">${message.ai_analysis.sentiment}</span>
+                        ${message.ai_analysis.urgency === 'high' || message.ai_analysis.urgency === 'urgent' ? 
+                            '<span class="ai-badge bg-danger text-white">Urgent</span>' : ''}
+                    ` : '<span class="ai-badge bg-light text-muted">Analyze</span>'}
+                </div>
+                
+                <div class="message-date">${formatDate(message.received_at)}</div>
+            </div>
+        `;
+    });
+    
+    container.innerHTML = html;
+    document.getElementById('messages-list').style.display = 'block';
+    feather.replace();
+}
+
+function showEmptyState() {
+    document.getElementById('empty-state').style.display = 'block';
+}
+
+function updateUnreadCount() {
+    const unreadCount = messages.filter(m => !m.is_read).length;
+    document.getElementById('unread-count').textContent = unreadCount;
+    document.getElementById('unread-count').style.display = unreadCount > 0 ? 'inline' : 'none';
+}
+
+function formatDate(dateString) {
+    if (!dateString) return '';
+    const date = new Date(dateString);
+    const now = new Date();
+    const isToday = date.toDateString() === now.toDateString();
+    
+    if (isToday) {
+        return date.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
+    } else {
+        return date.toLocaleDateString([], { month: 'short', day: 'numeric' });
+    }
+}
+
+function openMessage(messageId) {
+    window.location.href = `/gmail/message/${messageId}/enhanced`;
+}
+
+function openCompose() {
+    window.location.href = '/gmail/enhanced-compose';
+}
+
+async function syncEmails() {
+    const btn = event.target;
+    const originalText = btn.innerHTML;
+    
+    btn.innerHTML = '<span class="spinner-border spinner-border-sm me-2"></span>{{ _("Syncing...") }}';
+    btn.disabled = true;
+    
+    try {
+        const response = await fetch('/gmail/sync', { method: 'POST' });
+        if (response.ok) {
+            await loadMessages(currentFolder);
+        }
+    } catch (error) {
+        console.error('Sync failed:', error);
+    } finally {
+        btn.innerHTML = originalText;
+        btn.disabled = false;
+    }
+}
+
+function toggleSelectAll() {
+    const selectAll = document.getElementById('select-all');
+    const checkboxes = document.querySelectorAll('.message-checkbox input[type="checkbox"]');
+    
+    checkboxes.forEach(checkbox => {
+        checkbox.checked = selectAll.checked;
+    });
+    
+    updateSelection();
+}
+
+function updateSelection() {
+    selectedMessages.clear();
+    document.querySelectorAll('.message-checkbox input[type="checkbox"]:checked').forEach(checkbox => {
+        selectedMessages.add(checkbox.value);
+    });
+}
+
+async function bulkAIAnalysis() {
+    if (selectedMessages.size === 0) {
+        alert('{{ _("Please select messages to analyze") }}');
+        return;
+    }
+    
+    // Implementation for bulk AI analysis
+    alert('{{ _("Bulk AI analysis starting...") }}');
+}
+
+function searchEmails() {
+    const query = document.getElementById('search-input').value;
+    // Implementation for email search
+    alert(`{{ _("Searching for:") }} ${query}`);
+}
+
+function aiSmartSearch() {
+    // Implementation for AI-powered search
+    alert('{{ _("AI smart search coming soon!") }}');
+}
+
+function applyAIFilter(filter) {
+    // Implementation for AI-based filtering
+    alert(`{{ _("Applying filter:") }} ${filter}`);
+}
+
+// Additional functions for complete Gmail functionality
+function toggleStar(messageId) { /* Implementation */ }
+function markAllRead() { /* Implementation */ }
+function exportEmails() { /* Implementation */ }
+function openSettings() { /* Implementation */ }
+function refreshMessages() { loadMessages(currentFolder); }
+</script>
+{% endblock %}

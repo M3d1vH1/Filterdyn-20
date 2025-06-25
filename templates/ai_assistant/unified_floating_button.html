@@ -1,0 +1,676 @@
+<!-- Unified Floating Action Button -->
+<div id="unified-floating-assistant" class="unified-floating-assistant">
+    <!-- Main FAB -->
+    <div class="main-fab" onclick="toggleMainFAB()" id="main-fab">
+        <i data-feather="plus" class="fab-icon main-icon"></i>
+        <i data-feather="x" class="fab-icon close-icon" style="display: none;"></i>
+        <div class="fab-pulse"></div>
+    </div>
+    
+    <!-- Action Buttons -->
+    <div class="fab-actions" id="fab-actions" style="display: none;">
+        <!-- Voice/Dictation Button -->
+        <div class="fab-action voice-action" onclick="toggleDictation()" id="voice-fab">
+            <div class="fab-action-btn">
+                <i data-feather="mic" class="fab-icon"></i>
+            </div>
+            <span class="fab-label">{{ _('Voice Input') }}</span>
+        </div>
+        
+        <!-- AI Assistant Button -->
+        <div class="fab-action ai-action" onclick="toggleAIPanel()" id="ai-fab">
+            <div class="fab-action-btn">
+                <i data-feather="cpu" class="fab-icon"></i>
+            </div>
+            <span class="fab-label">{{ _('AI Assistant') }}</span>
+        </div>
+        
+        <!-- Gmail Button -->
+        <div class="fab-action gmail-action" onclick="openGmail()" id="gmail-fab">
+            <div class="fab-action-btn">
+                <i data-feather="mail" class="fab-icon"></i>
+            </div>
+            <span class="fab-label">{{ _('Gmail') }}</span>
+        </div>
+        
+        <!-- Quick Task Button -->
+        <div class="fab-action task-action" onclick="openQuickTask()" id="task-fab">
+            <div class="fab-action-btn">
+                <i data-feather="plus-square" class="fab-icon"></i>
+            </div>
+            <span class="fab-label">{{ _('Quick Task') }}</span>
+        </div>
+    </div>
+    
+    <!-- Voice Status Indicator -->
+    <div class="voice-status" id="voice-status" style="display: none;">
+        <div class="voice-visualizer">
+            <div class="voice-bar"></div>
+            <div class="voice-bar"></div>
+            <div class="voice-bar"></div>
+        </div>
+        <span class="voice-text">{{ _('Listening...') }}</span>
+    </div>
+    
+    <!-- AI Assistant Panel -->
+    <div class="ai-panel" id="ai-panel" style="display: none;">
+        <div class="ai-panel-header">
+            <h6 class="mb-0">
+                <i data-feather="cpu" class="me-2"></i>
+                {{ _('AI Assistant') }}
+                <span class="ai-badge">Gemini</span>
+            </h6>
+            <button class="btn-close" onclick="closeAIPanel()"></button>
+        </div>
+        
+        <div class="ai-panel-content">
+            <!-- Quick Actions -->
+            <div class="ai-section">
+                <h6 class="ai-section-title">{{ _('Quick Actions') }}</h6>
+                <div class="ai-quick-actions" id="ai-quick-actions">
+                    <div class="ai-loading">
+                        <div class="spinner-border spinner-border-sm me-2"></div>
+                        {{ _('Loading...') }}
+                    </div>
+                </div>
+            </div>
+            
+            <!-- AI Status -->
+            <div class="ai-section">
+                <h6 class="ai-section-title">{{ _('Status') }}</h6>
+                <div class="ai-status-grid" id="ai-status-grid">
+                    <div class="ai-loading">
+                        <div class="spinner-border spinner-border-sm me-2"></div>
+                        {{ _('Loading...') }}
+                    </div>
+                </div>
+            </div>
+        </div>
+        
+        <div class="ai-panel-footer">
+            <small class="text-muted">{{ _('Powered by Google Gemini AI') }}</small>
+        </div>
+    </div>
+</div>
+
+<style>
+.unified-floating-assistant {
+    position: fixed;
+    bottom: 20px;
+    right: 20px;
+    z-index: 10000;
+}
+
+.main-fab {
+    width: 60px;
+    height: 60px;
+    border-radius: 50%;
+    background: linear-gradient(135deg, #4285f4, #34a853);
+    color: white;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    cursor: pointer;
+    box-shadow: 0 4px 12px rgba(66, 133, 244, 0.3);
+    transition: all 0.3s ease;
+    position: relative;
+    overflow: hidden;
+}
+
+.main-fab:hover {
+    transform: scale(1.1);
+    box-shadow: 0 6px 16px rgba(66, 133, 244, 0.4);
+}
+
+.main-fab.active {
+    background: linear-gradient(135deg, #ea4335, #fbbc04);
+    transform: rotate(45deg);
+}
+
+.fab-pulse {
+    position: absolute;
+    width: 100%;
+    height: 100%;
+    border-radius: 50%;
+    background: rgba(66, 133, 244, 0.6);
+    animation: fabPulse 2s infinite;
+    pointer-events: none;
+}
+
+@keyframes fabPulse {
+    0% { transform: scale(1); opacity: 1; }
+    100% { transform: scale(1.5); opacity: 0; }
+}
+
+.fab-actions {
+    position: absolute;
+    bottom: 80px;
+    right: 0;
+    display: flex;
+    flex-direction: column;
+    gap: 15px;
+    align-items: flex-end;
+}
+
+.fab-action {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    opacity: 0;
+    transform: translateY(20px);
+    animation: fabActionSlide 0.3s ease-out forwards;
+}
+
+.fab-action:nth-child(1) { animation-delay: 0.1s; }
+.fab-action:nth-child(2) { animation-delay: 0.2s; }
+.fab-action:nth-child(3) { animation-delay: 0.3s; }
+.fab-action:nth-child(4) { animation-delay: 0.4s; }
+
+@keyframes fabActionSlide {
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
+}
+
+.fab-action-btn {
+    width: 48px;
+    height: 48px;
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    cursor: pointer;
+    transition: all 0.2s ease;
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.2);
+}
+
+.voice-action .fab-action-btn {
+    background: linear-gradient(135deg, #28a745, #20c997);
+    color: white;
+}
+
+.ai-action .fab-action-btn {
+    background: linear-gradient(135deg, #6f42c1, #e83e8c);
+    color: white;
+}
+
+.gmail-action .fab-action-btn {
+    background: linear-gradient(135deg, #dc3545, #fd7e14);
+    color: white;
+}
+
+.task-action .fab-action-btn {
+    background: linear-gradient(135deg, #17a2b8, #20c997);
+    color: white;
+}
+
+.fab-action-btn:hover {
+    transform: scale(1.1);
+}
+
+.fab-action-btn.active {
+    animation: fabActivePulse 1.5s infinite;
+}
+
+@keyframes fabActivePulse {
+    0%, 100% { box-shadow: 0 2px 8px rgba(0, 0, 0, 0.2); }
+    50% { box-shadow: 0 4px 16px rgba(0, 0, 0, 0.4); }
+}
+
+.fab-label {
+    background: rgba(0, 0, 0, 0.8);
+    color: white;
+    padding: 6px 12px;
+    border-radius: 20px;
+    font-size: 12px;
+    white-space: nowrap;
+    opacity: 0;
+    transition: opacity 0.2s ease;
+}
+
+.fab-action:hover .fab-label {
+    opacity: 1;
+}
+
+.voice-status {
+    position: absolute;
+    bottom: 80px;
+    right: 60px;
+    background: rgba(0, 0, 0, 0.8);
+    color: white;
+    padding: 10px 15px;
+    border-radius: 20px;
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    font-size: 12px;
+    animation: fabActivePulse 1.5s infinite;
+}
+
+.voice-visualizer {
+    display: flex;
+    gap: 3px;
+    align-items: flex-end;
+    height: 20px;
+}
+
+.voice-bar {
+    width: 3px;
+    background: #28a745;
+    border-radius: 2px;
+    animation: voiceBar 1.5s ease-in-out infinite;
+}
+
+.voice-bar:nth-child(2) { animation-delay: 0.1s; }
+.voice-bar:nth-child(3) { animation-delay: 0.2s; }
+
+@keyframes voiceBar {
+    0%, 100% { height: 6px; }
+    50% { height: 18px; }
+}
+
+.ai-panel {
+    position: absolute;
+    bottom: 80px;
+    right: 0;
+    width: 350px;
+    max-width: 90vw;
+    background: white;
+    border: 1px solid #dee2e6;
+    border-radius: 12px;
+    box-shadow: 0 8px 32px rgba(0, 0, 0, 0.15);
+    animation: aiPanelSlide 0.3s ease-out;
+}
+
+@keyframes aiPanelSlide {
+    from { transform: translateY(20px); opacity: 0; }
+    to { transform: translateY(0); opacity: 1; }
+}
+
+.ai-panel-header {
+    padding: 1rem;
+    border-bottom: 1px solid #e9ecef;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    background: linear-gradient(135deg, #f8f9fa, #e9ecef);
+    border-radius: 12px 12px 0 0;
+}
+
+.ai-panel-content {
+    padding: 1rem;
+    max-height: 300px;
+    overflow-y: auto;
+}
+
+.ai-section {
+    margin-bottom: 1rem;
+}
+
+.ai-section:last-child {
+    margin-bottom: 0;
+}
+
+.ai-section-title {
+    font-size: 0.8rem;
+    color: #495057;
+    margin-bottom: 0.5rem;
+    font-weight: 600;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+}
+
+.ai-quick-actions {
+    display: grid;
+    gap: 0.5rem;
+}
+
+.ai-quick-action {
+    display: flex;
+    align-items: center;
+    padding: 0.5rem;
+    background: #f8f9fa;
+    border: 1px solid #e9ecef;
+    border-radius: 6px;
+    cursor: pointer;
+    transition: all 0.2s ease;
+    text-decoration: none;
+    color: inherit;
+    font-size: 0.8rem;
+}
+
+.ai-quick-action:hover {
+    background: #e3f2fd;
+    border-color: #2196f3;
+    color: inherit;
+    text-decoration: none;
+}
+
+.ai-quick-action-icon {
+    width: 24px;
+    height: 24px;
+    background: #007bff;
+    color: white;
+    border-radius: 4px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    margin-right: 0.5rem;
+    flex-shrink: 0;
+}
+
+.ai-status-grid {
+    display: grid;
+    grid-template-columns: repeat(2, 1fr);
+    gap: 0.5rem;
+    font-size: 0.8rem;
+}
+
+.ai-status-item {
+    text-align: center;
+    padding: 0.5rem;
+    background: #f8f9fa;
+    border-radius: 4px;
+}
+
+.ai-status-value {
+    font-weight: bold;
+    color: #007bff;
+    display: block;
+    font-size: 1rem;
+}
+
+.ai-status-label {
+    color: #6c757d;
+    font-size: 0.7rem;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+}
+
+.ai-panel-footer {
+    padding: 0.75rem 1rem;
+    border-top: 1px solid #e9ecef;
+    background: #f8f9fa;
+    border-radius: 0 0 12px 12px;
+    text-align: center;
+}
+
+.ai-badge {
+    background: linear-gradient(135deg, #4285f4, #34a853);
+    color: white;
+    padding: 0.2rem 0.5rem;
+    border-radius: 8px;
+    font-size: 0.6rem;
+    font-weight: 500;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+}
+
+.ai-loading {
+    text-align: center;
+    padding: 0.5rem;
+    color: #6c757d;
+    font-size: 0.8rem;
+}
+
+/* Mobile Responsiveness */
+@media (max-width: 768px) {
+    .unified-floating-assistant {
+        bottom: 15px;
+        right: 15px;
+    }
+    
+    .main-fab {
+        width: 50px;
+        height: 50px;
+    }
+    
+    .fab-action-btn {
+        width: 40px;
+        height: 40px;
+    }
+    
+    .fab-actions {
+        bottom: 65px;
+    }
+    
+    .ai-panel {
+        width: calc(100vw - 30px);
+        right: -15px;
+        bottom: 65px;
+    }
+    
+    .voice-status {
+        right: 50px;
+        bottom: 65px;
+    }
+    
+    .fab-label {
+        display: none;
+    }
+}
+
+@media (max-width: 480px) {
+    .ai-panel {
+        width: calc(100vw - 20px);
+        right: -10px;
+    }
+}
+</style>
+
+<script>
+let fabOpen = false;
+let voiceActive = false;
+let aiPanelOpen = false;
+
+function toggleMainFAB() {
+    const mainFab = document.getElementById('main-fab');
+    const fabActions = document.getElementById('fab-actions');
+    const mainIcon = mainFab.querySelector('.main-icon');
+    const closeIcon = mainFab.querySelector('.close-icon');
+    
+    if (fabOpen) {
+        closeFAB();
+    } else {
+        openFAB();
+    }
+}
+
+function openFAB() {
+    const mainFab = document.getElementById('main-fab');
+    const fabActions = document.getElementById('fab-actions');
+    const mainIcon = mainFab.querySelector('.main-icon');
+    const closeIcon = mainFab.querySelector('.close-icon');
+    
+    fabOpen = true;
+    mainFab.classList.add('active');
+    fabActions.style.display = 'flex';
+    mainIcon.style.display = 'none';
+    closeIcon.style.display = 'inline';
+    
+    if (typeof feather !== 'undefined') {
+        feather.replace();
+    }
+}
+
+function closeFAB() {
+    const mainFab = document.getElementById('main-fab');
+    const fabActions = document.getElementById('fab-actions');
+    const mainIcon = mainFab.querySelector('.main-icon');
+    const closeIcon = mainFab.querySelector('.close-icon');
+    
+    fabOpen = false;
+    mainFab.classList.remove('active');
+    fabActions.style.display = 'none';
+    mainIcon.style.display = 'inline';
+    closeIcon.style.display = 'none';
+    
+    // Close any open panels
+    closeAIPanel();
+    stopVoice();
+}
+
+function toggleDictation() {
+    if (window.dictationManager) {
+        window.dictationManager.toggleDictation();
+        updateVoiceStatus();
+    } else {
+        alert('{{ _("Voice input not available") }}');
+    }
+}
+
+function updateVoiceStatus() {
+    const voiceStatus = document.getElementById('voice-status');
+    const voiceFab = document.getElementById('voice-fab').querySelector('.fab-action-btn');
+    
+    if (window.dictationManager && window.dictationManager.isListening) {
+        voiceActive = true;
+        voiceStatus.style.display = 'flex';
+        voiceFab.classList.add('active');
+    } else {
+        voiceActive = false;
+        voiceStatus.style.display = 'none';
+        voiceFab.classList.remove('active');
+    }
+}
+
+function stopVoice() {
+    if (window.dictationManager && window.dictationManager.isListening) {
+        window.dictationManager.stopListening();
+        updateVoiceStatus();
+    }
+}
+
+function toggleAIPanel() {
+    if (aiPanelOpen) {
+        closeAIPanel();
+    } else {
+        openAIPanel();
+    }
+}
+
+function openAIPanel() {
+    const aiPanel = document.getElementById('ai-panel');
+    const aiFab = document.getElementById('ai-fab').querySelector('.fab-action-btn');
+    
+    aiPanelOpen = true;
+    aiPanel.style.display = 'block';
+    aiFab.classList.add('active');
+    
+    loadAIQuickActions();
+    loadAIStatus();
+    
+    if (typeof feather !== 'undefined') {
+        feather.replace();
+    }
+}
+
+function closeAIPanel() {
+    const aiPanel = document.getElementById('ai-panel');
+    const aiFab = document.getElementById('ai-fab').querySelector('.fab-action-btn');
+    
+    aiPanelOpen = false;
+    aiPanel.style.display = 'none';
+    aiFab.classList.remove('active');
+}
+
+function openGmail() {
+    window.location.href = '/gmail/complete-interface';
+}
+
+function openQuickTask() {
+    window.location.href = '/tasks/create';
+}
+
+async function loadAIQuickActions() {
+    try {
+        const response = await fetch('/ai-assistant/quick-actions');
+        const data = await response.json();
+        
+        if (data.success) {
+            displayAIQuickActions(data.actions.slice(0, 4)); // Show top 4 actions
+        }
+    } catch (error) {
+        console.log('Failed to load AI actions:', error);
+        document.getElementById('ai-quick-actions').innerHTML = `
+            <div class="text-muted small">{{ _('Actions unavailable') }}</div>
+        `;
+    }
+}
+
+function displayAIQuickActions(actions) {
+    const container = document.getElementById('ai-quick-actions');
+    
+    let html = '';
+    actions.forEach(action => {
+        const onclick = action.action || (action.url ? `window.location.href='${action.url}'` : 'void(0)');
+        html += `
+            <div class="ai-quick-action" onclick="${onclick}">
+                <div class="ai-quick-action-icon">
+                    <i data-feather="${action.icon}" style="width: 14px; height: 14px;"></i>
+                </div>
+                <div class="ai-quick-action-title">${action.title}</div>
+            </div>
+        `;
+    });
+    
+    container.innerHTML = html;
+    
+    if (typeof feather !== 'undefined') {
+        feather.replace();
+    }
+}
+
+async function loadAIStatus() {
+    try {
+        const response = await fetch('/ai-assistant/status');
+        const data = await response.json();
+        
+        if (data.success) {
+            displayAIStatus(data.status);
+        }
+    } catch (error) {
+        console.log('Failed to load AI status:', error);
+        document.getElementById('ai-status-grid').innerHTML = `
+            <div class="text-muted small">{{ _('Status unavailable') }}</div>
+        `;
+    }
+}
+
+function displayAIStatus(status) {
+    const container = document.getElementById('ai-status-grid');
+    
+    const html = `
+        <div class="ai-status-item">
+            <span class="ai-status-value">${status.quick_stats.pending_tasks}</span>
+            <span class="ai-status-label">{{ _('Tasks') }}</span>
+        </div>
+        <div class="ai-status-item">
+            <span class="ai-status-value">${status.quick_stats.today_tasks}</span>
+            <span class="ai-status-label">{{ _('Today') }}</span>
+        </div>
+    `;
+    
+    container.innerHTML = html;
+}
+
+// Close FAB when clicking outside
+document.addEventListener('click', function(e) {
+    if (fabOpen && !e.target.closest('.unified-floating-assistant')) {
+        closeFAB();
+    }
+});
+
+// Listen for dictation events
+document.addEventListener('dictationStateChanged', function(e) {
+    updateVoiceStatus();
+});
+
+// Initialize
+document.addEventListener('DOMContentLoaded', function() {
+    if (typeof feather !== 'undefined') {
+        feather.replace();
+    }
+});
+</script>

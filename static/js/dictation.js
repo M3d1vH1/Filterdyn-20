@@ -37,16 +37,9 @@ class DictationManager {
     }
 
     createFloatingButton() {
-        // Only create if not already exists
-        if (document.getElementById('floating-dictation-btn')) {
-            console.log('Floating dictation button already exists');
-            return;
-        }
-
-        console.log('Creating floating dictation button...');
-        this.floatingButton = document.createElement('div');
-        this.floatingButton.id = 'floating-dictation-btn';
-        this.floatingButton.className = 'floating-dictation-btn';
+        // Skip creating separate dictation button - now integrated into unified FAB
+        console.log('Dictation integrated into unified FAB');
+        return;
         this.floatingButton.innerHTML = `
             <div class="dictation-btn-content">
                 <i data-feather="mic" class="dictation-icon"></i>

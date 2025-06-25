@@ -1,0 +1,163 @@
+<!-- Gmail API Endpoints for AJAX calls -->
+<script>
+// Gmail API endpoints for the complete interface
+class GmailAPI {
+    static async getMessages(folder = 'inbox', page = 1) {
+        try {
+            const response = await fetch(`/gmail/api/messages?folder=${folder}&page=${page}`);
+            return await response.json();
+        } catch (error) {
+            console.error('Failed to get messages:', error);
+            return { success: false, error: error.message };
+        }
+    }
+    
+    static async searchMessages(query, folder = 'inbox') {
+        try {
+            const response = await fetch('/gmail/api/search', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ query, folder })
+            });
+            return await response.json();
+        } catch (error) {
+            console.error('Search failed:', error);
+            return { success: false, error: error.message };
+        }
+    }
+    
+    static async analyzeMessage(messageId) {
+        try {
+            const response = await fetch(`/gmail/ai/analyze`, {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ message_id: messageId })
+            });
+            return await response.json();
+        } catch (error) {
+            console.error('Analysis failed:', error);
+            return { success: false, error: error.message };
+        }
+    }
+    
+    static async bulkAnalyze(messageIds) {
+        try {
+            const response = await fetch('/gmail/ai/bulk-analyze', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ message_ids: messageIds })
+            });
+            return await response.json();
+        } catch (error) {
+            console.error('Bulk analysis failed:', error);
+            return { success: false, error: error.message };
+        }
+    }
+    
+    static async markAsRead(messageIds) {
+        try {
+            const response = await fetch('/gmail/api/mark-read', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ message_ids: messageIds })
+            });
+            return await response.json();
+        } catch (error) {
+            console.error('Mark as read failed:', error);
+            return { success: false, error: error.message };
+        }
+    }
+    
+    static async toggleStar(messageId) {
+        try {
+            const response = await fetch('/gmail/api/toggle-star', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ message_id: messageId })
+            });
+            return await response.json();
+        } catch (error) {
+            console.error('Toggle star failed:', error);
+            return { success: false, error: error.message };
+        }
+    }
+    
+    static async syncAccount() {
+        try {
+            const response = await fetch('/gmail/api/sync', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' }
+            });
+            return await response.json();
+        } catch (error) {
+            console.error('Sync failed:', error);
+            return { success: false, error: error.message };
+        }
+    }
+    
+    static async getAccountInfo() {
+        try {
+            const response = await fetch('/gmail/api/account-info');
+            return await response.json();
+        } catch (error) {
+            console.error('Get account info failed:', error);
+            return { success: false, error: error.message };
+        }
+    }
+    
+    static async sendEmail(emailData) {
+        try {
+            const response = await fetch('/gmail/api/send', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify(emailData)
+            });
+            return await response.json();
+        } catch (error) {
+            console.error('Send email failed:', error);
+            return { success: false, error: error.message };
+        }
+    }
+    
+    static async aiSmartSearch(naturalQuery) {
+        try {
+            const response = await fetch('/gmail/ai/smart-search', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ query: naturalQuery })
+            });
+            return await response.json();
+        } catch (error) {
+            console.error('AI smart search failed:', error);
+            return { success: false, error: error.message };
+        }
+    }
+    
+    static async getAIInsights(messageId) {
+        try {
+            const response = await fetch(`/gmail/ai/insights/${messageId}`);
+            return await response.json();
+        } catch (error) {
+            console.error('Get AI insights failed:', error);
+            return { success: false, error: error.message };
+        }
+    }
+    
+    static async generateResponse(messageId, context = {}) {
+        try {
+            const response = await fetch('/gmail/ai/generate-response', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ message_id: messageId, context })
+            });
+            return await response.json();
+        } catch (error) {
+            console.error('Generate response failed:', error);
+            return { success: false, error: error.message };
+        }
+    }
+}
+
+// Make GmailAPI globally available
+window.GmailAPI = GmailAPI;
+</script>

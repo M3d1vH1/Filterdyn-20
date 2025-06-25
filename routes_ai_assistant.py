@@ -21,7 +21,7 @@ def get_quick_actions():
             'title': _('Gmail Inbox'),
             'description': _('Access Gmail with AI analysis'),
             'icon': 'mail',
-            'url': url_for('gmail_enhanced.enhanced_inbox') if 'gmail_enhanced' in current_app.blueprints else url_for('gmail.inbox'),
+            'url': url_for('gmail_enhanced.complete_interface') if 'gmail_enhanced' in current_app.blueprints else url_for('gmail.inbox'),
             'category': 'email'
         },
         {

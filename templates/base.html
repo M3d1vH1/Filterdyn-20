@@ -14,7 +14,6 @@
     
     <!-- Custom CSS -->
     <link href="{{ url_for('static', filename='css/filterdyn.css') }}" rel="stylesheet">
-    <link href="{{ url_for('static', filename='css/floating-buttons.css') }}" rel="stylesheet">
     
     <!-- Additional CSS -->
     {% block css %}{% endblock %}
@@ -232,7 +231,6 @@
     <script src="{{ url_for('static', filename='js/main.js') }}"></script>
     
     <!-- Enhanced AI Systems -->
-    <script src="{{ url_for('static', filename='js/floating-buttons-coordinator.js') }}"></script>
     <script src="{{ url_for('static', filename='js/dictation.js') }}"></script>
     <script src="{{ url_for('static', filename='js/ai-dictation.js') }}"></script>
     <script src="{{ url_for('static', filename='js/gmail-ai-enhanced.js') }}"></script>
@@ -240,9 +238,9 @@
     <!-- Additional JS -->
     {% block js %}{% endblock %}
     
-    <!-- AI Assistant Floating Button -->
+    <!-- Unified Floating Assistant -->
     {% if current_user.is_authenticated %}
-        {% include 'ai_assistant/floating_button.html' %}
+        {% include 'ai_assistant/unified_floating_button.html' %}
     {% endif %}
     
     <!-- Initialize page-specific features -->
