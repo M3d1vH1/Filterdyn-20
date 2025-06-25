@@ -51,92 +51,13 @@ def logout():
 
 @auth_bp.route('/google/login')
 def google_login():
-    """Initiate Google OAuth login"""
-    client_id = os.environ.get('GOOGLE_CLIENT_ID', '').strip()
-    if not client_id:
-        return "Google OAuth is not configured. Please contact your administrator.", 500
-    
-    # Get the current domain dynamically - use external domain for Replit
-    if 'replit.dev' in request.host or 'kirk.replit.dev' in request.host:
-        redirect_uri = f"https://{request.host}/auth/google/callback"
-    else:
-        redirect_uri = request.url_root.rstrip('/') + '/auth/google/callback'
-    
-    # Google OAuth parameters
-    params = {
-        'client_id': client_id,
-        'redirect_uri': redirect_uri,
-        'scope': 'https://www.googleapis.com/auth/gmail.readonly https://www.googleapis.com/auth/gmail.send https://www.googleapis.com/auth/gmail.modify https://www.googleapis.com/auth/userinfo.email',
-        'response_type': 'code',
-        'access_type': 'offline',
-        'prompt': 'consent'
-    }
-    
-    auth_url = 'https://accounts.google.com/o/oauth2/v2/auth?' + urlencode(params)
-    return redirect(auth_url)
+    """Redirect to Gmail OAuth flow"""
+    return redirect(url_for('gmail.connect'))
 
 @auth_bp.route('/google/callback')
 def google_callback():
-    """Handle Google OAuth callback"""
-    code = request.args.get('code')
-    error = request.args.get('error')
-    
-    if error:
-        flash(f'Google authentication failed: {error}', 'error')
-        return redirect(url_for('main.ai_assistant'))
-    
-    if not code:
-        flash('No authorization code received from Google', 'error')
-        return redirect(url_for('main.ai_assistant'))
-    
-    # Exchange code for tokens
-    client_id = os.environ.get('GOOGLE_CLIENT_ID', '').strip()
-    client_secret = os.environ.get('GOOGLE_CLIENT_SECRET', '').strip()
-    
-    if not client_id or not client_secret:
-        flash('Google OAuth credentials not configured', 'error')
-        return redirect(url_for('main.ai_assistant'))
-    
-    redirect_uri = request.url_root.rstrip('/') + '/auth/google/callback'
-    
-    token_data = {
-        'code': code,
-        'client_id': client_id,
-        'client_secret': client_secret,
-        'redirect_uri': redirect_uri,
-        'grant_type': 'authorization_code'
-    }
-    
-    try:
-        # Get access token
-        token_response = requests.post('https://oauth2.googleapis.com/token', data=token_data)
-        token_response.raise_for_status()
-        tokens = token_response.json()
-        
-        # Store tokens in session (in production, store in database)
-        session['google_access_token'] = tokens.get('access_token')
-        session['google_refresh_token'] = tokens.get('refresh_token')
-        
-        # Get user info
-        headers = {'Authorization': f'Bearer {tokens["access_token"]}'}
-        user_response = requests.get('https://www.googleapis.com/oauth2/v2/userinfo', headers=headers)
-        user_response.raise_for_status()
-        user_info = user_response.json()
-        
-        session['google_email'] = user_info.get('email')
-        session['google_connected'] = True
-        
-        # Check if user is logged in, if not redirect to login with success message
-        from flask_login import current_user
-        if current_user.is_authenticated:
-            flash(f'Successfully connected Gmail account: {user_info.get("email")}', 'success')
-            return redirect(url_for('main.gmail_inbox'))
-        else:
-            flash(f'Gmail connected: {user_info.get("email")}. Please log in to continue.', 'success')
-            return redirect(url_for('auth.login'))
-        
-    except requests.exceptions.RequestException as e:
-        return f'Failed to connect Gmail: {str(e)}', 500
+    """Redirect to Gmail OAuth callback"""
+    return redirect(url_for('gmail.oauth_callback', **request.args))
 
 @auth_bp.route('/google/disconnect')
 @login_required

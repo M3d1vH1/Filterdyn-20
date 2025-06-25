@@ -16,12 +16,13 @@ gmail_bp = Blueprint('gmail', __name__, url_prefix='/gmail')
 @login_required
 def connect():
     """Initiate Gmail OAuth connection"""
-    if current_user.role not in ['admin', 'superadmin', 'manager']:
-        flash(_('Access denied. Gmail integration requires admin or manager permissions.'), 'error')
-        return redirect(url_for('main.dashboard'))
-    
     try:
-        redirect_uri = url_for('gmail.oauth_callback', _external=True)
+        # Use external URL for proper OAuth redirect
+        if 'replit.dev' in request.host:
+            redirect_uri = f"https://{request.host}/gmail/oauth-callback"
+        else:
+            redirect_uri = url_for('gmail.oauth_callback', _external=True)
+            
         flow = GmailService.get_flow(redirect_uri)
         authorization_url, state = flow.authorization_url(
             access_type='offline',
@@ -37,16 +38,31 @@ def connect():
         return redirect(url_for('main.ai_assistant'))
 
 @gmail_bp.route('/oauth-callback')
-@login_required
 def oauth_callback():
     """Handle Gmail OAuth callback"""
     try:
+        # Check if user is authenticated
+        if not current_user.is_authenticated:
+            flash(_('Please log in first'), 'error')
+            return redirect(url_for('auth.login'))
+            
         state = session.get('gmail_oauth_state')
+        error = request.args.get('error')
+        
+        if error:
+            flash(f'Gmail authentication failed: {error}', 'error')
+            return redirect(url_for('main.ai_assistant'))
+            
         if not state:
             flash(_('Invalid OAuth state'), 'error')
             return redirect(url_for('main.ai_assistant'))
         
-        redirect_uri = url_for('gmail.oauth_callback', _external=True)
+        # Use the same redirect URI format as in connect()
+        if 'replit.dev' in request.host:
+            redirect_uri = f"https://{request.host}/gmail/oauth-callback"
+        else:
+            redirect_uri = url_for('gmail.oauth_callback', _external=True)
+            
         flow = GmailService.get_flow(redirect_uri)
         flow.fetch_token(authorization_response=request.url)
         
