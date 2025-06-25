@@ -82,6 +82,13 @@ def create_app():
     app.register_blueprint(settings_bp)
     app.register_blueprint(gmail_bp)
     
+    # Register enhanced Gmail AI blueprint
+    try:
+        from routes_gmail_enhanced import gmail_enhanced_bp
+        app.register_blueprint(gmail_enhanced_bp)
+    except ImportError:
+        pass
+    
     # Register custom template filters
     from template_filters import register_filters
     register_filters(app)

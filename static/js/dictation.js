@@ -450,6 +450,7 @@ document.addEventListener('DOMContentLoaded', function() {
         console.log('DictationManager already exists');
     }
 });
+});
 
 // Export for global access
 window.DictationManager = DictationManager;

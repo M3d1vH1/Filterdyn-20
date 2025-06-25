@@ -8,8 +8,16 @@ import logging
 from typing import Dict, List, Optional, Any
 from datetime import datetime, timezone
 import google.generativeai as genai
-from models_gmail import GmailMessage, AIEmailAnalysis, AIEmailLearningData
-from models import Customer, Order, Quote, Task
+try:
+    from models_gmail import GmailMessage, AIEmailAnalysis, AIEmailLearningData
+except ImportError:
+    # Fallback for existing models
+    GmailMessage = AIEmailAnalysis = AIEmailLearningData = None
+
+try:
+    from models import Customer, Order, Quote, Task
+except ImportError:
+    Customer = Order = Quote = Task = None
 from app import db
 from flask_login import current_user
 from flask_babel import get_locale

@@ -1,0 +1,615 @@
+{% extends "base.html" %}
+{% block title %}{{ message.subject or _('Email Message') }} - Gmail AI{% endblock %}
+
+{% block css %}
+<link rel="stylesheet" href="{{ url_for('static', filename='css/gmail-ai.css') }}">
+<style>
+.message-container {
+    max-width: 800px;
+    margin: 0 auto;
+}
+
+.message-header {
+    background: white;
+    border: 1px solid #dee2e6;
+    border-radius: 8px;
+    padding: 1.5rem;
+    margin-bottom: 1rem;
+    box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+}
+
+.message-body {
+    background: white;
+    border: 1px solid #dee2e6;
+    border-radius: 8px;
+    padding: 1.5rem;
+    margin-bottom: 1rem;
+    box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+    line-height: 1.6;
+}
+
+.message-actions {
+    background: white;
+    border: 1px solid #dee2e6;
+    border-radius: 8px;
+    padding: 1rem;
+    margin-bottom: 1rem;
+    box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+}
+
+.ai-analysis-panel {
+    background: #f8f9fa;
+    border: 1px solid #e3f2fd;
+    border-radius: 8px;
+    padding: 1.5rem;
+    margin-bottom: 1rem;
+    border-left: 4px solid #2196f3;
+}
+
+.sender-avatar {
+    width: 48px;
+    height: 48px;
+    border-radius: 50%;
+    background: #007bff;
+    color: white;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-weight: bold;
+    font-size: 1.2rem;
+}
+
+.message-meta {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+    gap: 1rem;
+    margin: 1rem 0;
+}
+
+.meta-item {
+    display: flex;
+    flex-direction: column;
+}
+
+.meta-label {
+    font-size: 0.8rem;
+    color: #6c757d;
+    font-weight: 500;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+}
+
+.meta-value {
+    font-weight: 500;
+    margin-top: 0.25rem;
+}
+
+.attachment-list {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0.5rem;
+    margin: 1rem 0;
+}
+
+.attachment-item {
+    background: #f8f9fa;
+    border: 1px solid #dee2e6;
+    border-radius: 6px;
+    padding: 0.5rem 0.75rem;
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    font-size: 0.875rem;
+}
+
+.reply-box {
+    background: white;
+    border: 1px solid #dee2e6;
+    border-radius: 8px;
+    padding: 1.5rem;
+    box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+}
+
+.entity-links-panel {
+    background: #fff3cd;
+    border: 1px solid #ffeaa7;
+    border-radius: 8px;
+    padding: 1rem;
+    margin: 1rem 0;
+}
+
+.entity-match {
+    background: white;
+    border: 1px solid #dee2e6;
+    border-radius: 6px;
+    padding: 0.75rem;
+    margin: 0.5rem 0;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+}
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="container-fluid">
+    <div class="message-container">
+        <!-- Header with back button -->
+        <div class="d-flex justify-content-between align-items-center mb-3">
+            <a href="{{ url_for('gmail_enhanced.enhanced_inbox') }}" class="btn btn-outline-secondary">
+                <i data-feather="arrow-left"></i> {{ _('Back to Inbox') }}
+            </a>
+            <div class="btn-group">
+                <button class="btn btn-outline-primary" onclick="replyToMessage()">
+                    <i data-feather="reply"></i> {{ _('Reply') }}
+                </button>
+                <button class="btn btn-outline-success" onclick="forwardMessage()">
+                    <i data-feather="corner-up-right"></i> {{ _('Forward') }}
+                </button>
+                <div class="btn-group">
+                    <button type="button" class="btn btn-outline-secondary dropdown-toggle" data-bs-toggle="dropdown">
+                        <i data-feather="more-horizontal"></i>
+                    </button>
+                    <ul class="dropdown-menu">
+                        <li><a class="dropdown-item" href="#" onclick="markAsRead()">{{ _('Mark as Read') }}</a></li>
+                        <li><a class="dropdown-item" href="#" onclick="markAsUnread()">{{ _('Mark as Unread') }}</a></li>
+                        <li><hr class="dropdown-divider"></li>
+                        <li><a class="dropdown-item" href="#" onclick="deleteMessage()">{{ _('Delete') }}</a></li>
+                    </ul>
+                </div>
+            </div>
+        </div>
+
+        <!-- Message Header -->
+        <div class="message-header">
+            <div class="d-flex align-items-start mb-3">
+                <div class="sender-avatar me-3">
+                    {{ (message.sender.split()[0][0] if message.sender and message.sender.split() else 'U')|upper }}
+                </div>
+                <div class="flex-grow-1">
+                    <h4 class="mb-1">{{ message.subject or _('(No Subject)') }}</h4>
+                    <div class="d-flex align-items-center text-muted mb-2">
+                        <span class="me-3">
+                            <strong>{{ _('From:') }}</strong> {{ message.sender or _('Unknown Sender') }}
+                        </span>
+                        <span>
+                            <strong>{{ _('Date:') }}</strong> 
+                            {{ message.received_at.strftime('%Y-%m-%d %H:%M') if message.received_at else _('Unknown') }}
+                        </span>
+                    </div>
+                    {% if message.recipients %}
+                    <div class="text-muted mb-2">
+                        <strong>{{ _('To:') }}</strong> {{ message.recipients }}
+                    </div>
+                    {% endif %}
+                    {% if message.cc %}
+                    <div class="text-muted mb-2">
+                        <strong>{{ _('CC:') }}</strong> {{ message.cc }}
+                    </div>
+                    {% endif %}
+                </div>
+            </div>
+
+            <!-- Message Meta Information -->
+            <div class="message-meta">
+                <div class="meta-item">
+                    <span class="meta-label">{{ _('Status') }}</span>
+                    <span class="meta-value">
+                        {% if message.is_read %}
+                            <span class="badge bg-success">{{ _('Read') }}</span>
+                        {% else %}
+                            <span class="badge bg-primary">{{ _('Unread') }}</span>
+                        {% endif %}
+                        {% if message.is_important %}
+                            <span class="badge bg-warning ms-1">{{ _('Important') }}</span>
+                        {% endif %}
+                    </span>
+                </div>
+                
+                {% if message.has_attachments %}
+                <div class="meta-item">
+                    <span class="meta-label">{{ _('Attachments') }}</span>
+                    <span class="meta-value">{{ message.attachments|length if message.attachments else _('Yes') }}</span>
+                </div>
+                {% endif %}
+                
+                {% if analysis %}
+                <div class="meta-item">
+                    <span class="meta-label">{{ _('AI Analysis') }}</span>
+                    <span class="meta-value">
+                        <span class="badge bg-info">{{ _('Analyzed') }}</span>
+                    </span>
+                </div>
+                {% endif %}
+            </div>
+
+            <!-- Attachments -->
+            {% if message.attachments %}
+            <div class="attachment-list">
+                <strong class="w-100 mb-2">{{ _('Attachments:') }}</strong>
+                {% for attachment in message.attachments %}
+                <div class="attachment-item">
+                    <i data-feather="paperclip"></i>
+                    <span>{{ attachment.filename }}</span>
+                    <span class="text-muted ms-1">({{ (attachment.size/1024)|round|int }} KB)</span>
+                    <a href="{{ url_for('gmail.download_attachment', attachment_id=attachment.attachment_id) }}" 
+                       class="btn btn-sm btn-outline-primary ms-2">
+                        <i data-feather="download"></i>
+                    </a>
+                </div>
+                {% endfor %}
+            </div>
+            {% endif %}
+        </div>
+
+        <!-- AI Analysis Panel -->
+        {% if analysis %}
+        <div class="ai-analysis-panel">
+            <h5 class="mb-3">
+                <i data-feather="cpu" class="me-2"></i>
+                {{ _('AI Analysis') }}
+                <span class="ai-badge ms-2">Gemini</span>
+            </h5>
+            
+            <div class="analysis-grid">
+                <div class="analysis-item">
+                    <span class="label">{{ _('Sentiment') }}</span>
+                    <span class="value sentiment-{{ analysis.sentiment }}">{{ analysis.sentiment|title }}</span>
+                </div>
+                <div class="analysis-item">
+                    <span class="label">{{ _('Intent') }}</span>
+                    <span class="value">{{ analysis.intent|title }}</span>
+                </div>
+                {% if analysis.entities and analysis.entities.get('urgency') %}
+                <div class="analysis-item">
+                    <span class="label">{{ _('Urgency') }}</span>
+                    <span class="value urgency-{{ analysis.entities.urgency }}">{{ analysis.entities.urgency|title }}</span>
+                </div>
+                {% endif %}
+                <div class="analysis-item">
+                    <span class="label">{{ _('Confidence') }}</span>
+                    <span class="value">{{ (analysis.confidence_score * 100)|round|int }}%</span>
+                </div>
+            </div>
+
+            {% if analysis.key_info %}
+            <div class="key-info mt-3">
+                <h6>{{ _('Key Information') }}</h6>
+                <ul class="mb-0">
+                    {% for key, value in analysis.key_info.items() %}
+                        {% if value %}
+                        <li><strong>{{ key|title }}:</strong> 
+                            {% if value is iterable and value is not string %}
+                                {{ value|join(', ') }}
+                            {% else %}
+                                {{ value }}
+                            {% endif %}
+                        </li>
+                        {% endif %}
+                    {% endfor %}
+                </ul>
+            </div>
+            {% endif %}
+
+            {% if analysis.entities %}
+            <div class="action-items mt-3">
+                <h6>{{ _('Extracted Entities') }}</h6>
+                <div class="entity-list">
+                    {% for category, items in analysis.entities.items() %}
+                        {% if items and items is iterable and items is not string %}
+                        <div class="entity-category">
+                            <strong>{{ category|replace('_', ' ')|title }}:</strong>
+                            {% for item in items %}
+                                <span class="badge bg-light text-dark me-1">{{ item }}</span>
+                            {% endfor %}
+                        </div>
+                        {% endif %}
+                    {% endfor %}
+                </div>
+            </div>
+            {% endif %}
+        </div>
+        {% else %}
+        <!-- No Analysis - Offer to Analyze -->
+        <div class="ai-analysis-panel text-center">
+            <h6>{{ _('AI Analysis Not Available') }}</h6>
+            <p class="text-muted">{{ _('Analyze this email to get insights about sentiment, intent, and key information.') }}</p>
+            <button class="btn btn-primary" onclick="analyzeThisMessage()">
+                <i data-feather="cpu"></i> {{ _('Analyze with AI') }}
+            </button>
+        </div>
+        {% endif %}
+
+        <!-- Business Entity Links -->
+        {% if message.customer or message.order or message.quote or message.task %}
+        <div class="entity-links-panel">
+            <h6>{{ _('Linked Business Records') }}</h6>
+            <div class="entity-matches">
+                {% if message.customer %}
+                <div class="entity-match">
+                    <div>
+                        <i data-feather="user" class="me-2"></i>
+                        <strong>{{ _('Customer:') }}</strong> {{ message.customer.name }}
+                    </div>
+                    <a href="{{ url_for('main.view_customer', id=message.customer.id) }}" class="btn btn-sm btn-outline-primary">
+                        {{ _('View') }}
+                    </a>
+                </div>
+                {% endif %}
+                
+                {% if message.order %}
+                <div class="entity-match">
+                    <div>
+                        <i data-feather="shopping-cart" class="me-2"></i>
+                        <strong>{{ _('Order:') }}</strong> {{ message.order.order_number }}
+                    </div>
+                    <a href="{{ url_for('main.view_order', id=message.order.id) }}" class="btn btn-sm btn-outline-primary">
+                        {{ _('View') }}
+                    </a>
+                </div>
+                {% endif %}
+                
+                {% if message.quote %}
+                <div class="entity-match">
+                    <div>
+                        <i data-feather="file-text" class="me-2"></i>
+                        <strong>{{ _('Quote:') }}</strong> {{ message.quote.quote_number }}
+                    </div>
+                    <a href="{{ url_for('main.view_quote', id=message.quote.id) }}" class="btn btn-sm btn-outline-primary">
+                        {{ _('View') }}
+                    </a>
+                </div>
+                {% endif %}
+                
+                {% if message.task %}
+                <div class="entity-match">
+                    <div>
+                        <i data-feather="check-square" class="me-2"></i>
+                        <strong>{{ _('Task:') }}</strong> {{ message.task.title }}
+                    </div>
+                    <a href="{{ url_for('main.view_task', id=message.task.id) }}" class="btn btn-sm btn-outline-primary">
+                        {{ _('View') }}
+                    </a>
+                </div>
+                {% endif %}
+            </div>
+        </div>
+        {% else %}
+        <!-- Suggest Entity Links -->
+        <div class="entity-links-panel">
+            <h6>{{ _('Link to Business Records') }}</h6>
+            <p class="text-muted">{{ _('Connect this email to customers, orders, quotes, or tasks for better organization.') }}</p>
+            <button class="btn btn-outline-info" onclick="suggestEntityLinks()">
+                <i data-feather="link"></i> {{ _('Find Connections') }}
+            </button>
+        </div>
+        {% endif %}
+
+        <!-- Message Body -->
+        <div class="message-body">
+            {% if message.body_html %}
+                {{ message.body_html|safe }}
+            {% elif message.body_plain %}
+                <pre style="white-space: pre-wrap; font-family: inherit;">{{ message.body_plain }}</pre>
+            {% else %}
+                <div class="text-muted text-center py-3">
+                    {{ _('Message content not available') }}
+                </div>
+            {% endif %}
+        </div>
+
+        <!-- Quick Actions -->
+        <div class="message-actions">
+            <h6>{{ _('Quick Actions') }}</h6>
+            <div class="d-flex gap-2 flex-wrap">
+                <button class="btn btn-outline-primary" onclick="quickReply()">
+                    <i data-feather="reply"></i> {{ _('Quick Reply') }}
+                </button>
+                <button class="btn btn-outline-success" onclick="generateAIResponse()">
+                    <i data-feather="zap"></i> {{ _('AI Suggest Reply') }}
+                </button>
+                <button class="btn btn-outline-info" onclick="createTaskFromEmail()">
+                    <i data-feather="plus-square"></i> {{ _('Create Task') }}
+                </button>
+                <button class="btn btn-outline-warning" onclick="addToCalendar()">
+                    <i data-feather="calendar"></i> {{ _('Add to Calendar') }}
+                </button>
+            </div>
+        </div>
+
+        <!-- AI Response Box (Hidden by default) -->
+        <div id="ai-response-box" class="reply-box" style="display: none;">
+            <h6>{{ _('AI Generated Response') }}</h6>
+            <div id="ai-response-content"></div>
+            <div class="mt-3">
+                <button class="btn btn-success" onclick="useAIResponse()">
+                    <i data-feather="check"></i> {{ _('Use This Response') }}
+                </button>
+                <button class="btn btn-outline-secondary" onclick="hideAIResponse()">
+                    {{ _('Cancel') }}
+                </button>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block js %}
+<script src="{{ url_for('static', filename='js/gmail-ai-enhanced.js') }}"></script>
+<script>
+const messageId = '{{ message.message_id }}';
+
+async function analyzeThisMessage() {
+    const btn = event.target;
+    const originalText = btn.innerHTML;
+    
+    btn.innerHTML = '<span class="spinner-border spinner-border-sm me-2"></span>{{ _("Analyzing...") }}';
+    btn.disabled = true;
+    
+    try {
+        const response = await fetch('/gmail/ai/analyze', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({
+                email_text: '{{ (message.body_plain or message.snippet)[:500] }}',
+                language: '{{ current_locale }}'
+            })
+        });
+        
+        if (response.ok) {
+            location.reload(); // Refresh to show analysis
+        } else {
+            alert('{{ _("Analysis failed") }}');
+        }
+    } catch (error) {
+        alert('{{ _("Network error") }}');
+    } finally {
+        btn.innerHTML = originalText;
+        btn.disabled = false;
+    }
+}
+
+async function generateAIResponse() {
+    const emailContent = '{{ (message.body_plain or message.snippet) }}';
+    const context = 'Reply to: {{ message.subject }}';
+    
+    try {
+        const response = await fetch('/gmail/ai/suggest', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({
+                email_text: emailContent,
+                context: context,
+                language: '{{ current_locale }}',
+                tone: 'professional'
+            })
+        });
+        
+        const data = await response.json();
+        if (data.success) {
+            displayAIResponse(data.suggestion);
+        } else {
+            alert('{{ _("AI response generation failed") }}');
+        }
+    } catch (error) {
+        alert('{{ _("Network error") }}');
+    }
+}
+
+function displayAIResponse(suggestion) {
+    const responseBox = document.getElementById('ai-response-box');
+    const responseContent = document.getElementById('ai-response-content');
+    
+    responseContent.innerHTML = `
+        <div class="mb-3">
+            <strong>{{ _("Subject:") }}</strong>
+            <div class="suggestion-text">${suggestion.subject || 'Re: {{ message.subject }}'}</div>
+        </div>
+        <div class="mb-3">
+            <strong>{{ _("Response:") }}</strong>
+            <div class="suggestion-text">${suggestion.response}</div>
+        </div>
+    `;
+    
+    responseBox.style.display = 'block';
+    responseBox.scrollIntoView({ behavior: 'smooth' });
+    
+    // Store for later use
+    window.currentAIResponse = suggestion;
+}
+
+function useAIResponse() {
+    if (window.currentAIResponse) {
+        // Redirect to compose with pre-filled content
+        const params = new URLSearchParams({
+            to: '{{ message.sender }}',
+            subject: window.currentAIResponse.subject || 'Re: {{ message.subject }}',
+            body: window.currentAIResponse.response
+        });
+        
+        window.location.href = `{{ url_for('gmail_enhanced.enhanced_compose') }}?${params.toString()}`;
+    }
+}
+
+function hideAIResponse() {
+    document.getElementById('ai-response-box').style.display = 'none';
+}
+
+async function suggestEntityLinks() {
+    const emailContent = `
+        From: {{ message.sender }}
+        Subject: {{ message.subject }}
+        
+        {{ (message.body_plain or message.snippet)[:1000] }}
+    `;
+    
+    try {
+        const response = await fetch('/gmail/ai/extract-entities', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ email_text: emailContent })
+        });
+        
+        const data = await response.json();
+        if (data.success) {
+            displayEntitySuggestions(data.entities);
+        } else {
+            alert('{{ _("Entity extraction failed") }}');
+        }
+    } catch (error) {
+        alert('{{ _("Network error") }}');
+    }
+}
+
+function displayEntitySuggestions(entities) {
+    // Implementation for displaying entity suggestions
+    alert('{{ _("Entity suggestions feature coming soon!") }}');
+}
+
+function quickReply() {
+    window.location.href = `{{ url_for('gmail_enhanced.enhanced_compose') }}?to={{ message.sender }}&subject=Re: {{ message.subject }}`;
+}
+
+function replyToMessage() {
+    quickReply();
+}
+
+function forwardMessage() {
+    window.location.href = `{{ url_for('gmail_enhanced.enhanced_compose') }}?subject=Fwd: {{ message.subject }}&body=------- Forwarded Message -------\nFrom: {{ message.sender }}\nSubject: {{ message.subject }}\n\n{{ (message.body_plain or message.snippet) }}`;
+}
+
+function createTaskFromEmail() {
+    const params = new URLSearchParams({
+        title: 'Follow up: {{ message.subject }}',
+        description: 'Email from {{ message.sender }}: {{ (message.snippet or message.subject)[:100] }}'
+    });
+    
+    window.location.href = `{{ url_for('main.create_task') }}?${params.toString()}`;
+}
+
+function addToCalendar() {
+    alert('{{ _("Calendar integration coming soon!") }}');
+}
+
+function markAsRead() {
+    // Implementation for marking as read
+    alert('{{ _("Mark as read feature coming soon!") }}');
+}
+
+function markAsUnread() {
+    // Implementation for marking as unread  
+    alert('{{ _("Mark as unread feature coming soon!") }}');
+}
+
+function deleteMessage() {
+    if (confirm('{{ _("Are you sure you want to delete this message?") }}')) {
+        alert('{{ _("Delete feature coming soon!") }}');
+    }
+}
+
+// Initialize
+document.addEventListener('DOMContentLoaded', function() {
+    feather.replace();
+});
+</script>
+{% endblock %}

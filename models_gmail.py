@@ -4,7 +4,6 @@ Extends the existing model structure with Gmail integration
 """
 from datetime import datetime, timezone
 from app import db
-from models import Tenant, User
 
 class GmailAccount(db.Model):
     __tablename__ = 'gmail_accounts'
@@ -21,8 +20,7 @@ class GmailAccount(db.Model):
     created_at = db.Column(db.DateTime, default=lambda: datetime.now(timezone.utc))
     updated_at = db.Column(db.DateTime, default=lambda: datetime.now(timezone.utc), onupdate=lambda: datetime.now(timezone.utc))
 
-    user = db.relationship('User', backref='gmail_accounts')
-    tenant = db.relationship('Tenant', backref='gmail_accounts')
+    # Relationships will be handled by existing models
     messages = db.relationship('GmailMessage', backref='gmail_account', lazy=True)
 
     __table_args__ = (db.UniqueConstraint('tenant_id', 'user_id', 'email', name='_tenant_user_email_uc'),)
@@ -60,10 +58,7 @@ class GmailMessage(db.Model):
     quote_id = db.Column(db.Integer, db.ForeignKey('quotes.id'), nullable=True)
     task_id = db.Column(db.Integer, db.ForeignKey('tasks.id'), nullable=True)
 
-    customer = db.relationship('Customer', backref='gmail_messages')
-    order = db.relationship('Order', backref='gmail_messages')
-    quote = db.relationship('Quote', backref='gmail_messages')
-    task = db.relationship('Task', backref='gmail_messages')
+    # Business relationships will be handled by existing models
 
 class GmailAttachment(db.Model):
     __tablename__ = 'gmail_attachments'
@@ -102,7 +97,7 @@ class AIEmailAnalysis(db.Model):
     created_at = db.Column(db.DateTime, default=lambda: datetime.now(timezone.utc))
     updated_at = db.Column(db.DateTime, default=lambda: datetime.now(timezone.utc), onupdate=lambda: datetime.now(timezone.utc))
 
-    tenant = db.relationship('Tenant', backref='ai_email_analyses')
+    # Tenant relationship handled by existing models
 
 class AIEmailLearningData(db.Model):
     __tablename__ = 'ai_email_learning_data'
@@ -128,8 +123,7 @@ class AIEmailLearningData(db.Model):
     
     created_at = db.Column(db.DateTime, default=lambda: datetime.now(timezone.utc))
 
-    tenant = db.relationship('Tenant', backref='ai_learning_data')
-    user = db.relationship('User', backref='ai_learning_data')
+    # Relationships handled by existing models
 
 class GmailSync(db.Model):
     __tablename__ = 'gmail_syncs'
@@ -152,4 +146,4 @@ class GmailSync(db.Model):
     
     created_at = db.Column(db.DateTime, default=lambda: datetime.now(timezone.utc))
 
-    gmail_account = db.relationship('GmailAccount', backref='sync_history')
+    # Relationship handled by existing models

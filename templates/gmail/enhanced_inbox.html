@@ -1,0 +1,588 @@
+{% extends "base.html" %}
+{% block title %}{{ _('Gmail Inbox') }} - AI Enhanced{% endblock %}
+
+{% block css %}
+<link rel="stylesheet" href="{{ url_for('static', filename='css/gmail-ai.css') }}">
+<style>
+.message-card {
+    border: 1px solid #dee2e6;
+    border-radius: 8px;
+    margin-bottom: 0.75rem;
+    transition: all 0.2s ease;
+    background: white;
+}
+
+.message-card:hover {
+    border-color: #007bff;
+    box-shadow: 0 2px 8px rgba(0,123,255,0.1);
+    transform: translateY(-1px);
+}
+
+.message-card.unread {
+    border-left: 4px solid #007bff;
+    background: #f8f9ff;
+}
+
+.message-header {
+    padding: 0.75rem 1rem;
+    border-bottom: 1px solid #f1f3f4;
+    display: flex;
+    justify-content: between;
+    align-items: center;
+}
+
+.message-content {
+    padding: 1rem;
+}
+
+.sender-info {
+    display: flex;
+    align-items: center;
+    margin-bottom: 0.5rem;
+}
+
+.sender-avatar {
+    width: 32px;
+    height: 32px;
+    border-radius: 50%;
+    background: #007bff;
+    color: white;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-weight: bold;
+    margin-right: 0.75rem;
+}
+
+.sender-name {
+    font-weight: 600;
+    color: #212529;
+}
+
+.message-time {
+    color: #6c757d;
+    font-size: 0.875rem;
+    margin-left: auto;
+}
+
+.message-subject {
+    font-weight: 500;
+    margin-bottom: 0.5rem;
+    color: #495057;
+}
+
+.message-snippet {
+    color: #6c757d;
+    font-size: 0.875rem;
+    line-height: 1.4;
+}
+
+.message-meta {
+    display: flex;
+    gap: 0.5rem;
+    margin-top: 0.75rem;
+    flex-wrap: wrap;
+}
+
+.ai-analysis-badge {
+    background: #e3f2fd;
+    color: #1976d2;
+    padding: 0.25rem 0.5rem;
+    border-radius: 12px;
+    font-size: 0.75rem;
+    font-weight: 500;
+}
+
+.priority-badge {
+    padding: 0.25rem 0.5rem;
+    border-radius: 12px;
+    font-size: 0.75rem;
+    font-weight: 500;
+}
+
+.priority-high { background: #ffebee; color: #c62828; }
+.priority-medium { background: #fff3e0; color: #ef6c00; }
+.priority-low { background: #e8f5e8; color: #2e7d32; }
+
+.message-actions {
+    padding: 0.5rem 1rem;
+    background: #f8f9fa;
+    border-top: 1px solid #f1f3f4;
+    display: flex;
+    gap: 0.5rem;
+}
+
+.search-bar {
+    margin-bottom: 1.5rem;
+}
+
+.inbox-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 1.5rem;
+    padding-bottom: 1rem;
+    border-bottom: 2px solid #e9ecef;
+}
+
+.inbox-stats {
+    display: flex;
+    gap: 1rem;
+}
+
+.stat-item {
+    text-align: center;
+}
+
+.stat-value {
+    font-size: 1.5rem;
+    font-weight: bold;
+    color: #007bff;
+}
+
+.stat-label {
+    font-size: 0.8rem;
+    color: #6c757d;
+    text-transform: uppercase;
+}
+
+.filter-tabs {
+    margin-bottom: 1rem;
+}
+
+.filter-tab {
+    padding: 0.5rem 1rem;
+    border: 1px solid #dee2e6;
+    background: white;
+    cursor: pointer;
+    transition: all 0.2s ease;
+}
+
+.filter-tab.active {
+    background: #007bff;
+    color: white;
+    border-color: #007bff;
+}
+
+.filter-tab:hover:not(.active) {
+    background: #f8f9fa;
+}
+
+.bulk-actions {
+    background: #f8f9fa;
+    padding: 0.75rem 1rem;
+    border-radius: 6px;
+    margin-bottom: 1rem;
+    display: none;
+}
+
+.bulk-actions.show {
+    display: block;
+}
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="container-fluid">
+    <div class="inbox-header">
+        <div>
+            <h1 class="h2 mb-0">
+                <i data-feather="mail" class="me-2"></i>
+                {{ _('Gmail Inbox') }}
+                <span class="ai-badge ms-2">AI Enhanced</span>
+            </h1>
+            <p class="text-muted mb-0">{{ account.email }}</p>
+        </div>
+        
+        <div class="d-flex gap-2">
+            <button class="btn btn-outline-primary" onclick="syncEmails()">
+                <i data-feather="refresh-cw"></i> {{ _('Sync') }}
+            </button>
+            <a href="{{ url_for('gmail_enhanced.enhanced_compose') }}" class="btn btn-primary">
+                <i data-feather="edit-3"></i> {{ _('Compose') }}
+            </a>
+        </div>
+    </div>
+
+    <!-- Search and Filters -->
+    <div class="row mb-3">
+        <div class="col-md-8">
+            <div class="search-bar">
+                <form method="get" action="{{ url_for('gmail.api_search') }}">
+                    <div class="input-group">
+                        <input type="text" class="form-control" name="q" 
+                               placeholder="{{ _('Search emails...') }}" 
+                               value="{{ request.args.get('q', '') }}">
+                        <button class="btn btn-outline-secondary" type="submit">
+                            <i data-feather="search"></i>
+                        </button>
+                        <button class="btn btn-outline-info" type="button" onclick="aiSearchSuggestions()">
+                            <i data-feather="zap"></i> {{ _('AI Search') }}
+                        </button>
+                    </div>
+                </form>
+            </div>
+        </div>
+        
+        <div class="col-md-4">
+            <div class="inbox-stats">
+                <div class="stat-item">
+                    <div class="stat-value">{{ messages.total }}</div>
+                    <div class="stat-label">{{ _('Total') }}</div>
+                </div>
+                <div class="stat-item">
+                    <div class="stat-value">{{ messages.items|selectattr('is_read', 'equalto', false)|list|length }}</div>
+                    <div class="stat-label">{{ _('Unread') }}</div>
+                </div>
+                <div class="stat-item">
+                    <div class="stat-value">{{ messages.items|selectattr('ai_analysis')|list|length }}</div>
+                    <div class="stat-label">{{ _('AI Analyzed') }}</div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Filter Tabs -->
+    <div class="filter-tabs mb-3">
+        <div class="btn-group" role="group">
+            <button type="button" class="filter-tab active" data-filter="all">
+                {{ _('All') }}
+            </button>
+            <button type="button" class="filter-tab" data-filter="unread">
+                {{ _('Unread') }}
+            </button>
+            <button type="button" class="filter-tab" data-filter="important">
+                {{ _('Important') }}
+            </button>
+            <button type="button" class="filter-tab" data-filter="ai-analyzed">
+                {{ _('AI Analyzed') }}
+            </button>
+        </div>
+    </div>
+
+    <!-- Bulk Actions -->
+    <div class="bulk-actions" id="bulk-actions">
+        <div class="d-flex justify-content-between align-items-center">
+            <span id="selected-count">0 {{ _('messages selected') }}</span>
+            <div class="btn-group btn-group-sm">
+                <button class="btn btn-outline-primary" onclick="markAsRead()">
+                    <i data-feather="mail-open"></i> {{ _('Mark as Read') }}
+                </button>
+                <button class="btn btn-outline-warning" onclick="bulkAnalyze()">
+                    <i data-feather="cpu"></i> {{ _('Bulk AI Analysis') }}
+                </button>
+                <button class="btn btn-outline-secondary" onclick="clearSelection()">
+                    {{ _('Clear Selection') }}
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Messages List -->
+    <div class="messages-container">
+        {% for message in messages.items %}
+        <div class="message-card {% if not message.is_read %}unread{% endif %}" data-message-id="{{ message.message_id }}">
+            <div class="message-header">
+                <div class="form-check">
+                    <input class="form-check-input message-checkbox" type="checkbox" 
+                           value="{{ message.message_id }}" onchange="updateSelection()">
+                </div>
+                <div class="message-time">
+                    {{ message.received_at.strftime('%Y-%m-%d %H:%M') if message.received_at else _('Unknown') }}
+                </div>
+            </div>
+            
+            <div class="message-content">
+                <div class="sender-info">
+                    <div class="sender-avatar">
+                        {{ (message.sender.split()[0][0] if message.sender and message.sender.split() else 'U')|upper }}
+                    </div>
+                    <div class="flex-grow-1">
+                        <div class="sender-name">{{ message.sender or _('Unknown Sender') }}</div>
+                        <div class="message-subject">{{ message.subject or _('(No Subject)') }}</div>
+                    </div>
+                </div>
+                
+                <div class="message-snippet">
+                    {{ message.snippet|truncate(150) if message.snippet else _('No preview available') }}
+                </div>
+                
+                <div class="message-meta">
+                    {% if message.ai_analysis %}
+                        <span class="ai-analysis-badge">
+                            <i data-feather="cpu" style="width: 12px; height: 12px;"></i>
+                            {{ message.ai_analysis.sentiment|title }} | {{ message.ai_analysis.intent|title }}
+                        </span>
+                        {% if message.ai_analysis.urgency %}
+                            <span class="priority-badge priority-{{ message.ai_analysis.urgency }}">
+                                {{ message.ai_analysis.urgency|title }}
+                            </span>
+                        {% endif %}
+                    {% endif %}
+                    
+                    {% if message.has_attachments %}
+                        <span class="badge bg-secondary">
+                            <i data-feather="paperclip" style="width: 12px; height: 12px;"></i>
+                            {{ _('Attachment') }}
+                        </span>
+                    {% endif %}
+                    
+                    {% if message.customer %}
+                        <span class="badge bg-info">
+                            <i data-feather="user" style="width: 12px; height: 12px;"></i>
+                            {{ message.customer.name }}
+                        </span>
+                    {% endif %}
+                </div>
+            </div>
+            
+            <div class="message-actions">
+                <button class="btn btn-sm btn-outline-primary" onclick="openMessage('{{ message.message_id }}')">
+                    <i data-feather="eye"></i> {{ _('View') }}
+                </button>
+                <button class="btn btn-sm btn-outline-success" onclick="quickReply('{{ message.message_id }}')">
+                    <i data-feather="reply"></i> {{ _('Quick Reply') }}
+                </button>
+                {% if not message.ai_analysis %}
+                <button class="btn btn-sm btn-outline-info" onclick="analyzeMessage('{{ message.message_id }}')">
+                    <i data-feather="cpu"></i> {{ _('AI Analyze') }}
+                </button>
+                {% endif %}
+                <button class="btn btn-sm btn-outline-warning" onclick="linkToEntity('{{ message.message_id }}')">
+                    <i data-feather="link"></i> {{ _('Link to Business') }}
+                </button>
+            </div>
+        </div>
+        {% else %}
+        <div class="text-center py-5">
+            <i data-feather="inbox" class="text-muted" style="width: 48px; height: 48px;"></i>
+            <h5 class="text-muted mt-3">{{ _('No emails found') }}</h5>
+            <p class="text-muted">{{ _('Try syncing your Gmail account or adjusting your search criteria.') }}</p>
+            <button class="btn btn-primary" onclick="syncEmails()">
+                <i data-feather="refresh-cw"></i> {{ _('Sync Now') }}
+            </button>
+        </div>
+        {% endfor %}
+    </div>
+
+    <!-- Pagination -->
+    {% if messages.pages > 1 %}
+    <nav aria-label="{{ _('Email pagination') }}" class="mt-4">
+        <ul class="pagination justify-content-center">
+            {% if messages.has_prev %}
+                <li class="page-item">
+                    <a class="page-link" href="{{ url_for('gmail_enhanced.enhanced_inbox', page=messages.prev_num) }}">
+                        <i data-feather="chevron-left"></i> {{ _('Previous') }}
+                    </a>
+                </li>
+            {% endif %}
+            
+            {% for page_num in messages.iter_pages() %}
+                {% if page_num %}
+                    {% if page_num != messages.page %}
+                        <li class="page-item">
+                            <a class="page-link" href="{{ url_for('gmail_enhanced.enhanced_inbox', page=page_num) }}">{{ page_num }}</a>
+                        </li>
+                    {% else %}
+                        <li class="page-item active">
+                            <span class="page-link">{{ page_num }}</span>
+                        </li>
+                    {% endif %}
+                {% else %}
+                    <li class="page-item disabled">
+                        <span class="page-link">...</span>
+                    </li>
+                {% endif %}
+            {% endfor %}
+            
+            {% if messages.has_next %}
+                <li class="page-item">
+                    <a class="page-link" href="{{ url_for('gmail_enhanced.enhanced_inbox', page=messages.next_num) }}">
+                        {{ _('Next') }} <i data-feather="chevron-right"></i>
+                    </a>
+                </li>
+            {% endif %}
+        </ul>
+    </nav>
+    {% endif %}
+</div>
+{% endblock %}
+
+{% block js %}
+<script src="{{ url_for('static', filename='js/gmail-ai-enhanced.js') }}"></script>
+<script>
+let selectedMessages = new Set();
+
+function updateSelection() {
+    selectedMessages.clear();
+    document.querySelectorAll('.message-checkbox:checked').forEach(checkbox => {
+        selectedMessages.add(checkbox.value);
+    });
+    
+    const bulkActions = document.getElementById('bulk-actions');
+    const selectedCount = document.getElementById('selected-count');
+    
+    if (selectedMessages.size > 0) {
+        bulkActions.classList.add('show');
+        selectedCount.textContent = `${selectedMessages.size} {{ _('messages selected') }}`;
+    } else {
+        bulkActions.classList.remove('show');
+    }
+}
+
+function clearSelection() {
+    document.querySelectorAll('.message-checkbox').forEach(checkbox => {
+        checkbox.checked = false;
+    });
+    updateSelection();
+}
+
+function openMessage(messageId) {
+    window.location.href = `/gmail/message/${messageId}/enhanced`;
+}
+
+async function quickReply(messageId) {
+    // Implementation for quick reply modal
+    alert('{{ _("Quick reply feature coming soon!") }}');
+}
+
+async function analyzeMessage(messageId) {
+    try {
+        const response = await fetch(`/gmail/message/${messageId}/analyze`, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' }
+        });
+        
+        if (response.ok) {
+            location.reload(); // Refresh to show analysis
+        } else {
+            alert('{{ _("Analysis failed") }}');
+        }
+    } catch (error) {
+        alert('{{ _("Network error") }}');
+    }
+}
+
+async function linkToEntity(messageId) {
+    // Implementation for linking to business entities
+    alert('{{ _("Entity linking feature coming soon!") }}');
+}
+
+async function syncEmails() {
+    const syncBtn = event.target;
+    const originalText = syncBtn.innerHTML;
+    
+    syncBtn.innerHTML = '<span class="spinner-border spinner-border-sm me-2"></span>{{ _("Syncing...") }}';
+    syncBtn.disabled = true;
+    
+    try {
+        const response = await fetch('/gmail/sync', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' }
+        });
+        
+        if (response.ok) {
+            location.reload();
+        } else {
+            alert('{{ _("Sync failed") }}');
+        }
+    } catch (error) {
+        alert('{{ _("Network error") }}');
+    } finally {
+        syncBtn.innerHTML = originalText;
+        syncBtn.disabled = false;
+    }
+}
+
+async function bulkAnalyze() {
+    if (selectedMessages.size === 0) {
+        alert('{{ _("Please select messages to analyze") }}');
+        return;
+    }
+    
+    const analyzeBtn = event.target;
+    const originalText = analyzeBtn.innerHTML;
+    
+    analyzeBtn.innerHTML = '<span class="spinner-border spinner-border-sm me-2"></span>{{ _("Analyzing...") }}';
+    analyzeBtn.disabled = true;
+    
+    try {
+        const response = await fetch('/gmail/ai/bulk-analyze', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({
+                message_ids: Array.from(selectedMessages)
+            })
+        });
+        
+        if (response.ok) {
+            location.reload();
+        } else {
+            alert('{{ _("Bulk analysis failed") }}');
+        }
+    } catch (error) {
+        alert('{{ _("Network error") }}');
+    } finally {
+        analyzeBtn.innerHTML = originalText;
+        analyzeBtn.disabled = false;
+    }
+}
+
+function markAsRead() {
+    if (selectedMessages.size === 0) {
+        alert('{{ _("Please select messages to mark as read") }}');
+        return;
+    }
+    
+    // Implementation for marking as read
+    alert('{{ _("Mark as read feature coming soon!") }}');
+}
+
+function aiSearchSuggestions() {
+    // Implementation for AI-powered search suggestions
+    alert('{{ _("AI search suggestions coming soon!") }}');
+}
+
+// Filter functionality
+document.querySelectorAll('.filter-tab').forEach(tab => {
+    tab.addEventListener('click', function() {
+        document.querySelectorAll('.filter-tab').forEach(t => t.classList.remove('active'));
+        this.classList.add('active');
+        
+        const filter = this.dataset.filter;
+        filterMessages(filter);
+    });
+});
+
+function filterMessages(filter) {
+    const messages = document.querySelectorAll('.message-card');
+    
+    messages.forEach(message => {
+        let show = true;
+        
+        switch (filter) {
+            case 'unread':
+                show = message.classList.contains('unread');
+                break;
+            case 'important':
+                show = message.querySelector('.priority-badge.priority-high, .priority-badge.priority-urgent') !== null;
+                break;
+            case 'ai-analyzed':
+                show = message.querySelector('.ai-analysis-badge') !== null;
+                break;
+            case 'all':
+            default:
+                show = true;
+                break;
+        }
+        
+        message.style.display = show ? 'block' : 'none';
+    });
+}
+
+// Initialize
+document.addEventListener('DOMContentLoaded', function() {
+    feather.replace();
+});
+</script>
+{% endblock %}
