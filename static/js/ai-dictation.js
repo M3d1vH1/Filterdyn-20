@@ -64,29 +64,6 @@ class AIDictationManager extends DictationManager {
             console.error('Error processing transcript:', error);
             this.showError('Failed to process voice input');
         }
-    }
-                    // For other pages, try to find the most likely input field
-                    const possibleFields = document.querySelectorAll('input[type="text"], input[type="search"], textarea');
-                    if (possibleFields.length > 0) {
-                        // Use the first visible input field
-                        for (let field of possibleFields) {
-                            if (field.offsetParent !== null && !field.disabled && !field.readonly) {
-                                field.value = transcript;
-                                field.dispatchEvent(new Event('input', { bubbles: true }));
-                                this.showSuccess('Text inserted into ' + (field.placeholder || 'input field'));
-                                return;
-                            }
-                        }
-                    }
-                    this.showError('No suitable input field found. Please click on a text field first, or use this on a task creation page.');
-                }
-            }
-        } catch (error) {
-            console.error('AI processing error:', error);
-            this.showError('AI processing failed. Using basic parsing...');
-            // Fallback to basic parsing
-            this.parseTaskDictation(transcript);
-        }
         
         this.stopListening();
     }
