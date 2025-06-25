@@ -42,13 +42,18 @@ class GmailService:
         if not client_id or not client_secret:
             raise ValueError("Google OAuth credentials not configured")
         
+        # Debug OAuth configuration
+        print(f"OAuth Debug - Client ID: {client_id[:20]}...")
+        print(f"OAuth Debug - Redirect URI: {redirect_uri}")
+        
         flow = Flow.from_client_config(
             {
                 "web": {
                     "client_id": client_id,
                     "client_secret": client_secret,
                     "auth_uri": "https://accounts.google.com/o/oauth2/auth",
-                    "token_uri": "https://oauth2.googleapis.com/token"
+                    "token_uri": "https://oauth2.googleapis.com/token",
+                    "redirect_uris": [redirect_uri]
                 }
             },
             scopes=SCOPES,
