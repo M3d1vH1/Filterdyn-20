@@ -486,12 +486,10 @@ class GmailAIAssistant {
     }
 }
 
-// Initialize when DOM is ready
+// Initialize when DOM is ready - prevent duplicate initialization
 document.addEventListener('DOMContentLoaded', function() {
-    if (window.location.pathname.includes('/gmail/')) {
-        if (!window.gmailAI) {
-            window.gmailAI = new GmailAIAssistant();
-        }
+    if (window.location.pathname.includes('/gmail/') && typeof window.gmailAI === 'undefined') {
+        window.gmailAI = new GmailAIAssistant();
     }
 });
 
