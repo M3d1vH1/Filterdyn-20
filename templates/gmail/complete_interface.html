@@ -373,10 +373,21 @@
         <p class="text-muted text-center mb-4">
             {{ _('Connect your Gmail account to access AI-powered email management, smart responses, and business integration.') }}
         </p>
-        <a href="{{ url_for('gmail.connect') }}" class="btn btn-primary btn-lg">
-            <i data-feather="link" class="me-2"></i>
-            {{ _('Connect Gmail Account') }}
-        </a>
+        <div class="mb-3">
+            <a href="/gmail/connect" class="btn btn-primary btn-lg me-2">
+                <i data-feather="link" class="me-2"></i>
+                {{ _('Connect Gmail Account') }}
+            </a>
+            <a href="/auth/google_login" class="btn btn-outline-primary btn-lg">
+                <i data-feather="user" class="me-2"></i>
+                {{ _('Google Login') }}
+            </a>
+        </div>
+        <div class="text-center">
+            <small class="text-muted">
+                {{ _('Secure OAuth2 authentication with Google') }}
+            </small>
+        </div>
     </div>
     {% endif %}
 </div>

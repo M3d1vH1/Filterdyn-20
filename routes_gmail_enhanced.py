@@ -255,7 +255,12 @@ def complete_interface():
         flash(_('Access denied. Gmail integration requires admin or manager permissions.'), 'error')
         return redirect(url_for('main.dashboard'))
     
-    account = GmailService.get_user_account(current_user.id, current_user.tenant_id) if GmailService else None
+    # Get Gmail account if it exists, otherwise show connection interface
+    try:
+        account = GmailService.get_user_account(current_user.id, current_user.tenant_id) if GmailService else None
+    except Exception as e:
+        current_app.logger.error(f"Gmail service error: {e}")
+        account = None
     
     return render_template('gmail/complete_interface.html',
                          account=account,
