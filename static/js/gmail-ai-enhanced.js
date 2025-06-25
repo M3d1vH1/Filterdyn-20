@@ -4,7 +4,7 @@
  */
 
 // Disabled - functionality moved to unified FAB
-class GmailAIAssistantDisabled {
+class GmailAIAssistant {
     constructor() {
         this.currentLanguage = document.documentElement.lang || 'en';
         this.currentTone = 'professional';

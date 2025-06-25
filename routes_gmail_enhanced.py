@@ -270,10 +270,7 @@ def complete_interface():
 @login_required
 def enhanced_inbox():
     """Enhanced inbox with AI analysis features"""
-    # Check permissions
-    if current_user.role not in ['admin', 'superadmin', 'manager']:
-        flash(_('Access denied. Gmail integration requires admin or manager permissions.'), 'error')
-        return redirect(url_for('main.dashboard'))
+    # Gmail access available to all authenticated users
     
     account = GmailService.get_user_account(current_user.id, current_user.tenant_id)
     if not account:
