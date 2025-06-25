@@ -356,7 +356,7 @@ class GmailService:
         return GmailAccount.query.filter_by(
             user_id=user_id,
             tenant_id=tenant_id,
-            sync_enabled=True
+            is_active=True
         ).first()
 
     @staticmethod

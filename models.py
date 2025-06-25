@@ -496,35 +496,35 @@ class GmailAccount(db.Model):
     tenant_id = db.Column(db.Integer, db.ForeignKey('tenants.id'), nullable=False)
     user_id = db.Column(db.Integer, db.ForeignKey('users.id'), nullable=False)
     
+    # Match actual database columns
     email_address = db.Column(db.String(255), nullable=False)
-    google_user_id = db.Column(db.String(255), nullable=False)
     access_token = db.Column(db.Text)
     refresh_token = db.Column(db.Text)
-    token_expires_at = db.Column(db.DateTime)
-    
-    # Account settings
-    is_primary = db.Column(db.Boolean, default=False)
-    sync_enabled = db.Column(db.Boolean, default=True)
-    last_sync_at = db.Column(db.DateTime)
-    sync_history_token = db.Column(db.String(255))
-    
-    # Filters and preferences
-    auto_categorize = db.Column(db.Boolean, default=True)
-    ai_suggestions_enabled = db.Column(db.Boolean, default=True)
-    smart_replies_enabled = db.Column(db.Boolean, default=True)
-    
-    created_at = db.Column(db.DateTime, default=lambda: datetime.now(timezone.utc))
-    updated_at = db.Column(db.DateTime, default=lambda: datetime.now(timezone.utc), onupdate=lambda: datetime.now(timezone.utc))
+    token_expiry = db.Column(db.DateTime)
+    connected_at = db.Column(db.DateTime)
+    is_active = db.Column(db.Boolean, default=True)
     
     # Relationships
     user = db.relationship('User', backref='gmail_accounts')
     tenant = db.relationship('Tenant', backref='gmail_accounts')
-    email_threads = db.relationship('EmailThread', backref='gmail_account', lazy=True, cascade='all, delete-orphan')
     
-    __table_args__ = (
-        db.UniqueConstraint('tenant_id', 'email_address', name='_tenant_gmail_uc'),
-        db.UniqueConstraint('tenant_id', 'user_id', 'is_primary', name='_tenant_user_primary_gmail_uc')
-    )
+    @property
+    def email(self):
+        """Compatibility property for existing code"""
+        return self.email_address
+    
+    @property
+    def token_expires_at(self):
+        """Compatibility property"""
+        return self.token_expiry
+    
+    @property 
+    def sync_enabled(self):
+        """Compatibility property"""
+        return self.is_active
+    
+    def __repr__(self):
+        return f'<GmailAccount {self.email_address}>'
 
 
 class EmailThread(db.Model):
