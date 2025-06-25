@@ -24,14 +24,6 @@ def connect():
             # Fallback for development
             redirect_uri = url_for('gmail.oauth_callback', _external=True)
             
-        # Debug logging
-        try:
-            current_app.logger.info(f"Gmail OAuth Connect - Host: {request.host}")
-            current_app.logger.info(f"Gmail OAuth Connect - Redirect URI: {redirect_uri}")
-        except:
-            print(f"Gmail OAuth Connect - Host: {request.host}")
-            print(f"Gmail OAuth Connect - Redirect URI: {redirect_uri}")
-        
         flow = GmailService.get_flow(redirect_uri)
         authorization_url, state = flow.authorization_url(
             access_type='offline',
@@ -39,19 +31,10 @@ def connect():
             prompt='consent'
         )
         
-        try:
-            current_app.logger.info(f"Gmail OAuth Connect - Generated URL: {authorization_url}")
-        except:
-            print(f"Gmail OAuth Connect - Generated URL: {authorization_url}")
-        
         session['gmail_oauth_state'] = state
         return redirect(authorization_url)
         
     except Exception as e:
-        try:
-            current_app.logger.error(f"Gmail OAuth Connect - Error: {str(e)}")
-        except:
-            print(f"Gmail OAuth Connect - Error: {str(e)}")
         flash(f'Error connecting to Gmail: {str(e)}', 'error')
         return redirect(url_for('main.ai_assistant'))
 
