@@ -309,28 +309,13 @@ function refreshFeatherIcons() {
     featherTimeout = setTimeout(initializeFeatherIcons, 100);
 }
 
-// AI Assistant Widget Functions
-function toggleAIChat() {
-    const chatWindow = document.getElementById('ai-chat-window');
-    const toggle = document.getElementById('ai-chat-toggle');
-    const notification = document.getElementById('ai-notification');
-    
-    if (chatWindow && chatWindow.classList.contains('show')) {
-        chatWindow.classList.remove('show');
-        toggle.classList.remove('active');
-        if (notification) notification.style.display = 'none';
-    } else if (chatWindow) {
-        chatWindow.classList.add('show');
-        toggle.classList.add('active');
-        if (notification) notification.style.display = 'none';
-    }
-}
+// AI Assistant functionality moved to unified FAB
 
 // Export functions for use in templates
 window.FilterdynApp = {
     calculateLineTotal: calculateLineTotal,
     formatCurrency: formatCurrency,
     formatDate: formatDate,
-    refreshFeatherIcons: refreshFeatherIcons,
-    toggleAIChat: toggleAIChat
+    refreshFeatherIcons: refreshFeatherIcons
+    // toggleAIChat removed - moved to unified FAB
 };
