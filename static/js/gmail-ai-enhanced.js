@@ -486,12 +486,12 @@ class GmailAIAssistant {
     }
 }
 
-// Initialize when DOM is ready - disabled as functionality moved to unified FAB
-// document.addEventListener('DOMContentLoaded', function() {
-//     if (window.location.pathname.includes('/gmail/')) {
-//         window.gmailAI = new GmailAIAssistant();
-//     }
-// });
+// Initialize when DOM is ready
+document.addEventListener('DOMContentLoaded', function() {
+    if (window.location.pathname.includes('/gmail/')) {
+        window.gmailAI = new GmailAIAssistant();
+    }
+});
 
 // CSS for AI features
 const aiStyles = `
