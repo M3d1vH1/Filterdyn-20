@@ -1,44 +1,59 @@
 /**
- * AI-Enhanced Dictation System
- * Uses OpenAI to process natural language speech into structured task data
+ * AI-Enhanced Dictation Manager for Filterdyn Operations Suite
+ * Enhanced voice input with Gemini AI integration for natural language task creation
  */
 
-class AIDictationManager extends DictationManager {
+class AIDictationManager {
     constructor() {
-        super();
-        this.useAI = true;
-        this.supportedLanguages = ['en-US', 'el-GR']; // English and Greek
-        this.currentLanguage = 'en-US';
-        this.updateButtonForAI();
+        this.isListening = false;
+        this.recognition = null;
+        this.currentField = null;
+        this.lastTranscript = '';
+        
+        this.setupSpeechRecognition();
+        console.log('AI-Enhanced Dictation Manager initialized');
     }
 
-    updateButtonForAI() {
-        if (this.floatingButton) {
-            const tooltip = this.floatingButton.querySelector('.dictation-tooltip');
-            if (tooltip) {
-                tooltip.textContent = 'AI Voice Input';
-            }
-            
-            // Add AI indicator
-            const content = this.floatingButton.querySelector('.dictation-btn-content');
-            if (content && !content.querySelector('.ai-indicator')) {
-                const aiIndicator = document.createElement('div');
-                aiIndicator.className = 'ai-indicator';
-                aiIndicator.innerHTML = '<span style="font-size: 10px; position: absolute; top: -5px; right: -5px; background: #007bff; color: white; border-radius: 50%; width: 16px; height: 16px; display: flex; align-items: center; justify-content: center; font-weight: bold;">AI</span>';
-                content.appendChild(aiIndicator);
-            }
+    setupSpeechRecognition() {
+        if (!('webkitSpeechRecognition' in window) && !('SpeechRecognition' in window)) {
+            console.warn('Speech recognition not supported in this browser');
+            return;
         }
+
+        const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
+        this.recognition = new SpeechRecognition();
+        
+        this.recognition.continuous = false;
+        this.recognition.interimResults = false;
+        this.recognition.maxAlternatives = 1;
+        this.recognition.lang = this.detectLanguage();
+
+        this.recognition.onresult = (event) => {
+            const transcript = event.results[0][0].transcript.trim();
+            this.lastTranscript = transcript;
+            console.log('AI Speech Recognition Result:', transcript);
+            this.processTranscript(transcript);
+        };
+
+        this.recognition.onerror = (event) => {
+            console.error('Speech recognition error:', event.error);
+            this.stopListening();
+            this.showError('Voice recognition error: ' + event.error);
+        };
+
+        this.recognition.onend = () => {
+            console.log('Speech recognition ended');
+            this.stopListening();
+        };
     }
 
-    async handleResult(event) {
-        const transcript = event.results[0][0].transcript;
+    async processTranscript(transcript) {
         console.log('AI Dictation - Raw transcript:', transcript);
         
         this.showNotification('Processing with AI...', 'info');
         
         try {
             if (this.currentField) {
-                // Simple field input - just insert text
                 if (this.currentField.value) {
                     this.currentField.value += ' ' + transcript;
                 } else {
@@ -47,22 +62,31 @@ class AIDictationManager extends DictationManager {
                 this.currentField.dispatchEvent(new Event('input', { bubbles: true }));
                 this.showSuccess('Text inserted successfully');
             } else {
-                // Check if we're on a task creation or form page
                 const isTaskPage = window.location.pathname.includes('/tasks/create') || 
                                  document.getElementById('title') || 
                                  document.getElementById('description');
                 
                 if (isTaskPage) {
-                    // AI task parsing for task creation pages
                     await this.parseWithAI(transcript);
                 } else {
-                    // Default behavior for other pages
-                    this.showNotification('Voice input recorded: ' + transcript, 'info');
+                    const possibleFields = document.querySelectorAll('input[type="text"], input[type="search"], textarea');
+                    if (possibleFields.length > 0) {
+                        for (let field of possibleFields) {
+                            if (field.offsetParent !== null && !field.disabled && !field.readonly) {
+                                field.value = transcript;
+                                field.dispatchEvent(new Event('input', { bubbles: true }));
+                                this.showSuccess('Text inserted into ' + (field.placeholder || 'input field'));
+                                return;
+                            }
+                        }
+                    }
+                    this.showNotification('Voice input: ' + transcript, 'info');
                 }
             }
         } catch (error) {
-            console.error('Error processing transcript:', error);
-            this.showError('Failed to process voice input');
+            console.error('AI processing error:', error);
+            this.showError('AI processing failed. Using basic parsing...');
+            this.parseTaskDictation(transcript);
         }
         
         this.stopListening();
@@ -80,106 +104,88 @@ class AIDictationManager extends DictationManager {
                 return;
             }
             
-            // Fill in the form fields with extracted data
             this.fillFormWithTaskData(taskData);
             this.showSuccess('Task information extracted and filled successfully');
         } catch (error) {
             console.error('Error parsing task with AI:', error);
             this.showError('Failed to parse task information');
         }
+    }
 
-            let fieldsUpdated = 0;
-
-        // Fill form fields
+    fillFormWithTaskData(taskData) {
+        console.log('Filling form with task data:', taskData);
+        
         if (taskData.title) {
             const titleField = document.getElementById('title');
             if (titleField) {
                 titleField.value = taskData.title;
                 titleField.dispatchEvent(new Event('input', { bubbles: true }));
-                fieldsUpdated++;
             }
         }
-
+        
         if (taskData.description) {
-            const descField = document.getElementById('description');
-            if (descField) {
-                descField.value = taskData.description;
-                descField.dispatchEvent(new Event('input', { bubbles: true }));
-                fieldsUpdated++;
+            const descriptionField = document.getElementById('description');
+            if (descriptionField) {
+                descriptionField.value = taskData.description;
+                descriptionField.dispatchEvent(new Event('input', { bubbles: true }));
             }
         }
-
+        
         if (taskData.priority) {
             const priorityField = document.getElementById('priority');
             if (priorityField) {
-                priorityField.value = taskData.priority.toLowerCase();
+                priorityField.value = taskData.priority;
                 priorityField.dispatchEvent(new Event('change', { bubbles: true }));
-                fieldsUpdated++;
             }
         }
-
-        if (taskData.assignee) {
-            const assigneeField = document.getElementById('assigned_to');
-            if (assigneeField) {
-                // Try to find matching user in select options
-                const options = assigneeField.querySelectorAll('option');
-                let found = false;
-                
-                for (let option of options) {
-                    if (option.text.toLowerCase().includes(taskData.assignee.toLowerCase())) {
-                        assigneeField.value = option.value;
-                        assigneeField.dispatchEvent(new Event('change', { bubbles: true }));
-                        found = true;
-                        fieldsUpdated++;
-                        break;
-                    }
-                }
-                
-                if (!found) {
-                    this.showNotification(`Note: Could not find user "${taskData.assignee}" in assignee list`, 'info');
-                }
+        
+        if (taskData.category) {
+            const categoryField = document.getElementById('category');
+            if (categoryField) {
+                categoryField.value = taskData.category;
+                categoryField.dispatchEvent(new Event('change', { bubbles: true }));
             }
         }
-
-        if (taskData.dueDate) {
+        
+        if (taskData.assigned_to) {
+            const assignedField = document.getElementById('assigned_to');
+            if (assignedField) {
+                assignedField.value = taskData.assigned_to;
+                assignedField.dispatchEvent(new Event('change', { bubbles: true }));
+            }
+        }
+        
+        if (taskData.due_date) {
             const dueDateField = document.getElementById('due_date');
             if (dueDateField) {
-                // Convert to datetime-local format
-                const date = new Date(taskData.dueDate);
-                if (!isNaN(date.getTime())) {
-                    const localDateTime = new Date(date.getTime() - date.getTimezoneOffset() * 60000).toISOString().slice(0, 16);
-                    dueDateField.value = localDateTime;
-                    dueDateField.dispatchEvent(new Event('change', { bubbles: true }));
-                    fieldsUpdated++;
-                }
+                dueDateField.value = taskData.due_date;
+                dueDateField.dispatchEvent(new Event('change', { bubbles: true }));
             }
         }
-
-        if (fieldsUpdated > 0) {
-            this.showSuccess(`AI extracted task data successfully! Updated ${fieldsUpdated} fields.`);
-        } else {
-            this.showError('AI processed the request but could not fill any form fields');
-        }
+        
+        console.log('Form fields populated with AI-extracted data');
     }
 
     async extractTaskDataWithAI(transcript) {
-        const prompt = `Extract task information from this natural language input. The input may be in English or Greek. Return a JSON object with the following fields (use null for missing data):
+        console.log('Extracting task data with AI from transcript:', transcript);
+        
+        const prompt = `
+You are an AI assistant that extracts task information from spoken natural language.
 
-{
-  "title": "brief task title",
-  "description": "detailed description", 
-  "priority": "low|medium|high|urgent",
-  "assignee": "person's name if mentioned",
-  "dueDate": "ISO date string if mentioned (relative dates like 'tomorrow', 'next week' should be converted to actual dates)"
-}
+Extract the following information from this spoken text: "${transcript}"
 
-Input: "${transcript}"
+Return a JSON object with these fields (use null for missing information):
+- title: Brief task title (max 50 chars)
+- description: Detailed description 
+- priority: "low", "medium", "high", or "urgent"
+- category: "follow_up", "service_reminder", or "general"
+- assigned_to: User name or "current user" if not specified
+- due_date: ISO date format YYYY-MM-DD if mentioned
 
 Guidelines:
-- Infer priority from urgency words (urgent, ASAP, επείγον = urgent; important, σπουδαίο = high)
-- Convert Greek terms (τίτλος, περιγραφή, προτεραιότητα) appropriately
-- For relative dates: tomorrow/αύριο = +1 day, next week/επόμενη εβδομάδα = +7 days, etc.
-- Keep titles concise (max 50 chars)
+- Extract the main action/task as the title
+- Include context and details in description
+- Infer priority from urgency words (urgent, asap, important, etc.)
 - If someone says "assign to me" or similar, use "current user"
 
 Respond only with valid JSON.`;
@@ -207,56 +213,56 @@ Respond only with valid JSON.`;
             console.error('Error extracting task data:', error);
             return null;
         }
-                    prompt: prompt,
-                    transcript: transcript,
-                    language: this.detectLanguage(transcript)
-                })
-            });
+    }
 
-            if (!response.ok) {
-                const errorData = await response.json().catch(() => ({}));
-                throw new Error(`Gemini API Error ${response.status}: ${errorData.error || response.statusText}`);
-            }
-
-            const result = await response.json();
-            return result.taskData;
-        } catch (error) {
-            console.error('Gemini AI API error:', error);
-            throw error;
+    parseTaskDictation(transcript) {
+        console.log('Basic task parsing for:', transcript);
+        
+        const result = {
+            title: transcript.substring(0, 50),
+            description: transcript,
+            priority: 'medium',
+            category: 'general'
+        };
+        
+        if (/urgent|asap|immediately|critical/i.test(transcript)) {
+            result.priority = 'urgent';
+        } else if (/important|high|priority/i.test(transcript)) {
+            result.priority = 'high';
+        } else if (/low|later|whenever/i.test(transcript)) {
+            result.priority = 'low';
         }
+        
+        return result;
     }
 
     detectLanguage(text) {
-        // Simple language detection
-        const greekChars = /[α-ωΑ-Ω]/;
+        if (!text) return this.detectBrowserLanguage();
+        
+        const greekChars = /[\u0370-\u03FF\u1F00-\u1FFF]/;
         return greekChars.test(text) ? 'el-GR' : 'en-US';
     }
 
     getCSRFToken() {
-        const token = document.querySelector('meta[name=csrf-token]');
+        const token = document.querySelector('meta[name="csrf-token"]');
         return token ? token.getAttribute('content') : '';
     }
 
     startListening() {
         if (!this.recognition || this.isListening) return;
 
-        // Set language based on detected language preference
-        const lang = this.detectBrowserLanguage();
-        this.recognition.lang = lang;
-        this.currentLanguage = lang;
+        this.currentField = document.activeElement;
+        if (this.currentField && this.currentField.tagName !== 'INPUT' && this.currentField.tagName !== 'TEXTAREA') {
+            this.currentField = null;
+        }
 
         this.isListening = true;
-        this.updateButtonState();
+        this.recognition.lang = this.detectLanguage();
         
-        // Show enhanced status with context
-        const status = document.getElementById('dictation-status');
+        const status = document.getElementById('voice-status');
         if (status) {
-            const isTaskPage = window.location.pathname.includes('/tasks/create') || 
-                             document.getElementById('title') || 
-                             document.getElementById('description');
-            
-            const context = isTaskPage ? 'Smart Task Mode' : 
-                          this.currentField ? 'Field Input' : 'Auto-detect Mode';
+            const lang = this.recognition.lang;
+            const context = this.currentField ? 'Field Input' : 'Auto-detect Mode';
             
             status.innerHTML = `<i data-feather="mic" style="width: 14px; height: 14px;"></i> Listening... (${context} - ${lang === 'el-GR' ? 'Ελληνικά' : 'English'})`;
             status.style.display = 'block';
@@ -280,7 +286,6 @@ Respond only with valid JSON.`;
     }
 
     showNotification(message, type = 'info') {
-        // Enhanced notifications with Gemini AI context
         const alert = document.createElement('div');
         const bgColor = type === 'error' ? 'danger' : type === 'success' ? 'success' : 'info';
         const icon = type === 'error' ? 'alert-circle' : type === 'success' ? 'check-circle' : 'cpu';
@@ -310,34 +315,59 @@ Respond only with valid JSON.`;
             }
         }, type === 'error' ? 6000 : 4000);
     }
+
+    showSuccess(message) {
+        this.showNotification(message, 'success');
+    }
+
+    showError(message) {
+        this.showNotification(message, 'error');
+    }
+
+    stopListening() {
+        this.isListening = false;
+        
+        const status = document.getElementById('voice-status');
+        if (status) {
+            status.style.display = 'none';
+        }
+        
+        if (this.recognition) {
+            this.recognition.stop();
+        }
+    }
+
+    toggleDictation() {
+        if (this.isListening) {
+            this.stopListening();
+        } else {
+            this.startListening();
+        }
+    }
 }
 
-// Enhanced initialization with AI check
 document.addEventListener('DOMContentLoaded', function() {
     console.log('AI Dictation system loading...');
     
-    // Check if AI is available
     fetch('/api/check-ai-availability')
         .then(response => response.json())
         .then(data => {
             console.log('AI availability check result:', data);
             if (data.available) {
                 console.log('Creating AI-enhanced DictationManager...');
-                // Replace any existing dictation manager with AI version
                 window.dictationManager = new AIDictationManager();
                 console.log('AI DictationManager created successfully');
             } else if (!window.dictationManager) {
                 console.log('AI not available, using basic DictationManager...');
-                window.dictationManager = new DictationManager();
+                window.dictationManager = new AIDictationManager();
             }
         })
         .catch(error => {
             console.log('AI check failed, using basic DictationManager...', error);
             if (!window.dictationManager) {
-                window.dictationManager = new DictationManager();
+                window.dictationManager = new AIDictationManager();
             }
         });
 });
 
-// Export for global access
 window.AIDictationManager = AIDictationManager;
