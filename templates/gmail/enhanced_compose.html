@@ -1,0 +1,607 @@
+{% extends "base.html" %}
+{% block title %}{{ _('Compose Email') }} - Gmail AI{% endblock %}
+
+{% block css %}
+<style>
+.ai-assistant-panel {
+    background: #f8f9fa;
+    border: 1px solid #dee2e6;
+    border-radius: 8px;
+    padding: 1rem;
+    margin-bottom: 1rem;
+}
+
+.ai-suggestion-box {
+    background: white;
+    border: 1px solid #e3f2fd;
+    border-radius: 6px;
+    padding: 1rem;
+    margin: 0.5rem 0;
+    box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+}
+
+.ai-suggestion-box.accepted {
+    background: #e8f5e8;
+    border-color: #4caf50;
+}
+
+.template-card {
+    border: 1px solid #dee2e6;
+    border-radius: 6px;
+    padding: 0.75rem;
+    margin: 0.5rem 0;
+    cursor: pointer;
+    transition: all 0.2s ease;
+}
+
+.template-card:hover {
+    background: #f8f9fa;
+    border-color: #007bff;
+}
+
+.template-card.selected {
+    background: #e3f2fd;
+    border-color: #2196f3;
+}
+
+.tone-selector {
+    display: flex;
+    gap: 0.5rem;
+    margin: 0.5rem 0;
+}
+
+.tone-btn {
+    padding: 0.25rem 0.75rem;
+    border: 1px solid #dee2e6;
+    border-radius: 15px;
+    background: white;
+    cursor: pointer;
+    transition: all 0.2s ease;
+}
+
+.tone-btn.active {
+    background: #007bff;
+    color: white;
+    border-color: #007bff;
+}
+
+.ai-loading {
+    display: none;
+    text-align: center;
+    padding: 1rem;
+}
+
+.ai-loading.show {
+    display: block;
+}
+
+.entity-links {
+    background: #fff3cd;
+    border: 1px solid #ffeaa7;
+    border-radius: 6px;
+    padding: 0.75rem;
+    margin: 0.5rem 0;
+}
+
+.entity-match {
+    background: white;
+    border: 1px solid #dee2e6;
+    border-radius: 4px;
+    padding: 0.5rem;
+    margin: 0.25rem 0;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+}
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="container-fluid">
+    <div class="row">
+        <!-- Main compose area -->
+        <div class="col-lg-8">
+            <div class="card">
+                <div class="card-header d-flex justify-content-between align-items-center">
+                    <h5 class="mb-0">
+                        <i data-feather="edit-3" class="me-2"></i>
+                        {{ _('Compose Email') }}
+                    </h5>
+                    <div class="btn-group btn-group-sm">
+                        <button type="button" class="btn btn-outline-primary" onclick="saveAsDraft()">
+                            <i data-feather="save"></i> {{ _('Save Draft') }}
+                        </button>
+                        <button type="button" class="btn btn-outline-info" onclick="analyzeContent()">
+                            <i data-feather="cpu"></i> {{ _('AI Analyze') }}
+                        </button>
+                    </div>
+                </div>
+                <form method="post" enctype="multipart/form-data" id="compose-form">
+                    <div class="card-body">
+                        <div class="mb-3">
+                            <label for="to" class="form-label">{{ _('To') }}</label>
+                            <input type="email" class="form-control" id="to" name="to" required>
+                            <div class="form-text">{{ _('Separate multiple recipients with commas') }}</div>
+                        </div>
+                        
+                        <div class="row">
+                            <div class="col-md-6">
+                                <div class="mb-3">
+                                    <label for="cc" class="form-label">{{ _('CC') }}</label>
+                                    <input type="email" class="form-control" id="cc" name="cc">
+                                </div>
+                            </div>
+                            <div class="col-md-6">
+                                <div class="mb-3">
+                                    <label for="bcc" class="form-label">{{ _('BCC') }}</label>
+                                    <input type="email" class="form-control" id="bcc" name="bcc">
+                                </div>
+                            </div>
+                        </div>
+                        
+                        <div class="mb-3">
+                            <label for="subject" class="form-label">{{ _('Subject') }}</label>
+                            <input type="text" class="form-control" id="subject" name="subject" required>
+                        </div>
+                        
+                        <div class="mb-3">
+                            <label for="body" class="form-label">{{ _('Message') }}</label>
+                            <textarea class="form-control" id="body" name="body" rows="12" required></textarea>
+                            <div class="form-text">{{ _('Use Shift+Enter for new lines') }}</div>
+                        </div>
+                        
+                        <div class="mb-3">
+                            <label for="attachments" class="form-label">{{ _('Attachments') }}</label>
+                            <input type="file" class="form-control" id="attachments" name="attachments" multiple>
+                            <div class="form-text">{{ _('Maximum 25MB total') }}</div>
+                        </div>
+                        
+                        <!-- Business Entity Linking -->
+                        <div id="entity-linking" class="mb-3" style="display: none;">
+                            <h6>{{ _('Link to Business Records') }}</h6>
+                            <div id="entity-matches"></div>
+                        </div>
+                    </div>
+                    
+                    <div class="card-footer d-flex justify-content-between">
+                        <div>
+                            <button type="button" class="btn btn-outline-secondary" onclick="insertSignature()">
+                                <i data-feather="user"></i> {{ _('Signature') }}
+                            </button>
+                        </div>
+                        <div>
+                            <button type="submit" class="btn btn-primary">
+                                <i data-feather="send"></i> {{ _('Send Email') }}
+                            </button>
+                            <a href="{{ url_for('gmail_enhanced.enhanced_inbox') }}" class="btn btn-secondary ms-2">
+                                {{ _('Cancel') }}
+                            </a>
+                        </div>
+                    </div>
+                </form>
+            </div>
+        </div>
+        
+        <!-- AI Assistant Panel -->
+        <div class="col-lg-4">
+            <div class="ai-assistant-panel">
+                <h6 class="d-flex align-items-center mb-3">
+                    <i data-feather="cpu" class="me-2"></i>
+                    {{ _('AI Assistant') }}
+                    <span class="badge bg-primary ms-auto">Gemini</span>
+                </h6>
+                
+                <!-- Tone Selection -->
+                <div class="mb-3">
+                    <label class="form-label small">{{ _('Response Tone') }}</label>
+                    <div class="tone-selector">
+                        <div class="tone-btn active" data-tone="professional">{{ _('Professional') }}</div>
+                        <div class="tone-btn" data-tone="friendly">{{ _('Friendly') }}</div>
+                        <div class="tone-btn" data-tone="formal">{{ _('Formal') }}</div>
+                    </div>
+                </div>
+                
+                <!-- AI Actions -->
+                <div class="d-grid gap-2 mb-3">
+                    <button type="button" class="btn btn-outline-info btn-sm" onclick="generateSuggestion()">
+                        <i data-feather="zap"></i> {{ _('AI Suggest Content') }}
+                    </button>
+                    <button type="button" class="btn btn-outline-success btn-sm" onclick="loadTemplates()">
+                        <i data-feather="file-text"></i> {{ _('Smart Templates') }}
+                    </button>
+                    <button type="button" class="btn btn-outline-warning btn-sm" onclick="extractEntities()">
+                        <i data-feather="link"></i> {{ _('Find Business Links') }}
+                    </button>
+                </div>
+                
+                <!-- AI Loading Indicator -->
+                <div class="ai-loading" id="ai-loading">
+                    <div class="spinner-border spinner-border-sm me-2" role="status"></div>
+                    {{ _('AI is analyzing...') }}
+                </div>
+                
+                <!-- AI Results -->
+                <div id="ai-results"></div>
+            </div>
+            
+            <!-- Quick Statistics -->
+            <div class="card mt-3">
+                <div class="card-header">
+                    <h6 class="mb-0">{{ _('AI Usage Stats') }}</h6>
+                </div>
+                <div class="card-body" id="ai-stats">
+                    <div class="text-center text-muted">
+                        <i data-feather="bar-chart-2"></i>
+                        <div>{{ _('Loading stats...') }}</div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block js %}
+<script>
+let currentTone = 'professional';
+let currentSuggestion = null;
+
+document.addEventListener('DOMContentLoaded', function() {
+    // Initialize tone selectors
+    document.querySelectorAll('.tone-btn').forEach(btn => {
+        btn.addEventListener('click', function() {
+            document.querySelectorAll('.tone-btn').forEach(b => b.classList.remove('active'));
+            this.classList.add('active');
+            currentTone = this.dataset.tone;
+        });
+    });
+    
+    // Load AI stats
+    loadAIStats();
+    
+    // Auto-save draft every 2 minutes
+    setInterval(saveAsDraft, 120000);
+});
+
+function generateSuggestion() {
+    const body = document.getElementById('body').value;
+    const subject = document.getElementById('subject').value;
+    
+    if (!body.trim() && !subject.trim()) {
+        alert('{{ _("Please enter some content first") }}');
+        return;
+    }
+    
+    showAILoading(true);
+    
+    fetch('/gmail/ai/suggest', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+            email_text: body,
+            context: `Subject: ${subject}`,
+            language: '{{ current_locale }}',
+            tone: currentTone
+        })
+    })
+    .then(r => r.json())
+    .then(data => {
+        showAILoading(false);
+        if (data.success) {
+            displaySuggestion(data.suggestion);
+        } else {
+            showAIError('{{ _("Suggestion failed") }}', data.error);
+        }
+    })
+    .catch(error => {
+        showAILoading(false);
+        showAIError('{{ _("Network error") }}', error.message);
+    });
+}
+
+function loadTemplates() {
+    const body = document.getElementById('body').value;
+    const subject = document.getElementById('subject').value;
+    
+    showAILoading(true);
+    
+    fetch('/gmail/ai/templates', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+            email_text: body || subject,
+            language: '{{ current_locale }}'
+        })
+    })
+    .then(r => r.json())
+    .then(data => {
+        showAILoading(false);
+        if (data.success) {
+            displayTemplates(data.templates);
+        } else {
+            showAIError('{{ _("Template loading failed") }}', data.error);
+        }
+    })
+    .catch(error => {
+        showAILoading(false);
+        showAIError('{{ _("Network error") }}', error.message);
+    });
+}
+
+function extractEntities() {
+    const body = document.getElementById('body').value;
+    const subject = document.getElementById('subject').value;
+    const to = document.getElementById('to').value;
+    
+    const emailText = `To: ${to}\nSubject: ${subject}\n\n${body}`;
+    
+    if (!emailText.trim()) {
+        alert('{{ _("Please enter email content first") }}');
+        return;
+    }
+    
+    showAILoading(true);
+    
+    fetch('/gmail/ai/extract-entities', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ email_text: emailText })
+    })
+    .then(r => r.json())
+    .then(data => {
+        showAILoading(false);
+        if (data.success) {
+            displayEntities(data.entities);
+        } else {
+            showAIError('{{ _("Entity extraction failed") }}', data.error);
+        }
+    })
+    .catch(error => {
+        showAILoading(false);
+        showAIError('{{ _("Network error") }}', error.message);
+    });
+}
+
+function displaySuggestion(suggestion) {
+    const html = `
+        <div class="ai-suggestion-box">
+            <h6>{{ _("AI Suggestion") }}</h6>
+            <div class="mb-2">
+                <strong>{{ _("Suggested Subject:") }}</strong>
+                <div class="text-muted">${suggestion.subject || '{{ _("No suggestion") }}'}</div>
+            </div>
+            <div class="mb-3">
+                <strong>{{ _("Suggested Response:") }}</strong>
+                <div class="text-muted small">${suggestion.response}</div>
+            </div>
+            <div class="d-grid gap-2 d-md-flex">
+                <button class="btn btn-success btn-sm" onclick="applySuggestion('${suggestion.subject}', \`${suggestion.response}\`)">
+                    {{ _("Apply Suggestion") }}
+                </button>
+                <button class="btn btn-outline-secondary btn-sm" onclick="provideFeedback('helpful')">
+                    <i data-feather="thumbs-up"></i> {{ _("Helpful") }}
+                </button>
+                <button class="btn btn-outline-secondary btn-sm" onclick="provideFeedback('not_helpful')">
+                    <i data-feather="thumbs-down"></i> {{ _("Not Helpful") }}
+                </button>
+            </div>
+        </div>
+    `;
+    
+    document.getElementById('ai-results').innerHTML = html;
+    currentSuggestion = suggestion;
+    feather.replace();
+}
+
+function displayTemplates(templates) {
+    if (!templates.templates || templates.templates.length === 0) {
+        document.getElementById('ai-results').innerHTML = `
+            <div class="alert alert-info">{{ _("No templates found for this content") }}</div>
+        `;
+        return;
+    }
+    
+    let html = '<div><h6>{{ _("Smart Templates") }}</h6>';
+    
+    templates.templates.forEach((template, index) => {
+        html += `
+            <div class="template-card" onclick="selectTemplate(${index})">
+                <div class="fw-bold">${template.name}</div>
+                <div class="text-muted small">${template.use_case}</div>
+                <div class="badge bg-light text-dark mt-1">${template.tone}</div>
+            </div>
+        `;
+    });
+    
+    html += '</div>';
+    document.getElementById('ai-results').innerHTML = html;
+    
+    // Store templates for selection
+    window.currentTemplates = templates.templates;
+}
+
+function displayEntities(entities) {
+    if (!entities.potential_customers && !entities.potential_orders && !entities.potential_quotes) {
+        document.getElementById('ai-results').innerHTML = `
+            <div class="alert alert-info">{{ _("No business entities found") }}</div>
+        `;
+        return;
+    }
+    
+    let html = '<div class="entity-links"><h6>{{ _("Business Entity Matches") }}</h6>';
+    
+    if (entities.potential_customers) {
+        html += '<div class="mb-2"><strong>{{ _("Potential Customers:") }}</strong>';
+        entities.potential_customers.forEach(customer => {
+            html += `
+                <div class="entity-match">
+                    <div>
+                        <div class="fw-bold">${customer.name}</div>
+                        <div class="text-muted small">${customer.context}</div>
+                    </div>
+                    <div class="badge bg-info">${Math.round(customer.confidence * 100)}%</div>
+                </div>
+            `;
+        });
+        html += '</div>';
+    }
+    
+    if (entities.suggested_actions) {
+        html += '<div class="mt-2"><strong>{{ _("Suggested Actions:") }}</strong><ul>';
+        entities.suggested_actions.forEach(action => {
+            html += `<li class="small text-muted">${action}</li>`;
+        });
+        html += '</ul></div>';
+    }
+    
+    html += '</div>';
+    document.getElementById('ai-results').innerHTML = html;
+    
+    // Show entity linking section
+    document.getElementById('entity-linking').style.display = 'block';
+    document.getElementById('entity-matches').innerHTML = html;
+}
+
+function applySuggestion(subject, response) {
+    if (subject && subject !== 'No suggestion') {
+        document.getElementById('subject').value = subject;
+    }
+    if (response) {
+        document.getElementById('body').value = response;
+    }
+    
+    // Mark as accepted
+    document.querySelector('.ai-suggestion-box').classList.add('accepted');
+    showNotification('{{ _("Suggestion applied successfully") }}', 'success');
+}
+
+function selectTemplate(index) {
+    if (!window.currentTemplates || !window.currentTemplates[index]) return;
+    
+    const template = window.currentTemplates[index];
+    
+    if (confirm(`{{ _("Apply template:") }} ${template.name}?`)) {
+        document.getElementById('subject').value = template.subject;
+        document.getElementById('body').value = template.body;
+        
+        showNotification('{{ _("Template applied") }}', 'success');
+    }
+}
+
+function showAILoading(show) {
+    const loading = document.getElementById('ai-loading');
+    if (show) {
+        loading.classList.add('show');
+        document.getElementById('ai-results').innerHTML = '';
+    } else {
+        loading.classList.remove('show');
+    }
+}
+
+function showAIError(title, message) {
+    document.getElementById('ai-results').innerHTML = `
+        <div class="alert alert-danger">
+            <strong>${title}</strong><br>
+            <small>${message}</small>
+        </div>
+    `;
+}
+
+function loadAIStats() {
+    fetch('/gmail/ai/stats')
+    .then(r => r.json())
+    .then(data => {
+        if (data.success) {
+            const stats = data.stats;
+            document.getElementById('ai-stats').innerHTML = `
+                <div class="row text-center">
+                    <div class="col-6">
+                        <div class="fw-bold">${stats.total_interactions}</div>
+                        <div class="small text-muted">{{ _("Total Uses") }}</div>
+                    </div>
+                    <div class="col-6">
+                        <div class="fw-bold">${Math.round(stats.helpfulness_rate * 100)}%</div>
+                        <div class="small text-muted">{{ _("Helpful Rate") }}</div>
+                    </div>
+                </div>
+                <div class="mt-2 text-center">
+                    <div class="small text-muted">{{ _("Avg Rating:") }} ${stats.average_rating}/5</div>
+                </div>
+            `;
+        }
+    })
+    .catch(error => {
+        console.log('Stats loading failed:', error);
+    });
+}
+
+function insertSignature() {
+    const signature = `\n\n{{ _("Best regards") }},\n{{ current_user.first_name }} {{ current_user.last_name }}\n{{ current_user.email }}`;
+    const bodyField = document.getElementById('body');
+    bodyField.value += signature;
+}
+
+function saveAsDraft() {
+    // Implementation for draft saving
+    console.log('Saving draft...');
+}
+
+function analyzeContent() {
+    const body = document.getElementById('body').value;
+    if (!body.trim()) {
+        alert('{{ _("Please enter content to analyze") }}');
+        return;
+    }
+    
+    showAILoading(true);
+    
+    fetch('/gmail/ai/analyze', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+            email_text: body,
+            language: '{{ current_locale }}'
+        })
+    })
+    .then(r => r.json())
+    .then(data => {
+        showAILoading(false);
+        if (data.success) {
+            const analysis = data.analysis;
+            document.getElementById('ai-results').innerHTML = `
+                <div class="alert alert-info">
+                    <h6>{{ _("Content Analysis") }}</h6>
+                    <div><strong>{{ _("Sentiment:") }}</strong> ${analysis.sentiment}</div>
+                    <div><strong>{{ _("Intent:") }}</strong> ${analysis.intent}</div>
+                    <div><strong>{{ _("Urgency:") }}</strong> ${analysis.urgency}</div>
+                    <div><strong>{{ _("Confidence:") }}</strong> ${Math.round(analysis.confidence_score * 100)}%</div>
+                </div>
+            `;
+        } else {
+            showAIError('{{ _("Analysis failed") }}', data.error);
+        }
+    })
+    .catch(error => {
+        showAILoading(false);
+        showAIError('{{ _("Network error") }}', error.message);
+    });
+}
+
+function showNotification(message, type = 'info') {
+    const alert = document.createElement('div');
+    alert.className = `alert alert-${type === 'success' ? 'success' : 'info'} alert-dismissible fade show position-fixed`;
+    alert.style.cssText = 'top: 20px; right: 20px; z-index: 9999; min-width: 300px;';
+    alert.innerHTML = `
+        ${message}
+        <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+    `;
+    
+    document.body.appendChild(alert);
+    setTimeout(() => {
+        if (alert.parentElement) {
+            alert.remove();
+        }
+    }, 3000);
+}
+</script>
+{% endblock %}
