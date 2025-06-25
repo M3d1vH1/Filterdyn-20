@@ -45,7 +45,7 @@ def get_quick_actions():
             'title': _('Daily Kanban'),
             'description': _('Today\'s task board'),
             'icon': 'columns',
-            'url': url_for('main.kanban_today'),
+            'url': url_for('main.kanban'),
             'category': 'productivity'
         },
         {
@@ -97,8 +97,9 @@ def get_status():
         ).count()
         
         status['quick_stats']['today_tasks'] = Task.query.filter_by(
-            tenant_id=current_user.tenant_id,
-            board_date=today
+            tenant_id=current_user.tenant_id
+        ).filter(
+            Task.created_at >= datetime.now(timezone.utc).replace(hour=0, minute=0, second=0, microsecond=0)
         ).count()
     except Exception as e:
         logging.error(f"Error getting task stats: {str(e)}")

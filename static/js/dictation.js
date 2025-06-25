@@ -61,14 +61,14 @@ class DictationManager {
             .floating-dictation-btn {
                 position: fixed;
                 bottom: 20px;
-                left: 20px;
+                right: 20px; /* Position on right side */
                 width: 60px;
                 height: 60px;
                 background: linear-gradient(135deg, #28a745, #20c997);
                 border-radius: 50%;
                 box-shadow: 0 4px 12px rgba(40, 167, 69, 0.3);
                 cursor: pointer;
-                z-index: 1000;
+                z-index: 9999; /* Higher z-index for dictation */
                 transition: all 0.3s ease;
                 display: flex;
                 align-items: center;
@@ -122,13 +122,13 @@ class DictationManager {
             .dictation-status {
                 position: fixed;
                 bottom: 90px;
-                left: 20px;
+                right: 20px; /* Align with dictation button */
                 background: rgba(0, 0, 0, 0.8);
                 color: white;
                 padding: 10px 15px;
                 border-radius: 20px;
                 font-size: 14px;
-                z-index: 1001;
+                z-index: 10000; /* Highest z-index for status */
                 display: none;
                 animation: dictation-pulse 1.5s infinite;
             }
@@ -138,11 +138,16 @@ class DictationManager {
                     width: 50px;
                     height: 50px;
                     bottom: 15px;
-                    left: 15px;
+                    right: 15px; /* Keep on right side for mobile */
                 }
                 
                 .dictation-tooltip {
                     display: none;
+                }
+                
+                .dictation-status {
+                    bottom: 75px; /* Adjust for smaller button */
+                    right: 15px;
                 }
             }
         `;

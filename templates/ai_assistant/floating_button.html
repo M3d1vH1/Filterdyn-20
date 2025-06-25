@@ -74,8 +74,8 @@
 .ai-assistant-floating {
     position: fixed;
     bottom: 20px;
-    right: 20px;
-    z-index: 9999;
+    right: 90px; /* Moved left to avoid dictation button */
+    z-index: 9998; /* Lower z-index than dictation */
 }
 
 .ai-assistant-btn {
@@ -313,7 +313,7 @@
 @media (max-width: 768px) {
     .ai-assistant-floating {
         bottom: 15px;
-        right: 15px;
+        right: 75px; /* More space from dictation button on mobile */
     }
     
     .ai-assistant-btn {
@@ -324,13 +324,20 @@
     .ai-assistant-panel {
         width: 300px;
         bottom: 60px;
+        right: -25px; /* Adjust panel position */
     }
 }
 
 @media (max-width: 480px) {
+    .ai-assistant-floating {
+        bottom: 85px; /* Stack vertically on very small screens */
+        right: 15px;
+    }
+    
     .ai-assistant-panel {
         width: calc(100vw - 30px);
         right: -15px;
+        bottom: 55px;
     }
 }
 </style>
@@ -413,7 +420,7 @@ function displayAIActions(actions) {
     
     let html = '';
     actions.forEach(action => {
-        const onclick = action.action || `window.location.href='${action.url}'`;
+        const onclick = action.action || (action.url ? `window.location.href='${action.url}'` : 'void(0)');
         html += `
             <div class="ai-action-item" onclick="${onclick}">
                 <div class="ai-action-icon">

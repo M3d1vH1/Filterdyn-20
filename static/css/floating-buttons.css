@@ -1,0 +1,182 @@
+/* Floating Buttons Coordination */
+/* This file manages the positioning and interaction of all floating buttons */
+
+/* Base floating button container coordination */
+.floating-buttons-container {
+    position: fixed;
+    bottom: 20px;
+    right: 20px;
+    z-index: 9000;
+    display: flex;
+    flex-direction: row;
+    gap: 15px;
+    align-items: flex-end;
+}
+
+/* Dictation Button - Primary position (rightmost) */
+.floating-dictation-btn {
+    position: fixed !important;
+    bottom: 20px !important;
+    right: 20px !important;
+    z-index: 9999 !important; /* Highest priority for voice input */
+}
+
+/* AI Assistant - Secondary position */
+.ai-assistant-floating {
+    position: fixed !important;
+    bottom: 20px !important;
+    right: 90px !important; /* 60px button + 15px gap + 15px margin */
+    z-index: 9998 !important;
+}
+
+/* Quick Add Task Button (if exists) - Tertiary position */
+.quick-add-floating {
+    position: fixed !important;
+    bottom: 20px !important;
+    right: 160px !important;
+    z-index: 9997 !important;
+}
+
+/* Status indicators positioning */
+.dictation-status {
+    position: fixed !important;
+    bottom: 90px !important;
+    right: 20px !important;
+    z-index: 10000 !important;
+}
+
+/* Mobile responsiveness for button coordination */
+@media (max-width: 768px) {
+    /* Stack buttons vertically on mobile */
+    .floating-dictation-btn {
+        bottom: 15px !important;
+        right: 15px !important;
+        width: 50px !important;
+        height: 50px !important;
+    }
+    
+    .ai-assistant-floating {
+        bottom: 80px !important; /* Stack above dictation */
+        right: 15px !important;
+    }
+    
+    .ai-assistant-btn {
+        width: 50px !important;
+        height: 50px !important;
+    }
+    
+    .quick-add-floating {
+        bottom: 145px !important; /* Stack above AI assistant */
+        right: 15px !important;
+    }
+    
+    .dictation-status {
+        bottom: 75px !important;
+        right: 15px !important;
+    }
+    
+    .ai-assistant-panel {
+        bottom: 60px !important;
+        right: 0 !important;
+        width: calc(100vw - 30px) !important;
+        margin: 0 15px !important;
+    }
+}
+
+@media (max-width: 480px) {
+    /* Very small screens - compact vertical stack */
+    .ai-assistant-floating {
+        bottom: 75px !important;
+    }
+    
+    .quick-add-floating {
+        bottom: 130px !important;
+    }
+}
+
+/* Ensure floating elements don't interfere with page content */
+body {
+    padding-bottom: 100px; /* Ensure content doesn't hide behind buttons */
+}
+
+@media (max-width: 768px) {
+    body {
+        padding-bottom: 160px; /* More space for stacked buttons */
+    }
+}
+
+/* Animation coordination - prevent conflicts */
+.floating-button-enter {
+    animation: floatingEnter 0.3s ease-out;
+}
+
+.floating-button-exit {
+    animation: floatingExit 0.3s ease-in;
+}
+
+@keyframes floatingEnter {
+    from {
+        transform: scale(0) translateY(20px);
+        opacity: 0;
+    }
+    to {
+        transform: scale(1) translateY(0);
+        opacity: 1;
+    }
+}
+
+@keyframes floatingExit {
+    from {
+        transform: scale(1) translateY(0);
+        opacity: 1;
+    }
+    to {
+        transform: scale(0) translateY(20px);
+        opacity: 0;
+    }
+}
+
+/* Hover state coordination */
+.floating-dictation-btn:hover,
+.ai-assistant-btn:hover,
+.quick-add-floating:hover {
+    transform: scale(1.1);
+    transition: transform 0.2s ease;
+}
+
+/* Active state coordination */
+.floating-dictation-btn.listening,
+.ai-assistant-btn.active {
+    animation: activePulse 1.5s infinite;
+}
+
+@keyframes activePulse {
+    0%, 100% { 
+        box-shadow: 0 4px 12px rgba(66, 133, 244, 0.3); 
+    }
+    50% { 
+        box-shadow: 0 6px 20px rgba(66, 133, 244, 0.6); 
+    }
+}
+
+/* Panel positioning to avoid conflicts */
+.ai-assistant-panel {
+    position: absolute !important;
+    bottom: 70px !important;
+    right: 0 !important;
+}
+
+/* Notification positioning to avoid floating buttons */
+.alert.position-fixed {
+    top: 20px !important;
+    right: 20px !important;
+    z-index: 10001 !important;
+    max-width: calc(100vw - 200px) !important; /* Account for button space */
+}
+
+@media (max-width: 768px) {
+    .alert.position-fixed {
+        max-width: calc(100vw - 40px) !important;
+        right: 20px !important;
+    }
+}
