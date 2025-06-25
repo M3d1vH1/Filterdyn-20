@@ -249,11 +249,16 @@ def complete_interface():
     """Complete Gmail interface with full functionality"""
     # Gmail access available to all authenticated users
     
-    # Get Gmail account if it exists, otherwise show connection interface
+    # Get Gmail account from database only (Phase 3: database-only approach)
     try:
-        account = GmailService.get_user_account(current_user.id, current_user.tenant_id) if GmailService else None
+        from models import GmailAccount
+        account = GmailAccount.query.filter_by(
+            user_id=current_user.id, 
+            tenant_id=current_user.tenant_id,
+            sync_enabled=True
+        ).first()
     except Exception as e:
-        current_app.logger.error(f"Gmail service error: {e}")
+        current_app.logger.error(f"Database query error: {e}")
         account = None
     
     return render_template('gmail/complete_interface.html',

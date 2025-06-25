@@ -3,7 +3,7 @@
  * Provides advanced AI features for Gmail interface
  */
 
-// Disabled - functionality moved to unified FAB
+// Gmail AI Assistant - Integrated with unified FAB
 class GmailAIAssistant {
     constructor() {
         this.currentLanguage = document.documentElement.lang || 'en';
@@ -489,7 +489,9 @@ class GmailAIAssistant {
 // Initialize when DOM is ready
 document.addEventListener('DOMContentLoaded', function() {
     if (window.location.pathname.includes('/gmail/')) {
-        window.gmailAI = new GmailAIAssistant();
+        if (!window.gmailAI) {
+            window.gmailAI = new GmailAIAssistant();
+        }
     }
 });
 
